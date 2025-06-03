@@ -1,7 +1,7 @@
 // Fallback for using MaterialIcons on Android and web.
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { SymbolWeight, SymbolViewProps } from 'expo-symbols';
+import { SymbolViewProps, SymbolWeight } from 'expo-symbols';
 import { ComponentProps } from 'react';
 import { OpaqueColorValue, type StyleProp, type TextStyle } from 'react-native';
 
@@ -18,6 +18,29 @@ const MAPPING = {
   'paperplane.fill': 'send',
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
+  'cross.case.fill': 'local-hospital',
+  'pill.fill': 'medication',
+  'syringe.fill': 'vaccines',
+  'calendar': 'event',
+  'gearshape.fill': 'settings',
+  'bell.fill': 'notifications',
+  'moon.fill': 'dark-mode',
+  'arrow.down.circle.fill': 'download',
+  'questionmark.circle.fill': 'help',
+  'rectangle.portrait.and.arrow.right': 'logout',
+  'pencil': 'edit',
+  'arrow.left': 'arrow-back',
+  'pawprint.fill': 'pets',
+  'fork.knife': 'restaurant',
+  'dollarsign.circle.fill': 'attach-money',
+  'line.3.horizontal.decrease': 'filter-list',
+  'person.fill': 'person',
+  'phone.fill': 'phone',
+  'envelope.fill': 'email',
+  'figure.walk': 'directions-walk',
+  'scissors': 'content-cut',
+  'checkmark.circle.fill': 'check-circle',
+  'circle': 'radio-button-unchecked'
 } as IconMapping;
 
 /**
