@@ -1,4 +1,4 @@
-import { Tabs } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 import React from "react";
 import { Platform, View } from "react-native";
 
@@ -8,10 +8,10 @@ import { IconSymbol } from "@/app/components/ui/IconSymbol";
 import TabBarBackground from "@/app/components/ui/TabBarBackground";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import FloatingActionButton from "../components/ui/FloatingActionButton";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const router = useRouter();
 
   return (
     <View style={{ flex: 1 }}>
@@ -105,7 +105,6 @@ export default function TabLayout() {
           ),
         }}
       />
-      <FloatingActionButton items={[{label: "Add", icon: "+", onPress: () => {}}]} />
     </View>
   );
 }

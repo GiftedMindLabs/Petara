@@ -5,46 +5,61 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
-import ContactForm from "./forms/ContactForm";
-import PetForm from "./forms/PetForm";
-import TaskForm from "./forms/TaskForm";
-import TreatmentForm from "./forms/TreatmentForm";
-import VaccinationForm from "./forms/VaccinationForm";
-import VetVisitForm from "./forms/VetVisitForm";
-import { IconSymbol } from "./ui/IconSymbol";
+import ContactForm from "./components/forms/ContactForm";
+import TaskForm from "./components/forms/TaskForm";
+import TreatmentForm from "./components/forms/TreatmentForm";
+import VaccinationForm from "./components/forms/VaccinationForm";
+import VetVisitForm from "./components/forms/VetVisitForm";
+import { IconSymbol } from "./components/ui/IconSymbol";
 
-function Modal() {
+export default function FormModal() {
   const router = useRouter();
-  const {
-    title,
-    action,
-    screen,
-  }: { title: string; action: "create" | "edit"; screen: string } =
-    useLocalSearchParams();
+  const { title, action, form } = useLocalSearchParams();
   let children;
-  switch (screen) {
+  console.log("params:", useLocalSearchParams());
+  console.log("form:", form);
+  switch (form) {
     case "pet":
-      children = <PetForm onSubmit={() => {}} onCancel={() => {}} />;
+      children = (
+        <View>
+          <Text>Pet Form</Text>
+        </View>
+      );
+      //<PetForm onSubmit={() => {}} onCancel={() => router.back()} />;
       break;
     case "contact":
-      children = <ContactForm onSubmit={() => {}} onCancel={() => {}} />;
+      children = (
+        <ContactForm onSubmit={() => {}} onCancel={() => router.back()} />
+      );
       break;
     case "vaccination":
-      children = <VaccinationForm onSubmit={() => {}} onCancel={() => {}} />;
+      children = (
+        <VaccinationForm onSubmit={() => {}} onCancel={() => router.back()} />
+      );
       break;
     case "treatment":
-      children = <TreatmentForm onSubmit={() => {}} onCancel={() => {}} />;
+      children = (
+        <TreatmentForm onSubmit={() => {}} onCancel={() => router.back()} />
+      );
       break;
     case "vetVisit":
-      children = <VetVisitForm onSubmit={() => {}} onCancel={() => {}} />;
+      children = (
+        <VetVisitForm onSubmit={() => {}} onCancel={() => router.back()} />
+      );
       break;
     case "task":
-      children = <TaskForm onSubmit={() => {}} onCancel={() => {}} />;
+      children = (
+        <TaskForm onSubmit={() => {}} onCancel={() => router.back()} />
+      );
       break;
     default:
-      children = null;
+      children = (
+        <View>
+          <Text>No form found</Text>
+        </View>
+      );
   }
   return (
     <View style={styles.container}>
@@ -64,6 +79,7 @@ function Modal() {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     backgroundColor: "white",
     borderRadius: 8,
     width: Math.min(Dimensions.get("window").width - 32, 400),
@@ -91,5 +107,3 @@ const styles = StyleSheet.create({
     padding: 16,
   },
 });
-
-export default Modal;

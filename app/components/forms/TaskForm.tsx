@@ -1,10 +1,19 @@
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { Picker } from '@react-native-picker/picker';
-import React, { useState } from 'react';
-import { Platform, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { pets } from '../../utils/mockData';
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { Picker } from "@react-native-picker/picker";
+import React, { useState } from "react";
+import {
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { pets } from "../../utils/mockData";
 
-type TaskType = 'feeding' | 'medication' | 'walk' | 'grooming' | 'other';
+type TaskType = "feeding" | "medication" | "walk" | "grooming" | "other";
 
 interface TaskFormProps {
   task?: {
@@ -20,21 +29,17 @@ interface TaskFormProps {
   onCancel: () => void;
 }
 
-const TaskForm: React.FC<TaskFormProps> = ({
-  task,
-  onSubmit,
-  onCancel
-}) => {
+const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit, onCancel }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
   const [formData, setFormData] = useState({
-    petId: task?.petId || '',
-    title: task?.title || '',
-    type: task?.type || 'other',
+    petId: task?.petId || "",
+    title: task?.title || "",
+    type: task?.type || "other",
     dueDate: task?.dueDate ? new Date(task.dueDate) : new Date(),
-    notes: task?.notes || '',
-    recurring: task?.recurring || false
+    notes: task?.notes || "",
+    recurring: task?.recurring || false,
   });
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
@@ -60,7 +65,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
   const handleSubmit = () => {
     onSubmit({
       ...formData,
-      dueDate: formData.dueDate.toISOString()
+      dueDate: formData.dueDate.toISOString(),
     });
   };
 
@@ -69,7 +74,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
   };
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
   return (
@@ -79,11 +84,13 @@ const TaskForm: React.FC<TaskFormProps> = ({
         <View style={styles.pickerContainer}>
           <Picker
             selectedValue={formData.petId}
-            onValueChange={(value: string) => setFormData({ ...formData, petId: value })}
+            onValueChange={(value: string) =>
+              setFormData({ ...formData, petId: value })
+            }
             style={styles.picker}
           >
             <Picker.Item label="Select a pet" value="" />
-            {pets.map(pet => (
+            {pets.map((pet) => (
               <Picker.Item key={pet.id} label={pet.name} value={pet.id} />
             ))}
           </Picker>
@@ -106,7 +113,9 @@ const TaskForm: React.FC<TaskFormProps> = ({
         <View style={styles.pickerContainer}>
           <Picker
             selectedValue={formData.type}
-            onValueChange={(value: TaskType) => setFormData({ ...formData, type: value })}
+            onValueChange={(value: TaskType) =>
+              setFormData({ ...formData, type: value })
+            }
             style={styles.picker}
           >
             <Picker.Item label="Feeding" value="feeding" />
@@ -125,13 +134,15 @@ const TaskForm: React.FC<TaskFormProps> = ({
             style={styles.input}
             onPress={() => setShowDatePicker(true)}
           >
-            <Text style={styles.dateTimeText}>{formatDate(formData.dueDate)}</Text>
+            <Text style={styles.dateTimeText}>
+              {formatDate(formData.dueDate)}
+            </Text>
           </TouchableOpacity>
           {showDatePicker && (
             <DateTimePicker
               value={formData.dueDate}
               mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              display={Platform.OS === "ios" ? "spinner" : "default"}
               onChange={handleDateChange}
             />
           )}
@@ -143,13 +154,15 @@ const TaskForm: React.FC<TaskFormProps> = ({
             style={styles.input}
             onPress={() => setShowTimePicker(true)}
           >
-            <Text style={styles.dateTimeText}>{formatTime(formData.dueDate)}</Text>
+            <Text style={styles.dateTimeText}>
+              {formatTime(formData.dueDate)}
+            </Text>
           </TouchableOpacity>
           {showTimePicker && (
             <DateTimePicker
               value={formData.dueDate}
               mode="time"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              display={Platform.OS === "ios" ? "spinner" : "default"}
               onChange={handleTimeChange}
             />
           )}
@@ -172,9 +185,11 @@ const TaskForm: React.FC<TaskFormProps> = ({
       <View style={styles.switchContainer}>
         <Switch
           value={formData.recurring}
-          onValueChange={(value) => setFormData({ ...formData, recurring: value })}
-          trackColor={{ false: '#D1D5DB', true: '#0D9488' }}
-          thumbColor={formData.recurring ? '#fff' : '#fff'}
+          onValueChange={(value) =>
+            setFormData({ ...formData, recurring: value })
+          }
+          trackColor={{ false: "#D1D5DB", true: "#0D9488" }}
+          thumbColor={formData.recurring ? "#fff" : "#fff"}
         />
         <Text style={styles.switchLabel}>Recurring task</Text>
       </View>
@@ -191,7 +206,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
           onPress={handleSubmit}
         >
           <Text style={styles.submitButtonText}>
-            {task ? 'Save Changes' : 'Add Task'}
+            {task ? "Save Changes" : "Add Task"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -208,34 +223,34 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#374151',
+    fontWeight: "500",
+    color: "#374151",
     marginBottom: 4,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: "#D1D5DB",
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
     fontSize: 16,
-    color: '#1F2937',
+    color: "#1F2937",
   },
   pickerContainer: {
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: "#D1D5DB",
     borderRadius: 8,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   picker: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
   },
   textArea: {
     minHeight: 80,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   row: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 16,
   },
   flex1: {
@@ -243,20 +258,20 @@ const styles = StyleSheet.create({
   },
   dateTimeText: {
     fontSize: 16,
-    color: '#1F2937',
+    color: "#1F2937",
   },
   switchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 16,
   },
   switchLabel: {
     marginLeft: 8,
     fontSize: 14,
-    color: '#374151',
+    color: "#374151",
   },
   buttonContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
     marginTop: 16,
     marginBottom: 24,
@@ -265,25 +280,25 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
   cancelButton: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: "#D1D5DB",
   },
   submitButton: {
-    backgroundColor: '#0D9488',
+    backgroundColor: "#0D9488",
   },
   cancelButtonText: {
-    color: '#374151',
+    color: "#374151",
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   submitButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
 });
 
