@@ -1,13 +1,8 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
-import {
-  Dimensions,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import ContactForm from "./components/forms/ContactForm";
+import PetForm from "./components/forms/PetForm";
 import TaskForm from "./components/forms/TaskForm";
 import TreatmentForm from "./components/forms/TreatmentForm";
 import VaccinationForm from "./components/forms/VaccinationForm";
@@ -22,12 +17,7 @@ export default function FormModal() {
   console.log("form:", form);
   switch (form) {
     case "pet":
-      children = (
-        <View>
-          <Text>Pet Form</Text>
-        </View>
-      );
-      //<PetForm onSubmit={() => {}} onCancel={() => router.back()} />;
+      children = <PetForm onSubmit={() => {}} onCancel={() => router.back()} />;
       break;
     case "contact":
       children = (
@@ -81,10 +71,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "white",
-    borderRadius: 8,
-    width: Math.min(Dimensions.get("window").width - 32, 400),
-    maxHeight: Dimensions.get("window").height * 0.9,
-    marginHorizontal: 16,
   },
   header: {
     flexDirection: "row",
@@ -104,6 +90,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   content: {
+    flex: 1,
     padding: 16,
   },
 });

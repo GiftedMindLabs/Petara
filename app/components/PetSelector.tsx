@@ -1,7 +1,8 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { pets } from '../utils/mockData';
+import { Pet } from '../database/types';
+import { useRepositories } from '../hooks/useRepositories';
 
 interface PetSelectorProps {
   selectedPetId: string;
@@ -12,8 +13,23 @@ const PetSelector: React.FC<PetSelectorProps> = ({
   selectedPetId,
   onPetChange
 }) => {
+  const { petRepository } = useRepositories();
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [pets, setPets] = useState<Pet[]>([]);
   const selectedPet = pets.find(p => p.id === selectedPetId);
+
+  useEffect(() => {
+    const loadPets = async () => {
+      try {
+        const allPets = await petRepository.getLivingPets();
+        setPets(allPets);
+        
+      } catch (error) {
+        console.error('Error loading pets:', error);
+      }
+    };
+    loadPets();
+  }, [petRepository]);
 
   return (
     <View>

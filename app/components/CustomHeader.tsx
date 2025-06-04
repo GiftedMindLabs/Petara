@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSelectedPet } from '../providers/SelectedPetProvider';
 import PetSelector from './PetSelector';
 import { IconSymbol } from './ui/IconSymbol';
 
-const CustomHeader: React.FC = () => {
-  const [selectedPetId, setSelectedPetId] = useState('all');
+export const CustomHeader: React.FC = () => {
+  const { selectedPetId, setSelectedPetId } = useSelectedPet();
 
   return (
     <View style={styles.container}>
@@ -63,6 +64,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: '#F9FAFB'
   }
-}); 
+});
 
 export default CustomHeader;

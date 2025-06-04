@@ -1,7 +1,8 @@
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
+  Alert,
   Platform,
   ScrollView,
   StyleSheet,
@@ -11,35 +12,52 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { pets } from "../../utils/mockData";
+import { Task } from "../../database/types";
+import { useRepositories } from "../../hooks/useRepositories";
 
 type TaskType = "feeding" | "medication" | "walk" | "grooming" | "other";
+type RecurrencePattern = "daily" | "weekly" | "monthly" | "yearly";
 
 interface TaskFormProps {
-  task?: {
-    id: string;
-    petId: string;
-    title: string;
-    type: TaskType;
-    dueDate: string;
-    notes?: string;
-    recurring?: boolean;
-  };
-  onSubmit: (data: any) => void;
+  task?: Partial<Task>;
+  onSubmit: (task: Task) => void;
   onCancel: () => void;
 }
 
 const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit, onCancel }) => {
+  const { taskRepository, petRepository } = useRepositories();
+  const [pets, setPets] = useState<Array<{ id: string; name: string }>>([]);
+  
+  useEffect(() => {
+    const loadPets = async () => {
+      try {
+        const allPets = await petRepository.getAllPets();
+        setPets(allPets);
+      } catch (error) {
+        console.error('Error loading pets:', error);
+        Alert.alert("Error", "Failed to load pets");
+      }
+    };
+    loadPets();
+  }, [petRepository]);
+
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
 
   const [formData, setFormData] = useState({
     petId: task?.petId || "",
     title: task?.title || "",
-    type: task?.type || "other",
+    type: task?.type || "other" as TaskType,
     dueDate: task?.dueDate ? new Date(task.dueDate) : new Date(),
     notes: task?.notes || "",
     recurring: task?.recurring || false,
+    recurrencePattern: task?.recurrencePattern || "daily" as RecurrencePattern,
+    recurrenceInterval: task?.recurrenceInterval || 1,
+    recurrenceWeekDays: task?.recurrenceWeekDays || [],
+    recurrenceMonthDay: task?.recurrenceMonthDay || 1,
+    recurrenceEndDate: task?.recurrenceEndDate ? new Date(task.recurrenceEndDate) : undefined,
+    recurrenceCount: task?.recurrenceCount || undefined,
   });
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
@@ -62,11 +80,48 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit, onCancel }) => {
     }
   };
 
-  const handleSubmit = () => {
-    onSubmit({
-      ...formData,
-      dueDate: formData.dueDate.toISOString(),
-    });
+  const handleEndDateChange = (event: any, selectedDate?: Date) => {
+    setShowEndDatePicker(false);
+    if (selectedDate) {
+      setFormData({ ...formData, recurrenceEndDate: selectedDate });
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!formData.petId) {
+      Alert.alert("Error", "Please select a pet");
+      return;
+    }
+    if (!formData.title) {
+      Alert.alert("Error", "Please enter a title");
+      return;
+    }
+
+    try {
+      const taskData: Omit<Task, 'id'> = {
+        petId: formData.petId,
+        title: formData.title,
+        type: formData.type,
+        dueDate: formData.dueDate.toISOString(),
+        notes: formData.notes,
+        isComplete: false,
+        recurring: formData.recurring,
+        ...(formData.recurring && {
+          recurrencePattern: formData.recurrencePattern,
+          recurrenceInterval: formData.recurrenceInterval,
+          recurrenceWeekDays: formData.recurrenceWeekDays,
+          recurrenceMonthDay: formData.recurrenceMonthDay,
+          recurrenceEndDate: formData.recurrenceEndDate?.toISOString(),
+          recurrenceCount: formData.recurrenceCount,
+        }),
+      };
+
+      const createdTask = await taskRepository.createTask(taskData);
+      onSubmit(createdTask);
+    } catch (error) {
+      console.error('Error creating task:', error);
+      Alert.alert("Error", "Failed to create task. Please try again.");
+    }
   };
 
   const formatDate = (date: Date) => {
@@ -75,6 +130,27 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit, onCancel }) => {
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
+
+  const weekDays = [
+    { label: "Sunday", value: 0 },
+    { label: "Monday", value: 1 },
+    { label: "Tuesday", value: 2 },
+    { label: "Wednesday", value: 3 },
+    { label: "Thursday", value: 4 },
+    { label: "Friday", value: 5 },
+    { label: "Saturday", value: 6 },
+  ];
+
+  const toggleWeekDay = (dayValue: number) => {
+    const currentWeekDays = [...formData.recurrenceWeekDays];
+    const index = currentWeekDays.indexOf(dayValue);
+    if (index === -1) {
+      currentWeekDays.push(dayValue);
+    } else {
+      currentWeekDays.splice(index, 1);
+    }
+    setFormData({ ...formData, recurrenceWeekDays: currentWeekDays });
   };
 
   return (
@@ -194,19 +270,175 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit, onCancel }) => {
         <Text style={styles.switchLabel}>Recurring task</Text>
       </View>
 
+      {formData.recurring && (
+        <>
+          <View style={styles.formField}>
+            <Text style={styles.label}>Recurrence Pattern</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={formData.recurrencePattern}
+                onValueChange={(value: RecurrencePattern) =>
+                  setFormData({ ...formData, recurrencePattern: value })
+                }
+                style={styles.picker}
+              >
+                <Picker.Item label="Daily" value="daily" />
+                <Picker.Item label="Weekly" value="weekly" />
+                <Picker.Item label="Monthly" value="monthly" />
+                <Picker.Item label="Yearly" value="yearly" />
+              </Picker>
+            </View>
+          </View>
+
+          <View style={styles.formField}>
+            <Text style={styles.label}>Repeat every</Text>
+            <View style={styles.row}>
+              <TextInput
+                style={[styles.input, styles.flex1]}
+                value={formData.recurrenceInterval.toString()}
+                onChangeText={(value) =>
+                  setFormData({
+                    ...formData,
+                    recurrenceInterval: parseInt(value) || 1,
+                  })
+                }
+                keyboardType="number-pad"
+              />
+              <Text style={styles.intervalText}>
+                {formData.recurrencePattern}
+                {formData.recurrenceInterval > 1 ? "s" : ""}
+              </Text>
+            </View>
+          </View>
+
+          {formData.recurrencePattern === "weekly" && (
+            <View style={styles.formField}>
+              <Text style={styles.label}>Repeat on</Text>
+              <View style={styles.weekDaysContainer}>
+                {weekDays.map((day) => (
+                  <TouchableOpacity
+                    key={day.value}
+                    style={[
+                      styles.weekDayButton,
+                      formData.recurrenceWeekDays.includes(day.value) &&
+                        styles.weekDayButtonSelected,
+                    ]}
+                    onPress={() => toggleWeekDay(day.value)}
+                  >
+                    <Text
+                      style={[
+                        styles.weekDayText,
+                        formData.recurrenceWeekDays.includes(day.value) &&
+                          styles.weekDayTextSelected,
+                      ]}
+                    >
+                      {day.label.substring(0, 1)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {formData.recurrencePattern === "monthly" && (
+            <View style={styles.formField}>
+              <Text style={styles.label}>Day of month</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.recurrenceMonthDay.toString()}
+                onChangeText={(value) =>
+                  setFormData({
+                    ...formData,
+                    recurrenceMonthDay: Math.min(
+                      Math.max(parseInt(value) || 1, 1),
+                      31
+                    ),
+                  })
+                }
+                keyboardType="number-pad"
+              />
+            </View>
+          )}
+
+          <View style={styles.formField}>
+            <Text style={styles.label}>End</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={formData.recurrenceCount ? "count" : "date"}
+                onValueChange={(value) => {
+                  if (value === "count") {
+                    setFormData({
+                      ...formData,
+                      recurrenceCount: 10,
+                      recurrenceEndDate: undefined,
+                    });
+                  } else {
+                    setFormData({
+                      ...formData,
+                      recurrenceCount: undefined,
+                      recurrenceEndDate: new Date(),
+                    });
+                  }
+                }}
+                style={styles.picker}
+              >
+                <Picker.Item label="After number of occurrences" value="count" />
+                <Picker.Item label="On date" value="date" />
+              </Picker>
+            </View>
+
+            {formData.recurrenceCount !== undefined && (
+              <TextInput
+                style={[styles.input, { marginTop: 8 }]}
+                value={formData.recurrenceCount.toString()}
+                onChangeText={(value) =>
+                  setFormData({
+                    ...formData,
+                    recurrenceCount: parseInt(value) || 1,
+                  })
+                }
+                keyboardType="number-pad"
+              />
+            )}
+
+            {formData.recurrenceEndDate !== undefined && (
+              <>
+                <TouchableOpacity
+                  style={[styles.input, { marginTop: 8 }]}
+                  onPress={() => setShowEndDatePicker(true)}
+                >
+                  <Text style={styles.dateTimeText}>
+                    {formatDate(formData.recurrenceEndDate)}
+                  </Text>
+                </TouchableOpacity>
+                {showEndDatePicker && (
+                  <DateTimePicker
+                    value={formData.recurrenceEndDate}
+                    mode="date"
+                    display={Platform.OS === "ios" ? "spinner" : "default"}
+                    onChange={handleEndDateChange}
+                    minimumDate={formData.dueDate}
+                  />
+                )}
+              </>
+            )}
+          </View>
+        </>
+      )}
+
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={[styles.button, styles.cancelButton]}
           onPress={onCancel}
         >
-          <Text style={styles.cancelButtonText}>Cancel</Text>
+          <Text style={[styles.buttonText, styles.cancelButtonText]}>Cancel</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.button, styles.submitButton]}
           onPress={handleSubmit}
         >
-          <Text style={styles.submitButtonText}>
-            {task ? "Save Changes" : "Add Task"}
+          <Text style={[styles.buttonText, styles.submitButtonText]}>
+            {task ? "Update" : "Create"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -217,6 +449,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit, onCancel }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 16,
   },
   formField: {
     marginBottom: 16,
@@ -224,34 +457,35 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#374151",
+    color: "#4B5563",
     marginBottom: 4,
   },
   input: {
+    backgroundColor: "#F9FAFB",
     borderWidth: 1,
-    borderColor: "#D1D5DB",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    borderColor: "#E5E7EB",
+    borderRadius: 6,
+    padding: 12,
     fontSize: 16,
     color: "#1F2937",
   },
   pickerContainer: {
+    backgroundColor: "#F9FAFB",
     borderWidth: 1,
-    borderColor: "#D1D5DB",
-    borderRadius: 8,
+    borderColor: "#E5E7EB",
+    borderRadius: 6,
     overflow: "hidden",
   },
   picker: {
-    backgroundColor: "white",
+    
   },
   textArea: {
-    minHeight: 80,
+    height: 100,
     textAlignVertical: "top",
   },
   row: {
     flexDirection: "row",
-    gap: 16,
+    gap: 12,
   },
   flex1: {
     flex: 1,
@@ -267,38 +501,66 @@ const styles = StyleSheet.create({
   },
   switchLabel: {
     marginLeft: 8,
-    fontSize: 14,
-    color: "#374151",
+    fontSize: 16,
+    color: "#1F2937",
   },
   buttonContainer: {
     flexDirection: "row",
     gap: 12,
-    marginTop: 16,
+    marginTop: 24,
     marginBottom: 24,
   },
   button: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
+    height: 48,
+    borderRadius: 6,
+    justifyContent: "center",
     alignItems: "center",
   },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
   cancelButton: {
-    backgroundColor: "white",
-    borderWidth: 1,
-    borderColor: "#D1D5DB",
+    backgroundColor: "#F3F4F6",
+  },
+  cancelButtonText: {
+    color: "#4B5563",
   },
   submitButton: {
     backgroundColor: "#0D9488",
   },
-  cancelButtonText: {
-    color: "#374151",
-    fontSize: 16,
-    fontWeight: "500",
-  },
   submitButtonText: {
-    color: "white",
-    fontSize: 16,
+    color: "#FFFFFF",
+  },
+  intervalText: {
+    alignSelf: "center",
+    marginLeft: 8,
+    color: "#4B5563",
+  },
+  weekDaysContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 8,
+  },
+  weekDayButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F3F4F6",
+  },
+  weekDayButtonSelected: {
+    backgroundColor: "#0D9488",
+  },
+  weekDayText: {
+    fontSize: 14,
     fontWeight: "500",
+    color: "#4B5563",
+  },
+  weekDayTextSelected: {
+    color: "#FFFFFF",
   },
 });
 

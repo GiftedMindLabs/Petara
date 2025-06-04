@@ -1,36 +1,37 @@
 import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
-import { Image, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Platform, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Pet } from '../../database/types';
+import { useRepositories } from '../../hooks/useRepositories';
 import { IconSymbol } from '../ui/IconSymbol';
 
 interface PetFormProps {
-  pet?: {
-    id: string;
-    name: string;
-    species: PetSpecies;
-    breed: string;
-    age: number;
-    weight: number;
-    imageUrl: string;
-  };
-  onSubmit: (data: any) => void;
+  pet?: Pet;
+  onSubmit: (data: Pet) => void;
   onCancel: () => void;
 }
 
 type PetSpecies = 'dog' | 'cat' | 'bird' | 'other';
+type PetSex = 'male' | 'female';
 
 const PetForm: React.FC<PetFormProps> = ({
   pet,
   onSubmit,
   onCancel
 }) => {
+  const { petRepository } = useRepositories();
   const [formData, setFormData] = useState({
     name: pet?.name || '',
-    species: pet?.species || 'dog',
+    species: pet?.species || 'dog' as PetSpecies,
     breed: pet?.breed || '',
-    age: pet?.age?.toString() || '',
+    sex: pet?.sex || 'male' as PetSex,
+    birthDate: pet?.birthDate || new Date().getTime(),
+    allergies: pet?.allergies || [],
     weight: pet?.weight?.toString() || '',
+    microchipCode: pet?.microchipCode?.toString() || '',
+    sterilized: pet?.sterilized || false,
+    deceased: pet?.deceased || false,
     imageUrl: pet?.imageUrl || ''
   });
 
@@ -54,14 +55,40 @@ const PetForm: React.FC<PetFormProps> = ({
     }
   };
 
-  const handleSubmit = () => {
-    // Convert string values back to numbers
-    const submissionData = {
-      ...formData,
-      age: parseFloat(formData.age) || 0,
-      weight: parseFloat(formData.weight) || 0,
-    };
-    onSubmit(submissionData);
+  const handleSubmit = async () => {
+    try {
+      if (!formData.name) {
+        Alert.alert('Error', 'Please enter a pet name');
+        return;
+      }
+
+      const petData = {
+        name: formData.name,
+        species: formData.species,
+        breed: formData.breed,
+        sex: formData.sex,
+        birthDate: formData.birthDate,
+        allergies: formData.allergies,
+        weight: parseFloat(formData.weight) || 0,
+        microchipCode: parseInt(formData.microchipCode) || 0,
+        sterilized: formData.sterilized,
+        deceased: formData.deceased,
+        imageUrl: formData.imageUrl || 'default_pet_image.png'
+      };
+
+      let result;
+      if (pet?.id) {
+        await petRepository.updatePet(pet.id, petData);
+        result = { ...petData, id: pet.id };
+      } else {
+        result = await petRepository.createPet(petData);
+      }
+
+      onSubmit(result);
+    } catch (error) {
+      console.error('Error saving pet:', error);
+      Alert.alert('Error', 'Failed to save pet. Please try again.');
+    }
   };
 
   return (
@@ -109,6 +136,20 @@ const PetForm: React.FC<PetFormProps> = ({
       </View>
 
       <View style={styles.formField}>
+        <Text style={styles.label}>Sex</Text>
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={formData.sex}
+            onValueChange={(value: PetSex) => setFormData({ ...formData, sex: value })}
+            style={styles.picker}
+          >
+            <Picker.Item label="Male" value="male" />
+            <Picker.Item label="Female" value="female" />
+          </Picker>
+        </View>
+      </View>
+
+      <View style={styles.formField}>
         <Text style={styles.label}>Breed</Text>
         <TextInput
           style={styles.input}
@@ -121,18 +162,6 @@ const PetForm: React.FC<PetFormProps> = ({
 
       <View style={styles.row}>
         <View style={[styles.formField, styles.flex1]}>
-          <Text style={styles.label}>Age (years)</Text>
-          <TextInput
-            style={styles.input}
-            value={formData.age}
-            onChangeText={(value) => setFormData({ ...formData, age: value })}
-            placeholder="0.0"
-            placeholderTextColor="#9CA3AF"
-            keyboardType="decimal-pad"
-          />
-        </View>
-
-        <View style={[styles.formField, styles.flex1]}>
           <Text style={styles.label}>Weight (lbs)</Text>
           <TextInput
             style={styles.input}
@@ -141,6 +170,39 @@ const PetForm: React.FC<PetFormProps> = ({
             placeholder="0.0"
             placeholderTextColor="#9CA3AF"
             keyboardType="decimal-pad"
+          />
+        </View>
+
+        <View style={[styles.formField, styles.flex1]}>
+          <Text style={styles.label}>Microchip</Text>
+          <TextInput
+            style={styles.input}
+            value={formData.microchipCode}
+            onChangeText={(value) => setFormData({ ...formData, microchipCode: value })}
+            placeholder="Enter code"
+            placeholderTextColor="#9CA3AF"
+            keyboardType="number-pad"
+          />
+        </View>
+      </View>
+
+      <View style={styles.switchContainer}>
+        <View style={styles.switchRow}>
+          <Text style={styles.switchLabel}>Sterilized</Text>
+          <Switch
+            value={formData.sterilized}
+            onValueChange={(value) => setFormData({ ...formData, sterilized: value })}
+            trackColor={{ false: "#D1D5DB", true: "#0D9488" }}
+            thumbColor={formData.sterilized ? "#fff" : "#fff"}
+          />
+        </View>
+        <View style={styles.switchRow}>
+          <Text style={styles.switchLabel}>Deceased</Text>
+          <Switch
+            value={formData.deceased}
+            onValueChange={(value) => setFormData({ ...formData, deceased: value })}
+            trackColor={{ false: "#D1D5DB", true: "#0D9488" }}
+            thumbColor={formData.deceased ? "#fff" : "#fff"}
           />
         </View>
       </View>
@@ -271,6 +333,19 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '500',
+  },
+  switchContainer: {
+    marginBottom: 16,
+  },
+  switchRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  switchLabel: {
+    fontSize: 16,
+    color: '#374151',
   },
 });
 

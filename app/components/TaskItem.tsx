@@ -1,28 +1,52 @@
-import { IconSymbol } from '@/app/components/ui/IconSymbol';
-import React from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
-import { Task, pets } from '../utils/mockData';
+import { IconSymbol } from "@/app/components/ui/IconSymbol";
+import React, { useEffect, useState } from "react";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Pet, Task } from "../database/types";
+import { useRepositories } from "../hooks/useRepositories";
 
 interface TaskItemProps {
   task: Task;
-  showPet?: boolean;
+  onComplete?: () => void;
+  onPress?: () => void;
+  style?: any;
+  showOverdueIndicator?: boolean;
+  showPetInfo: boolean;
 }
 
 const TaskItem: React.FC<TaskItemProps> = ({
   task,
-  showPet = false
+  onComplete,
+  onPress,
+  style,
+  showOverdueIndicator = false,
+  showPetInfo,
 }) => {
-  const pet = pets.find(p => p.id === task.petId);
+  const { petRepository } = useRepositories();
+  const [pet, setPet] = useState<Pet | null>(null);
+
+  useEffect(() => {
+    const loadPet = async () => {
+      try {
+        const petData = await petRepository.getPetById(task.petId);
+        setPet(petData);
+      } catch (error) {
+        console.error("Error loading pet:", error);
+      }
+    };
+    if (showPetInfo) {
+      loadPet();
+    }
+  }, [task.petId, petRepository, showPetInfo]);
 
   const getTaskIcon = () => {
     switch (task.type) {
-      case 'walk':
+      case "walk":
         return <IconSymbol name="figure.walk" size={16} color="#3B82F6" />;
-      case 'medication':
+      case "medication":
         return <IconSymbol name="pill.fill" size={16} color="#9333EA" />;
-      case 'feeding':
+      case "feeding":
         return <IconSymbol name="fork.knife" size={16} color="#F97316" />;
-      case 'grooming':
+      case "grooming":
         return <IconSymbol name="scissors" size={16} color="#EC4899" />;
       default:
         return <IconSymbol name="calendar" size={16} color="#6B7280" />;
@@ -30,24 +54,52 @@ const TaskItem: React.FC<TaskItemProps> = ({
   };
 
   const taskTime = new Date(task.dueDate).toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit'
+    hour: "2-digit",
+    minute: "2-digit",
   });
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.checkboxContainer}>
-        {task.isComplete ? 
-          <IconSymbol name="checkmark.circle.fill" size={20} color="#22C55E" /> : 
+  const shouldShowPet = showPetInfo && pet !== null;
+  const isOverdue = showOverdueIndicator && new Date(task.dueDate) < new Date();
+
+  console.log("Should show pet: ", showPetInfo);
+
+  const renderContent = () => (
+    <View
+      style={[styles.container, style, isOverdue && styles.overdueContainer]}
+    >
+      <TouchableOpacity
+        style={styles.checkboxContainer}
+        onPress={onComplete}
+        disabled={task.isComplete}
+      >
+        {task.isComplete ? (
+          <IconSymbol name="checkmark.circle.fill" size={20} color="#22C55E" />
+        ) : (
           <IconSymbol name="circle" size={20} color="#D1D5DB" />
-        }
-      </View>
+        )}
+      </TouchableOpacity>
       <View style={styles.contentContainer}>
         <View style={styles.titleContainer}>
           {getTaskIcon()}
-          <Text style={styles.title}>{task.title}</Text>
+          <Text
+            style={[
+              styles.title,
+              task.isComplete && styles.completedTitle,
+              isOverdue && styles.overdueTitle,
+            ]}
+          >
+            {task.title}
+          </Text>
+          {task.recurring && (
+            <IconSymbol
+              name="arrow.clockwise"
+              size={14}
+              color="#6B7280"
+              style={styles.recurringIcon}
+            />
+          )}
         </View>
-        {showPet && pet && (
+        {shouldShowPet && pet && (
           <View style={styles.petContainer}>
             <Image source={{ uri: pet.imageUrl }} style={styles.petImage} />
             <Text style={styles.petName}>{pet.name}</Text>
@@ -55,58 +107,87 @@ const TaskItem: React.FC<TaskItemProps> = ({
         )}
         {task.notes && <Text style={styles.notes}>{task.notes}</Text>}
       </View>
-      <Text style={styles.time}>{taskTime}</Text>
+      <Text style={[styles.time, isOverdue && styles.overdueTime]}>
+        {taskTime}
+      </Text>
     </View>
   );
+
+  if (onPress) {
+    return (
+      <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+        {renderContent()}
+      </TouchableOpacity>
+    );
+  }
+
+  return renderContent();
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6'
+    borderBottomColor: "#F3F4F6",
+  },
+  overdueContainer: {
+    backgroundColor: "#FEF2F2",
   },
   checkboxContainer: {
-    marginRight: 12
+    marginRight: 12,
+    padding: 4,
   },
   contentContainer: {
-    flex: 1
+    flex: 1,
   },
   titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center'
+    flexDirection: "row",
+    alignItems: "center",
   },
   title: {
     marginLeft: 8,
-    fontWeight: '500',
-    color: '#1F2937'
+    fontWeight: "500",
+    color: "#1F2937",
+  },
+  completedTitle: {
+    color: "#9CA3AF",
+    textDecorationLine: "line-through",
+  },
+  overdueTitle: {
+    color: "#DC2626",
+  },
+  recurringIcon: {
+    marginLeft: 4,
   },
   petContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 4,
   },
   petImage: {
     width: 20,
     height: 20,
-    borderRadius: 10
+    borderRadius: 10,
   },
   petName: {
     marginLeft: 4,
     fontSize: 12,
-    color: '#6B7280'
+    color: "#6B7280",
   },
   notes: {
     marginTop: 4,
     fontSize: 12,
-    color: '#4B5563'
+    color: "#4B5563",
   },
   time: {
     fontSize: 14,
-    color: '#6B7280'
-  }
+    color: "#6B7280",
+  },
+  overdueTime: {
+    color: "#DC2626",
+  },
 });
 
 export default TaskItem;
