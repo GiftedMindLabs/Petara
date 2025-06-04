@@ -1,55 +1,97 @@
+import { AddButton } from "@/app/components/ui/AddButton";
 import { IconSymbol } from "@/app/components/ui/IconSymbol";
+import { router } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import TaskItem from "../components/TaskItem";
 import { Task } from "../database/types";
-import { useRepositories } from "../hooks/useRepositories";
+import { useTasks } from "../hooks/useTasks";
 import { useSelectedPet } from "../providers/SelectedPetProvider";
 
 const TaskManager: React.FC = () => {
-  const { taskRepository } = useRepositories();
   const { selectedPetId } = useSelectedPet();
-  const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [todaysTasks, setTodaysTasks] = useState<Task[]>([]);
   const [upcomingTasks, setUpcomingTasks] = useState<Task[]>([]);
   const [overdueTasks, setOverdueTasks] = useState<Task[]>([]);
 
-  const loadTasks = useCallback(async () => {
-    console.log("Selected pet ID: ", selectedPetId);
-    try {
-      const [today, upcoming, overdue] = await Promise.all([
-        taskRepository.getTodaysTasks(),
-        taskRepository.getUpcomingTasks(),
-        taskRepository.getOverdueTasks(),
-      ]);
+  const {
+    tasks,
+    isLoading,
+    error,
+    loadTasks,
+    completeTask: handleTaskComplete,
+    clearAllTasks
+  } = useTasks();
 
-      // Filter tasks if a specific pet is selected
-      const filterByPet = (tasks: Task[]) =>
-        selectedPetId === "all"
-          ? tasks
-          : tasks.filter((task) => task.petId === selectedPetId);
-
-      setTodaysTasks(filterByPet(today));
-      setUpcomingTasks(filterByPet(upcoming));
-      setOverdueTasks(filterByPet(overdue));
-      setError(null);
-    } catch (err) {
-      setError("Failed to load tasks. Please try again.");
-      console.error("Error loading tasks:", err);
+  const filterAndSortTasks = useCallback(() => {
+    if (!tasks.length) {
+      setTodaysTasks([]);
+      setUpcomingTasks([]);
+      setOverdueTasks([]);
+      return;
     }
-  }, [taskRepository, selectedPetId]);
+
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    const filteredTasks = selectedPetId === "all" ? tasks : tasks.filter(task => task.petId === selectedPetId);
+
+    const overdue = filteredTasks.filter(task => 
+      !task.isComplete && new Date(task.dueDate) < now && task.dueDate.split('T')[0] < today
+    );
+
+    const todayList = filteredTasks.filter(task => 
+      !task.isComplete && task.dueDate.startsWith(today)
+    );
+
+    const upcoming = filteredTasks.filter(task => 
+      !task.isComplete && task.dueDate.split('T')[0] > today
+    );
+
+    setOverdueTasks(overdue.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()));
+    setTodaysTasks(todayList.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()));
+    setUpcomingTasks(upcoming.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()));
+  }, [tasks, selectedPetId]);
+
+  const handleClearTasks = useCallback(async () => {
+    Alert.alert(
+      "Clear All Tasks",
+      "Are you sure you want to delete all tasks? This action cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Clear All",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await clearAllTasks();
+            } catch (err) {
+              Alert.alert("Error", "Failed to clear tasks. Please try again.");
+            }
+          }
+        }
+      ]
+    );
+  }, [clearAllTasks]);
 
   useEffect(() => {
-    loadTasks().finally(() => setIsLoading(false));
+    filterAndSortTasks();
+  }, [filterAndSortTasks]);
+
+  useEffect(() => {
+    loadTasks();
   }, [loadTasks]);
 
   const onRefresh = useCallback(async () => {
@@ -57,16 +99,6 @@ const TaskManager: React.FC = () => {
     await loadTasks();
     setIsRefreshing(false);
   }, [loadTasks]);
-
-  const handleTaskComplete = async (taskId: string) => {
-    try {
-      await taskRepository.completeTask(taskId);
-      await loadTasks(); // Reload tasks after completion
-    } catch (err) {
-      console.error("Error completing task:", err);
-      // You might want to show an error message to the user here
-    }
-  };
 
   if (isLoading) {
     return (
@@ -98,6 +130,31 @@ const TaskManager: React.FC = () => {
           <Text style={styles.dateText}>{new Date().toLocaleDateString()}</Text>
         </View>
       </View>
+
+      <AddButton
+        label="Add Task"
+        onPress={() =>
+          router.push({
+            pathname: "/FormModal",
+            params: {
+              title: "Add",
+              action: "create",
+              form: "task",
+            },
+          })
+        }
+      />
+
+      <TouchableOpacity
+        style={[styles.clearButton, !tasks.length && styles.clearButtonDisabled]}
+        onPress={handleClearTasks}
+        disabled={!tasks.length}
+      >
+        <IconSymbol name="trash" size={20} color={tasks.length ? "#DC2626" : "#9CA3AF"} />
+        <Text style={[styles.clearButtonText, !tasks.length && styles.clearButtonTextDisabled]}>
+          Clear All Tasks
+        </Text>
+      </TouchableOpacity>
 
       {overdueTasks.length > 0 && (
         <View style={[styles.section, styles.overdueSection]}>
@@ -249,6 +306,26 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: "#6B7280",
+  },
+  clearButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#F3F4F6",
+    borderRadius: 8,
+  },
+  clearButtonDisabled: {
+    backgroundColor: "#F3F4F6",
+  },
+  clearButtonText: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#DC2626",
+  },
+  clearButtonTextDisabled: {
+    color: "#9CA3AF",
   },
 });
 

@@ -61,8 +61,6 @@ const TaskItem: React.FC<TaskItemProps> = ({
   const shouldShowPet = showPetInfo && pet !== null;
   const isOverdue = showOverdueIndicator && new Date(task.dueDate) < new Date();
 
-  console.log("Should show pet: ", showPetInfo);
-
   const renderContent = () => (
     <View
       style={[styles.container, style, isOverdue && styles.overdueContainer]}

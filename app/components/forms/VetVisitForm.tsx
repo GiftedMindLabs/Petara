@@ -1,21 +1,23 @@
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
-import React, { useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import React, { useCallback, useState } from 'react';
 import { Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { pets } from '../../utils/mockData';
+import { VetVisit } from '../../database/types';
+import { usePets } from '../../hooks/usePets';
+import { useVetVisits } from '../../hooks/useVetVisits';
 
 interface VetVisitFormProps {
-  visit?: {
-    id: string;
-    petId: string;
-    date: string;
-    reason: string;
-    notes: string;
-    vetName: string;
-    weight?: number;
-  };
-  onSubmit: (data: any) => void;
+  visit?: VetVisit;
+  onSubmit: (data: Omit<VetVisit, 'id'>) => void;
   onCancel: () => void;
+}
+
+interface FormErrors {
+  petId?: string;
+  reason?: string;
+  vetName?: string;
+  weight?: string;
 }
 
 const VetVisitForm: React.FC<VetVisitFormProps> = ({
@@ -24,6 +26,9 @@ const VetVisitForm: React.FC<VetVisitFormProps> = ({
   onCancel
 }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const { pets, loadPets } = usePets();
+  const { addVetVisit, updateVetVisit } = useVetVisits();
 
   const [formData, setFormData] = useState({
     petId: visit?.petId || '',
@@ -34,19 +39,68 @@ const VetVisitForm: React.FC<VetVisitFormProps> = ({
     weight: visit?.weight?.toString() || ''
   });
 
-  const handleDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(false);
+  // Use useFocusEffect to reload pets when the form comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadPets();
+    }, [loadPets])
+  );
+
+  const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    setShowDatePicker(Platform.OS === 'ios');
     if (selectedDate) {
       setFormData({ ...formData, date: selectedDate });
     }
   };
 
-  const handleSubmit = () => {
-    onSubmit({
-      ...formData,
-      date: formData.date.toISOString(),
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+
+    if (!formData.petId) {
+      newErrors.petId = 'Please select a pet';
+    }
+
+    if (!formData.reason.trim()) {
+      newErrors.reason = 'Please enter a reason for the visit';
+    }
+
+    if (!formData.vetName.trim()) {
+      newErrors.vetName = 'Please enter the veterinarian\'s name';
+    }
+
+    if (formData.weight && !/^\d*\.?\d*$/.test(formData.weight)) {
+      newErrors.weight = 'Please enter a valid weight';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    const visitData = {
+      petId: formData.petId,
+      date: formData.date.toISOString().split('T')[0], // Format as YYYY-MM-DD
+      reason: formData.reason.trim(),
+      notes: formData.notes.trim(),
+      vetName: formData.vetName.trim(),
       weight: formData.weight ? parseFloat(formData.weight) : undefined,
-    });
+    };
+
+    try {
+      if (visit?.id) {
+        await updateVetVisit(visit.id, visitData);
+      } else {
+        await addVetVisit(visitData);
+      }
+      onSubmit(visitData);
+    } catch (error) {
+      console.error('Error saving vet visit:', error);
+      // You might want to show an error message to the user here
+    }
   };
 
   const formatDate = (date: Date) => {
@@ -57,10 +111,13 @@ const VetVisitForm: React.FC<VetVisitFormProps> = ({
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.formField}>
         <Text style={styles.label}>Pet</Text>
-        <View style={styles.pickerContainer}>
+        <View style={[styles.pickerContainer, errors.petId && styles.inputError]}>
           <Picker
             selectedValue={formData.petId}
-            onValueChange={(value: string) => setFormData({ ...formData, petId: value })}
+            onValueChange={(value: string) => {
+              setFormData({ ...formData, petId: value });
+              setErrors(prev => ({ ...prev, petId: undefined }));
+            }}
             style={styles.picker}
           >
             <Picker.Item label="Select a pet" value="" />
@@ -69,6 +126,7 @@ const VetVisitForm: React.FC<VetVisitFormProps> = ({
             ))}
           </Picker>
         </View>
+        {errors.petId && <Text style={styles.errorText}>{errors.petId}</Text>}
       </View>
 
       <View style={styles.formField}>
@@ -93,40 +151,49 @@ const VetVisitForm: React.FC<VetVisitFormProps> = ({
       <View style={styles.formField}>
         <Text style={styles.label}>Reason for Visit</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, errors.reason && styles.inputError]}
           value={formData.reason}
-          onChangeText={(value) => setFormData({ ...formData, reason: value })}
+          onChangeText={(value) => {
+            setFormData({ ...formData, reason: value });
+            setErrors(prev => ({ ...prev, reason: undefined }));
+          }}
           placeholder="Enter reason for visit"
           placeholderTextColor="#9CA3AF"
         />
+        {errors.reason && <Text style={styles.errorText}>{errors.reason}</Text>}
       </View>
 
       <View style={styles.formField}>
         <Text style={styles.label}>Veterinarian</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, errors.vetName && styles.inputError]}
           value={formData.vetName}
-          onChangeText={(value) => setFormData({ ...formData, vetName: value })}
+          onChangeText={(value) => {
+            setFormData({ ...formData, vetName: value });
+            setErrors(prev => ({ ...prev, vetName: undefined }));
+          }}
           placeholder="Enter veterinarian name"
           placeholderTextColor="#9CA3AF"
         />
+        {errors.vetName && <Text style={styles.errorText}>{errors.vetName}</Text>}
       </View>
 
       <View style={styles.formField}>
         <Text style={styles.label}>Weight (lbs)</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, errors.weight && styles.inputError]}
           value={formData.weight}
           onChangeText={(value) => {
-            // Only allow numbers and decimal point
             if (value === '' || /^\d*\.?\d*$/.test(value)) {
               setFormData({ ...formData, weight: value });
+              setErrors(prev => ({ ...prev, weight: undefined }));
             }
           }}
           placeholder="Enter weight"
           placeholderTextColor="#9CA3AF"
           keyboardType="decimal-pad"
         />
+        {errors.weight && <Text style={styles.errorText}>{errors.weight}</Text>}
       </View>
 
       <View style={styles.formField}>
@@ -184,6 +251,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#1F2937',
   },
+  inputError: {
+    borderColor: '#DC2626',
+  },
+  errorText: {
+    color: '#DC2626',
+    fontSize: 12,
+    marginTop: 4,
+  },
   pickerContainer: {
     borderWidth: 1,
     borderColor: '#D1D5DB',
@@ -203,33 +278,33 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     flexDirection: 'row',
+    justifyContent: 'flex-end',
     gap: 12,
-    marginTop: 16,
-    marginBottom: 24,
+    marginTop: 24,
+    marginBottom: 16,
   },
   button: {
-    flex: 1,
-    paddingVertical: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
     borderRadius: 8,
+    minWidth: 100,
     alignItems: 'center',
-  },
-  cancelButton: {
-    backgroundColor: 'white',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
   },
   submitButton: {
     backgroundColor: '#0D9488',
   },
-  cancelButtonText: {
-    color: '#374151',
-    fontSize: 16,
-    fontWeight: '500',
-  },
   submitButtonText: {
-    color: 'white',
-    fontSize: 16,
+    color: '#FFFFFF',
     fontWeight: '500',
+    fontSize: 16,
+  },
+  cancelButton: {
+    backgroundColor: '#F3F4F6',
+  },
+  cancelButtonText: {
+    color: '#4B5563',
+    fontWeight: '500',
+    fontSize: 16,
   },
 });
 

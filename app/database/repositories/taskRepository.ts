@@ -29,12 +29,11 @@ type TaskInput = Omit<Task, 'id'>;
 type TaskUpdate = Partial<TaskInput>;
 
 export class TaskRepository {
-  constructor(private db: SQLiteDatabase) {}
+  constructor(public db: SQLiteDatabase) {}
   /**
    * Create a new task
    */
   async createTask(task: TaskInput): Promise<Task> {
-    console.log("Database when creating task", this.db)
     try {
       const id = Math.random().toString(36).substring(2, 15);
       const params: SQLiteValue[] = [
@@ -317,6 +316,19 @@ export class TaskRepository {
     );
 
     return result.changes > 0;
+  }
+
+  /**
+   * Clear all tasks from the database
+   */
+  async clearAllTasks(): Promise<boolean> {
+    try {
+      await this.db.runAsync('DELETE FROM tasks', []);
+      return true;
+    } catch (error) {
+      console.error('Error clearing tasks:', error);
+      return false;
+    }
   }
 
   /**

@@ -6,13 +6,12 @@ import {
 import { useFonts } from "expo-font";
 import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Platform, SafeAreaView, View } from "react-native";
+import { SafeAreaView } from "react-native";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 import * as SQLite from "expo-sqlite";
 import { SQLiteProvider } from "expo-sqlite";
-import FloatingActionButton from "./components/ui/FloatingActionButton";
 import { SelectedPetProvider } from "./providers/SelectedPetProvider";
 
 export default function RootLayout() {
@@ -113,7 +112,13 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <SafeAreaView style={{ flex: 1 }}>
-        <SQLiteProvider databaseName="petara.db" onInit={migrateDatabase}>
+        <SQLiteProvider 
+          databaseName="petara.db" 
+          onInit={migrateDatabase}
+          options={{
+            enableChangeListener: true
+          }}
+        >
           <SelectedPetProvider>
             <Stack>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -123,113 +128,6 @@ export default function RootLayout() {
                 options={{ headerShown: false, presentation: "modal" }}
               />
             </Stack>
-            <View
-              style={{
-                position: "absolute",
-                bottom: 0,
-                right: 0,
-                left: 0,
-                zIndex: 1,
-                pointerEvents: "box-none",
-                marginBottom: Platform.select({ ios: 90, android: 70 }),
-              }}
-            >
-              <FloatingActionButton
-                items={[
-                  {
-                    icon: "✓",
-                    label: "Add Task",
-                    onPress: () =>
-                      router.push({
-                        pathname: "/FormModal",
-                        params: {
-                          title: "Add",
-                          action: "create",
-                          form: "task",
-                        },
-                      }),
-                  },
-                  {
-                    icon: "🐾",
-                    label: "Add Pet",
-                    onPress: () =>
-                      router.push({
-                        pathname: "/FormModal",
-                        params: {
-                          title: "Add",
-                          action: "create",
-                          form: "pet",
-                        },
-                      }),
-                  },
-                  {
-                    icon: "👤",
-                    label: "Add Contact",
-                    onPress: () =>
-                      router.push({
-                        pathname: "/FormModal",
-                        params: {
-                          title: "Add",
-                          action: "create",
-                          form: "contact",
-                        },
-                      }),
-                  },
-                  {
-                    icon: "🏥",
-                    label: "Add Vet Visit",
-                    onPress: () =>
-                      router.push({
-                        pathname: "/FormModal",
-                        params: {
-                          title: "Add",
-                          action: "create",
-                          form: "vetVisit",
-                        },
-                      }),
-                  },
-                  {
-                    icon: "💉",
-                    label: "Add Vaccination",
-                    onPress: () =>
-                      router.push({
-                        pathname: "/FormModal",
-                        params: {
-                          title: "Add",
-                          action: "create",
-                          form: "vaccination",
-                        },
-                      }),
-                  },
-                  {
-                    icon: "💊",
-                    label: "Add Treatment",
-                    onPress: () =>
-                      router.push({
-                        pathname: "/FormModal",
-                        params: {
-                          title: "Add",
-                          action: "create",
-                          form: "treatment",
-                        },
-                      }),
-                  },
-                  {
-                    icon: "💰",
-                    label: "Add Expense",
-                    onPress: () =>
-                      router.push({
-                        pathname: "/FormModal",
-                        params: {
-                          title: "Add",
-                          action: "create",
-                          form: "expense",
-                        },
-                      }),
-                  },
-                ]}
-              />
-            </View>
             <StatusBar style="auto" />
           </SelectedPetProvider>
         </SQLiteProvider>

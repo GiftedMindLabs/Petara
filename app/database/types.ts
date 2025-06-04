@@ -1,11 +1,3 @@
-export interface SQLiteDatabase {
-  transaction(
-    callback: (transaction: SQLTransaction) => void,
-    error?: (error: Error) => void,
-    success?: () => void
-  ): void;
-}
-
 export interface SQLTransaction {
   executeSql(
     sqlStatement: string,
@@ -93,4 +85,4 @@ export interface Vaccination {
   administeredBy: string;
   lotNumber: string;
   manufacturer: string;
-} 
+}

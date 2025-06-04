@@ -14,18 +14,30 @@ import {
 } from "react-native";
 import { Task } from "../../database/types";
 import { useRepositories } from "../../hooks/useRepositories";
+import { useTasks } from "../../hooks/useTasks";
 
 type TaskType = "feeding" | "medication" | "walk" | "grooming" | "other";
 type RecurrencePattern = "daily" | "weekly" | "monthly" | "yearly";
 
 interface TaskFormProps {
-  task?: Partial<Task>;
+  task?: Task;
   onSubmit: (task: Task) => void;
   onCancel: () => void;
 }
 
+const weekDays = [
+  { label: "Sunday", value: 0 },
+  { label: "Monday", value: 1 },
+  { label: "Tuesday", value: 2 },
+  { label: "Wednesday", value: 3 },
+  { label: "Thursday", value: 4 },
+  { label: "Friday", value: 5 },
+  { label: "Saturday", value: 6 },
+];
+
 const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit, onCancel }) => {
-  const { taskRepository, petRepository } = useRepositories();
+  const { petRepository } = useRepositories();
+  const { addTask, updateTask } = useTasks();
   const [pets, setPets] = useState<Array<{ id: string; name: string }>>([]);
   
   useEffect(() => {
@@ -87,6 +99,26 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit, onCancel }) => {
     }
   };
 
+  const toggleWeekDay = (day: number) => {
+    const weekDays = [...formData.recurrenceWeekDays];
+    const index = weekDays.indexOf(day);
+    if (index === -1) {
+      weekDays.push(day);
+    } else {
+      weekDays.splice(index, 1);
+    }
+    weekDays.sort();
+    setFormData({ ...formData, recurrenceWeekDays: weekDays });
+  };
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString();
+  };
+
   const handleSubmit = async () => {
     if (!formData.petId) {
       Alert.alert("Error", "Please select a pet");
@@ -116,41 +148,23 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit, onCancel }) => {
         }),
       };
 
-      const createdTask = await taskRepository.createTask(taskData);
-      onSubmit(createdTask);
+      if (task?.id) {
+        // Update existing task
+        const success = await updateTask(task.id, taskData);
+        if (success) {
+          onSubmit({ ...taskData, id: task.id });
+        } else {
+          throw new Error("Failed to update task");
+        }
+      } else {
+        // Create new task
+        const newTask = await addTask(taskData);
+        onSubmit(newTask);
+      }
     } catch (error) {
-      console.error('Error creating task:', error);
-      Alert.alert("Error", "Failed to create task. Please try again.");
+      console.error('Error saving task:', error);
+      Alert.alert("Error", "Failed to save task. Please try again.");
     }
-  };
-
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString();
-  };
-
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  };
-
-  const weekDays = [
-    { label: "Sunday", value: 0 },
-    { label: "Monday", value: 1 },
-    { label: "Tuesday", value: 2 },
-    { label: "Wednesday", value: 3 },
-    { label: "Thursday", value: 4 },
-    { label: "Friday", value: 5 },
-    { label: "Saturday", value: 6 },
-  ];
-
-  const toggleWeekDay = (dayValue: number) => {
-    const currentWeekDays = [...formData.recurrenceWeekDays];
-    const index = currentWeekDays.indexOf(dayValue);
-    if (index === -1) {
-      currentWeekDays.push(dayValue);
-    } else {
-      currentWeekDays.splice(index, 1);
-    }
-    setFormData({ ...formData, recurrenceWeekDays: currentWeekDays });
   };
 
   return (
@@ -211,7 +225,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit, onCancel }) => {
             onPress={() => setShowDatePicker(true)}
           >
             <Text style={styles.dateTimeText}>
-              {formatDate(formData.dueDate)}
+              {formData.dueDate.toLocaleDateString()}
             </Text>
           </TouchableOpacity>
           {showDatePicker && (
@@ -408,7 +422,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit, onCancel }) => {
                   onPress={() => setShowEndDatePicker(true)}
                 >
                   <Text style={styles.dateTimeText}>
-                    {formatDate(formData.recurrenceEndDate)}
+                    {formData.recurrenceEndDate.toLocaleDateString()}
                   </Text>
                 </TouchableOpacity>
                 {showEndDatePicker && (
@@ -556,7 +570,6 @@ const styles = StyleSheet.create({
   },
   weekDayText: {
     fontSize: 14,
-    fontWeight: "500",
     color: "#4B5563",
   },
   weekDayTextSelected: {

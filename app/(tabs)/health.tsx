@@ -1,25 +1,39 @@
+import { AddButton } from '@/app/components/ui/AddButton';
 import { IconSymbol } from '@/app/components/ui/IconSymbol';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { pets, treatments, Vaccination, vaccinations, vetVisits } from '../utils/mockData';
+import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { usePets } from '../hooks/usePets';
+import { useTreatments } from '../hooks/useTreatments';
+import { useVaccinations } from '../hooks/useVaccinations';
+import { useVetVisits } from '../hooks/useVetVisits';
+import { useSelectedPet } from '../providers/SelectedPetProvider';
 
 type TabType = 'visits' | 'vaccinations' | 'treatments';
 
 const VetHealth: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('visits');
-  const [selectedPetId, setSelectedPetId] = useState<string>('all');
+  const { selectedPetId } = useSelectedPet();
+  const { pets } = usePets();
+  const { vaccinations, isLoading: isLoadingVaccinations } = useVaccinations();
+  const { treatments, isLoading: isLoadingTreatments } = useTreatments();
+  const { visits, isLoading: isLoadingVisits, error } = useVetVisits();
 
-  const filteredVisits = selectedPetId === 'all' 
-    ? vetVisits 
-    : vetVisits.filter(visit => visit.petId === selectedPetId);
+  if (isLoadingVaccinations || isLoadingTreatments || isLoadingVisits) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0D9488" />
+      </View>
+    );
+  }
 
-  const filteredVaccinations = selectedPetId === 'all'
-    ? vaccinations
-    : vaccinations.filter((vacc: Vaccination) => vacc.petId === selectedPetId);
-
-  const filteredTreatments = selectedPetId === 'all'
-    ? treatments
-    : treatments.filter(treat => treat.petId === selectedPetId);
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>{error}</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>
@@ -71,39 +85,75 @@ const VetHealth: React.FC = () => {
 
       {activeTab === 'visits' && (
         <View style={styles.contentContainer}>
-          {filteredVisits.map(visit => {
-            const pet = pets.find(p => p.id === visit.petId);
-            return (
-              <View key={visit.id} style={styles.card}>
-                {selectedPetId === 'all' && (
-                  <View style={styles.petInfo}>
-                    <Image source={{ uri: pet?.imageUrl }} style={styles.petImage} />
-                    <Text style={styles.petName}>
-                      {pet?.name}
+          <AddButton
+            label="Add Vet Visit"
+            onPress={() =>
+              router.push({
+                pathname: "/FormModal",
+                params: {
+                  title: "Add",
+                  action: "create",
+                  form: "vetVisit",
+                },
+              })
+            }
+          />
+          {visits.length > 0 ? (
+            visits.map(visit => {
+              const pet = pets.find(p => p.id === visit.petId);
+              return (
+                <View key={visit.id} style={styles.card}>
+                  {selectedPetId === 'all' && pet && (
+                    <View style={styles.petInfo}>
+                      <Image source={{ uri: pet.imageUrl }} style={styles.petImage} />
+                      <Text style={styles.petName}>
+                        {pet.name}
+                      </Text>
+                    </View>
+                  )}
+                  <View style={styles.cardContent}>
+                    <Text style={styles.cardTitle}>{visit.reason}</Text>
+                    <Text style={styles.timestamp}>
+                      {new Date(visit.date).toLocaleDateString()}
                     </Text>
                   </View>
-                )}
-                <View style={styles.cardContent}>
-                  <Text style={styles.cardTitle}>{visit.reason}</Text>
-                  <Text style={styles.timestamp}>
-                    {new Date(visit.date).toLocaleDateString()}
-                  </Text>
+                  {visit.notes && <Text style={styles.notes}>{visit.notes}</Text>}
+                  <View style={styles.footer}>
+                    <Text style={styles.footerText}>{visit.vetName}</Text>
+                    {visit.weight && (
+                      <>
+                        <Text style={styles.bullet}>•</Text>
+                        <Text style={styles.footerText}>{visit.weight} lbs</Text>
+                      </>
+                    )}
+                  </View>
                 </View>
-                <Text style={styles.notes}>{visit.notes}</Text>
-                <View style={styles.footer}>
-                  <Text style={styles.footerText}>{visit.vetName}</Text>
-                  <Text style={styles.bullet}>•</Text>
-                  <Text style={styles.footerText}>{visit.weight} lbs</Text>
-                </View>
-              </View>
-            );
-          })}
+              );
+            })
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>No vet visits found</Text>
+            </View>
+          )}
         </View>
       )}
 
       {activeTab === 'vaccinations' && (
         <View style={styles.contentContainer}>
-          {filteredVaccinations.map(vaccination => {
+          <AddButton
+            label="Add Vaccination"
+            onPress={() =>
+              router.push({
+                pathname: "/FormModal",
+                params: {
+                  title: "Add",
+                  action: "create",
+                  form: "vaccination",
+                },
+              })
+            }
+          />
+          {vaccinations.map(vaccination => {
             const pet = pets.find(p => p.id === vaccination.petId);
             return (
               <View key={vaccination.id} style={styles.card}>
@@ -147,7 +197,20 @@ const VetHealth: React.FC = () => {
 
       {activeTab === 'treatments' && (
         <View style={styles.contentContainer}>
-          {filteredTreatments.map(treatment => {
+          <AddButton
+            label="Add Treatment"
+            onPress={() =>
+              router.push({
+                pathname: "/FormModal",
+                params: {
+                  title: "Add",
+                  action: "create",
+                  form: "treatment",
+                },
+              })
+            }
+          />
+          {treatments.map(treatment => {
             const pet = pets.find(p => p.id === treatment.petId);
             return (
               <View key={treatment.id} style={styles.card}>
@@ -203,12 +266,6 @@ const VetHealth: React.FC = () => {
           })}
         </View>
       )}
-
-      <TouchableOpacity style={styles.addButton}>
-        <Text style={styles.buttonText}>
-          Add New {activeTab.charAt(0).toUpperCase() + activeTab.slice(1, -1)}
-        </Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -365,7 +422,42 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#FFFFFF',
     fontWeight: '500'
-  }
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+  },
+  errorText: {
+    color: '#DC2626',
+    textAlign: 'center',
+    fontSize: 16,
+  },
+  emptyState: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  emptyText: {
+    color: '#6B7280',
+    fontSize: 14,
+  },
 });
 
 export default VetHealth;

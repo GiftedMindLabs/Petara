@@ -1,5 +1,7 @@
+import { AddButton } from '@/app/components/ui/AddButton';
 import { IconSymbol } from '@/app/components/ui/IconSymbol';
 import * as Linking from 'expo-linking';
+import { router } from 'expo-router';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -54,6 +56,20 @@ const Contacts: React.FC = () => {
         <IconSymbol name="person.fill" size={20} color="#0D9488" />
       </View>
 
+      <AddButton
+        label="Add Contact"
+        onPress={() =>
+          router.push({
+            pathname: "/FormModal",
+            params: {
+              title: "Add",
+              action: "create",
+              form: "contact",
+            },
+          })
+        }
+      />
+
       <View style={styles.contactsList}>
         {contacts.map(contact => (
           <View key={contact.id} style={styles.contactCard}>
@@ -99,10 +115,6 @@ const Contacts: React.FC = () => {
           </View>
         ))}
       </View>
-
-      <TouchableOpacity style={styles.addButton}>
-        <Text style={styles.addButtonText}>Add New Contact</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -191,22 +203,6 @@ const styles = StyleSheet.create({
   notes: {
     fontSize: 14,
     color: '#6B7280'
-  },
-  addButton: {
-    marginTop: 16,
-    backgroundColor: '#0D9488',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2
-  },
-  addButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '500'
   }
 });
 

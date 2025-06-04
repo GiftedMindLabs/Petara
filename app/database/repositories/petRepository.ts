@@ -20,6 +20,7 @@ type SQLiteValue = string | number | null;
 
 export class PetRepository {
   constructor(private db: SQLiteDatabase) {}
+
   /**
    * Create a new pet
    */

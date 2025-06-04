@@ -1,8 +1,9 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import { router } from 'expo-router';
+import React, { useState } from 'react';
 import { Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Pet } from '../database/types';
-import { useRepositories } from '../hooks/useRepositories';
+import { usePets } from '../hooks/usePets';
+import { IconSymbol } from './ui/IconSymbol';
 
 interface PetSelectorProps {
   selectedPetId: string;
@@ -13,34 +14,20 @@ const PetSelector: React.FC<PetSelectorProps> = ({
   selectedPetId,
   onPetChange
 }) => {
-  const { petRepository } = useRepositories();
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [pets, setPets] = useState<Pet[]>([]);
+  const { pets } = usePets();
   const selectedPet = pets.find(p => p.id === selectedPetId);
-
-  useEffect(() => {
-    const loadPets = async () => {
-      try {
-        const allPets = await petRepository.getLivingPets();
-        setPets(allPets);
-        
-      } catch (error) {
-        console.error('Error loading pets:', error);
-      }
-    };
-    loadPets();
-  }, [petRepository]);
 
   return (
     <View>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.selectorButton}
         onPress={() => setIsModalVisible(true)}
       >
         {selectedPetId !== 'all' && selectedPet ? (
-          <Image 
-            source={{ uri: selectedPet.imageUrl }} 
-            style={styles.petImage} 
+          <Image
+            source={{ uri: selectedPet.imageUrl }}
+            style={styles.petImage}
           />
         ) : (
           <View style={styles.allPetsIcon}>
@@ -59,7 +46,7 @@ const PetSelector: React.FC<PetSelectorProps> = ({
         animationType="fade"
         onRequestClose={() => setIsModalVisible(false)}
       >
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
           onPress={() => setIsModalVisible(false)}
@@ -98,9 +85,9 @@ const PetSelector: React.FC<PetSelectorProps> = ({
                   setIsModalVisible(false);
                 }}
               >
-                <Image 
-                  source={{ uri: pet.imageUrl }} 
-                  style={styles.petImage} 
+                <Image
+                  source={{ uri: pet.imageUrl }}
+                  style={styles.petImage}
                 />
                 <Text style={[
                   styles.optionText,
@@ -110,6 +97,26 @@ const PetSelector: React.FC<PetSelectorProps> = ({
                 </Text>
               </TouchableOpacity>
             ))}
+
+            <View style={styles.divider} />
+
+            <TouchableOpacity
+              style={styles.addPetButton}
+              onPress={() => {
+                setIsModalVisible(false);
+                router.push({
+                  pathname: "/FormModal",
+                  params: {
+                    title: "Add",
+                    action: "create",
+                    form: "pet",
+                  },
+                });
+              }}
+            >
+              <IconSymbol name="plus" size={16} color="#0D9488" />
+              <Text style={styles.addPetText}>Add New Pet</Text>
+            </TouchableOpacity>
           </View>
         </TouchableOpacity>
       </Modal>
@@ -184,7 +191,24 @@ const styles = StyleSheet.create({
   },
   selectedOptionText: {
     color: '#0D9488'
-  }
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#F3F4F6',
+    marginVertical: 4,
+  },
+  addPetButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 8,
+  },
+  addPetText: {
+    fontSize: 14,
+    color: '#0D9488',
+    fontWeight: '500',
+    marginLeft: 8,
+  },
 });
 
 export default PetSelector;

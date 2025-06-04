@@ -1,24 +1,14 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import React, { useState } from 'react';
-import { Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { pets } from '../../utils/mockData';
-
-type TreatmentStatus = 'ongoing' | 'scheduled' | 'completed';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Treatment } from '../../database/types';
+import { usePets } from '../../hooks/usePets';
+import { useTreatments } from '../../hooks/useTreatments';
 
 interface TreatmentFormProps {
-  treatment?: {
-    id: string;
-    petId: string;
-    name: string;
-    type: string;
-    startDate: string;
-    endDate?: string;
-    frequency: string;
-    dosage: string;
-    status: TreatmentStatus;
-  };
-  onSubmit: (data: any) => void;
+  treatment?: Treatment;
+  onSubmit: (data: Omit<Treatment, 'id'>) => void;
   onCancel: () => void;
 }
 
@@ -29,13 +19,15 @@ const TreatmentForm: React.FC<TreatmentFormProps> = ({
 }) => {
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const { pets } = usePets();
+  const { addTreatment, updateTreatment } = useTreatments();
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Omit<Treatment, 'id'>>({
     petId: treatment?.petId || '',
     name: treatment?.name || '',
     type: treatment?.type || '',
-    startDate: treatment?.startDate ? new Date(treatment.startDate) : new Date(),
-    endDate: treatment?.endDate ? new Date(treatment.endDate) : undefined,
+    startDate: treatment?.startDate || new Date().toISOString(),
+    endDate: treatment?.endDate,
     frequency: treatment?.frequency || '',
     dosage: treatment?.dosage || '',
     status: treatment?.status || 'scheduled'
@@ -44,27 +36,33 @@ const TreatmentForm: React.FC<TreatmentFormProps> = ({
   const handleStartDateChange = (event: any, selectedDate?: Date) => {
     setShowStartDatePicker(false);
     if (selectedDate) {
-      setFormData({ ...formData, startDate: selectedDate });
+      setFormData({ ...formData, startDate: selectedDate.toISOString() });
     }
   };
 
   const handleEndDateChange = (event: any, selectedDate?: Date) => {
     setShowEndDatePicker(false);
     if (selectedDate) {
-      setFormData({ ...formData, endDate: selectedDate });
+      setFormData({ ...formData, endDate: selectedDate.toISOString() });
     }
   };
 
-  const handleSubmit = () => {
-    onSubmit({
-      ...formData,
-      startDate: formData.startDate.toISOString(),
-      endDate: formData.endDate?.toISOString(),
-    });
+  const handleSubmit = async () => {
+    try {
+      if (treatment?.id) {
+        await updateTreatment(treatment.id, formData);
+      } else {
+        await addTreatment(formData);
+      }
+      onSubmit(formData);
+    } catch (error) {
+      console.error('Error saving treatment:', error);
+      // You might want to show an error message to the user here
+    }
   };
 
-  const formatDate = (date?: Date) => {
-    return date ? date.toLocaleDateString() : '';
+  const formatDate = (date?: string) => {
+    return date ? new Date(date).toLocaleDateString() : '';
   };
 
   return (
@@ -107,42 +105,42 @@ const TreatmentForm: React.FC<TreatmentFormProps> = ({
         />
       </View>
 
-      <View style={styles.row}>
-        <View style={[styles.formField, styles.flex1]}>
-          <Text style={styles.label}>Start Date</Text>
-          <TouchableOpacity
-            style={styles.input}
-            onPress={() => setShowStartDatePicker(true)}
-          >
-            <Text style={styles.dateText}>{formatDate(formData.startDate)}</Text>
-          </TouchableOpacity>
-          {showStartDatePicker && (
-            <DateTimePicker
-              value={formData.startDate}
-              mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              onChange={handleStartDateChange}
-            />
-          )}
-        </View>
+      <View style={styles.formField}>
+        <Text style={styles.label}>Start Date</Text>
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setShowStartDatePicker(true)}
+        >
+          <Text style={styles.dateButtonText}>
+            {formatDate(formData.startDate)}
+          </Text>
+        </TouchableOpacity>
+        {showStartDatePicker && (
+          <DateTimePicker
+            value={new Date(formData.startDate)}
+            mode="date"
+            onChange={handleStartDateChange}
+          />
+        )}
+      </View>
 
-        <View style={[styles.formField, styles.flex1]}>
-          <Text style={styles.label}>End Date</Text>
-          <TouchableOpacity
-            style={styles.input}
-            onPress={() => setShowEndDatePicker(true)}
-          >
-            <Text style={styles.dateText}>{formatDate(formData.endDate)}</Text>
-          </TouchableOpacity>
-          {showEndDatePicker && (
-            <DateTimePicker
-              value={formData.endDate || new Date()}
-              mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              onChange={handleEndDateChange}
-            />
-          )}
-        </View>
+      <View style={styles.formField}>
+        <Text style={styles.label}>End Date (Optional)</Text>
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setShowEndDatePicker(true)}
+        >
+          <Text style={styles.dateButtonText}>
+            {formatDate(formData.endDate)}
+          </Text>
+        </TouchableOpacity>
+        {showEndDatePicker && (
+          <DateTimePicker
+            value={formData.endDate ? new Date(formData.endDate) : new Date()}
+            mode="date"
+            onChange={handleEndDateChange}
+          />
+        )}
       </View>
 
       <View style={styles.formField}>
@@ -151,7 +149,7 @@ const TreatmentForm: React.FC<TreatmentFormProps> = ({
           style={styles.input}
           value={formData.frequency}
           onChangeText={(value) => setFormData({ ...formData, frequency: value })}
-          placeholder="e.g., Twice daily, Every 8 hours"
+          placeholder="Enter frequency (e.g., 'Twice daily')"
           placeholderTextColor="#9CA3AF"
         />
       </View>
@@ -162,7 +160,7 @@ const TreatmentForm: React.FC<TreatmentFormProps> = ({
           style={styles.input}
           value={formData.dosage}
           onChangeText={(value) => setFormData({ ...formData, dosage: value })}
-          placeholder="e.g., 1 tablet, 5ml"
+          placeholder="Enter dosage"
           placeholderTextColor="#9CA3AF"
         />
       </View>
@@ -172,7 +170,8 @@ const TreatmentForm: React.FC<TreatmentFormProps> = ({
         <View style={styles.pickerContainer}>
           <Picker
             selectedValue={formData.status}
-            onValueChange={(value: TreatmentStatus) => setFormData({ ...formData, status: value })}
+            onValueChange={(value: 'ongoing' | 'scheduled' | 'completed') => 
+              setFormData({ ...formData, status: value })}
             style={styles.picker}
           >
             <Picker.Item label="Scheduled" value="scheduled" />
@@ -187,14 +186,14 @@ const TreatmentForm: React.FC<TreatmentFormProps> = ({
           style={[styles.button, styles.cancelButton]}
           onPress={onCancel}
         >
-          <Text style={styles.cancelButtonText}>Cancel</Text>
+          <Text style={styles.buttonText}>Cancel</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.button, styles.submitButton]}
           onPress={handleSubmit}
         >
-          <Text style={styles.submitButtonText}>
-            {treatment ? 'Save Changes' : 'Add Treatment'}
+          <Text style={[styles.buttonText, styles.submitButtonText]}>
+            {treatment ? 'Update' : 'Add'} Treatment
           </Text>
         </TouchableOpacity>
       </View>
@@ -233,14 +232,14 @@ const styles = StyleSheet.create({
   picker: {
     backgroundColor: 'white',
   },
-  row: {
-    flexDirection: 'row',
-    gap: 16,
+  dateButton: {
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
-  flex1: {
-    flex: 1,
-  },
-  dateText: {
+  dateButtonText: {
     fontSize: 16,
     color: '#1F2937',
   },
@@ -257,23 +256,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButton: {
-    backgroundColor: 'white',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    backgroundColor: '#EF4444',
   },
   submitButton: {
     backgroundColor: '#0D9488',
   },
-  cancelButtonText: {
-    color: '#374151',
+  buttonText: {
+    color: 'white',
     fontSize: 16,
     fontWeight: '500',
   },
   submitButtonText: {
     color: 'white',
-    fontSize: 16,
-    fontWeight: '500',
-  },
+  }
 });
 
 export default TreatmentForm;

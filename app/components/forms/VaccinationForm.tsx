@@ -1,20 +1,14 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import React, { useState } from 'react';
-import { Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { pets } from '../../utils/mockData';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Vaccination } from '../../database/types';
+import { usePets } from '../../hooks/usePets';
+import { useVaccinations } from '../../hooks/useVaccinations';
 
 interface VaccinationFormProps {
-  vaccination?: {
-    id: string;
-    petId: string;
-    name: string;
-    date: string;
-    nextDue: string;
-    provider: string;
-    notes: string;
-  };
-  onSubmit: (data: any) => void;
+  vaccination?: Vaccination;
+  onSubmit: (data: Omit<Vaccination, 'id'>) => void;
   onCancel: () => void;
 }
 
@@ -25,40 +19,49 @@ const VaccinationForm: React.FC<VaccinationFormProps> = ({
 }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showNextDuePicker, setShowNextDuePicker] = useState(false);
+  const { pets } = usePets();
+  const { addVaccination, updateVaccination } = useVaccinations();
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Omit<Vaccination, 'id'>>({
     petId: vaccination?.petId || '',
     name: vaccination?.name || '',
-    date: vaccination?.date ? new Date(vaccination.date) : new Date(),
-    nextDue: vaccination?.nextDue ? new Date(vaccination.nextDue) : new Date(),
-    provider: vaccination?.provider || '',
-    notes: vaccination?.notes || ''
+    dateGiven: vaccination?.dateGiven || new Date().toISOString(),
+    dueDate: vaccination?.dueDate || new Date().toISOString(),
+    administeredBy: vaccination?.administeredBy || '',
+    lotNumber: vaccination?.lotNumber || '',
+    manufacturer: vaccination?.manufacturer || ''
   });
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
     setShowDatePicker(false);
     if (selectedDate) {
-      setFormData({ ...formData, date: selectedDate });
+      setFormData({ ...formData, dateGiven: selectedDate.toISOString() });
     }
   };
 
   const handleNextDueChange = (event: any, selectedDate?: Date) => {
     setShowNextDuePicker(false);
     if (selectedDate) {
-      setFormData({ ...formData, nextDue: selectedDate });
+      setFormData({ ...formData, dueDate: selectedDate.toISOString() });
     }
   };
 
-  const handleSubmit = () => {
-    onSubmit({
-      ...formData,
-      date: formData.date.toISOString(),
-      nextDue: formData.nextDue.toISOString(),
-    });
+  const handleSubmit = async () => {
+    try {
+      if (vaccination?.id) {
+        await updateVaccination(vaccination.id, formData);
+      } else {
+        await addVaccination(formData);
+      }
+      onSubmit(formData);
+    } catch (error) {
+      console.error('Error saving vaccination:', error);
+      // You might want to show an error message to the user here
+    }
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString();
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString();
   };
 
   return (
@@ -90,66 +93,74 @@ const VaccinationForm: React.FC<VaccinationFormProps> = ({
         />
       </View>
 
-      <View style={styles.row}>
-        <View style={[styles.formField, styles.flex1]}>
-          <Text style={styles.label}>Date Given</Text>
-          <TouchableOpacity
-            style={styles.input}
-            onPress={() => setShowDatePicker(true)}
-          >
-            <Text style={styles.dateText}>{formatDate(formData.date)}</Text>
-          </TouchableOpacity>
-          {showDatePicker && (
-            <DateTimePicker
-              value={formData.date}
-              mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              onChange={handleDateChange}
-            />
-          )}
-        </View>
-
-        <View style={[styles.formField, styles.flex1]}>
-          <Text style={styles.label}>Next Due</Text>
-          <TouchableOpacity
-            style={styles.input}
-            onPress={() => setShowNextDuePicker(true)}
-          >
-            <Text style={styles.dateText}>{formatDate(formData.nextDue)}</Text>
-          </TouchableOpacity>
-          {showNextDuePicker && (
-            <DateTimePicker
-              value={formData.nextDue}
-              mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              onChange={handleNextDueChange}
-              minimumDate={formData.date}
-            />
-          )}
-        </View>
+      <View style={styles.formField}>
+        <Text style={styles.label}>Date Given</Text>
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setShowDatePicker(true)}
+        >
+          <Text style={styles.dateButtonText}>
+            {formatDate(formData.dateGiven)}
+          </Text>
+        </TouchableOpacity>
+        {showDatePicker && (
+          <DateTimePicker
+            value={new Date(formData.dateGiven)}
+            mode="date"
+            onChange={handleDateChange}
+          />
+        )}
       </View>
 
       <View style={styles.formField}>
-        <Text style={styles.label}>Provider</Text>
+        <Text style={styles.label}>Due Date</Text>
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setShowNextDuePicker(true)}
+        >
+          <Text style={styles.dateButtonText}>
+            {formatDate(formData.dueDate)}
+          </Text>
+        </TouchableOpacity>
+        {showNextDuePicker && (
+          <DateTimePicker
+            value={new Date(formData.dueDate)}
+            mode="date"
+            onChange={handleNextDueChange}
+          />
+        )}
+      </View>
+
+      <View style={styles.formField}>
+        <Text style={styles.label}>Administered By</Text>
         <TextInput
           style={styles.input}
-          value={formData.provider}
-          onChangeText={(value) => setFormData({ ...formData, provider: value })}
-          placeholder="Enter provider name"
+          value={formData.administeredBy}
+          onChangeText={(value) => setFormData({ ...formData, administeredBy: value })}
+          placeholder="Enter administrator name"
           placeholderTextColor="#9CA3AF"
         />
       </View>
 
       <View style={styles.formField}>
-        <Text style={styles.label}>Notes</Text>
+        <Text style={styles.label}>Lot Number</Text>
         <TextInput
-          style={[styles.input, styles.textArea]}
-          value={formData.notes}
-          onChangeText={(value) => setFormData({ ...formData, notes: value })}
-          placeholder="Enter notes"
+          style={styles.input}
+          value={formData.lotNumber}
+          onChangeText={(value) => setFormData({ ...formData, lotNumber: value })}
+          placeholder="Enter lot number"
           placeholderTextColor="#9CA3AF"
-          multiline
-          numberOfLines={3}
+        />
+      </View>
+
+      <View style={styles.formField}>
+        <Text style={styles.label}>Manufacturer</Text>
+        <TextInput
+          style={styles.input}
+          value={formData.manufacturer}
+          onChangeText={(value) => setFormData({ ...formData, manufacturer: value })}
+          placeholder="Enter manufacturer"
+          placeholderTextColor="#9CA3AF"
         />
       </View>
 
@@ -158,14 +169,14 @@ const VaccinationForm: React.FC<VaccinationFormProps> = ({
           style={[styles.button, styles.cancelButton]}
           onPress={onCancel}
         >
-          <Text style={styles.cancelButtonText}>Cancel</Text>
+          <Text style={styles.buttonText}>Cancel</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.button, styles.submitButton]}
           onPress={handleSubmit}
         >
-          <Text style={styles.submitButtonText}>
-            {vaccination ? 'Save Changes' : 'Add Vaccination'}
+          <Text style={[styles.buttonText, styles.submitButtonText]}>
+            {vaccination ? 'Update' : 'Add'} Vaccination
           </Text>
         </TouchableOpacity>
       </View>
@@ -204,18 +215,14 @@ const styles = StyleSheet.create({
   picker: {
     backgroundColor: 'white',
   },
-  textArea: {
-    minHeight: 80,
-    textAlignVertical: 'top',
+  dateButton: {
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
-  row: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  flex1: {
-    flex: 1,
-  },
-  dateText: {
+  dateButtonText: {
     fontSize: 16,
     color: '#1F2937',
   },
@@ -232,23 +239,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButton: {
-    backgroundColor: 'white',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    backgroundColor: '#EF4444',
   },
   submitButton: {
     backgroundColor: '#0D9488',
   },
-  cancelButtonText: {
-    color: '#374151',
+  buttonText: {
+    color: 'white',
     fontSize: 16,
     fontWeight: '500',
   },
   submitButtonText: {
     color: 'white',
-    fontSize: 16,
-    fontWeight: '500',
-  },
+  }
 });
 
 export default VaccinationForm;

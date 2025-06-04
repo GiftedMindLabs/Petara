@@ -1,4 +1,6 @@
+import { AddButton } from '@/app/components/ui/AddButton';
 import { IconSymbol } from '@/app/components/ui/IconSymbol';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -53,6 +55,20 @@ const Expenses: React.FC = () => {
         <Text style={styles.title}>Expenses</Text>
         <IconSymbol name="dollarsign.circle.fill" size={20} color="#0D9488" />
       </View>
+
+      <AddButton
+        label="Add Expense"
+        onPress={() =>
+          router.push({
+            pathname: "/FormModal",
+            params: {
+              title: "Add",
+              action: "create",
+              form: "expense",
+            },
+          })
+        }
+      />
 
       <View style={styles.summaryContainer}>
         <View style={styles.summaryCard}>
@@ -129,10 +145,6 @@ const Expenses: React.FC = () => {
           </View>
         ))}
       </View>
-
-      <TouchableOpacity style={styles.addButton}>
-        <Text style={styles.addButtonText}>Add New Expense</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -272,22 +284,6 @@ const styles = StyleSheet.create({
   petId: {
     fontSize: 12,
     color: '#6B7280'
-  },
-  addButton: {
-    marginTop: 16,
-    backgroundColor: '#0D9488',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2
-  },
-  addButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '500'
   }
 });
 

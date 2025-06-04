@@ -1,9 +1,9 @@
+import { usePets } from '@/app/hooks/usePets';
 import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
 import { Alert, Image, Platform, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Pet } from '../../database/types';
-import { useRepositories } from '../../hooks/useRepositories';
 import { IconSymbol } from '../ui/IconSymbol';
 
 interface PetFormProps {
@@ -20,7 +20,7 @@ const PetForm: React.FC<PetFormProps> = ({
   onSubmit,
   onCancel
 }) => {
-  const { petRepository } = useRepositories();
+  const {pets, addPet, updatePet} = usePets();
   const [formData, setFormData] = useState({
     name: pet?.name || '',
     species: pet?.species || 'dog' as PetSpecies,
@@ -78,10 +78,10 @@ const PetForm: React.FC<PetFormProps> = ({
 
       let result;
       if (pet?.id) {
-        await petRepository.updatePet(pet.id, petData);
+        await updatePet(pet.id, petData);
         result = { ...petData, id: pet.id };
       } else {
-        result = await petRepository.createPet(petData);
+        result = await addPet(petData);
       }
 
       onSubmit(result);
