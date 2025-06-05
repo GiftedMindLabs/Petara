@@ -1,37 +1,59 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Treatment } from '../../database/types';
 import { usePets } from '../../hooks/usePets';
 import { useTreatments } from '../../hooks/useTreatments';
+import { useSelectedPet } from '../../providers/SelectedPetProvider';
 
 interface TreatmentFormProps {
-  treatment?: Treatment;
+  treatmentId?: string;
   onSubmit: (data: Omit<Treatment, 'id'>) => void;
   onCancel: () => void;
 }
 
 const TreatmentForm: React.FC<TreatmentFormProps> = ({
-  treatment,
+  treatmentId,
   onSubmit,
   onCancel
 }) => {
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const { pets } = usePets();
-  const { addTreatment, updateTreatment } = useTreatments();
+  const { selectedPetId } = useSelectedPet();
+  const { addTreatment, updateTreatment, getTreatmentById } = useTreatments();
+  const [treatment, setTreatment] = useState<Treatment | null>(null);
 
   const [formData, setFormData] = useState<Omit<Treatment, 'id'>>({
-    petId: treatment?.petId || '',
-    name: treatment?.name || '',
-    type: treatment?.type || '',
-    startDate: treatment?.startDate || new Date().toISOString(),
-    endDate: treatment?.endDate,
-    frequency: treatment?.frequency || '',
-    dosage: treatment?.dosage || '',
-    status: treatment?.status || 'scheduled'
+    petId: selectedPetId !== 'all' ? selectedPetId : '',
+    name: '',
+    type: '',
+    startDate: new Date().toISOString(),
+    frequency: '',
+    dosage: '',
+    status: 'scheduled'
   });
+
+  useEffect(() => {
+    if (treatmentId) {
+      getTreatmentById(treatmentId).then(loadedTreatment => {
+        if (loadedTreatment) {
+          setTreatment(loadedTreatment);
+          setFormData({
+            petId: loadedTreatment.petId,
+            name: loadedTreatment.name,
+            type: loadedTreatment.type,
+            startDate: loadedTreatment.startDate,
+            endDate: loadedTreatment.endDate,
+            frequency: loadedTreatment.frequency,
+            dosage: loadedTreatment.dosage,
+            status: loadedTreatment.status
+          });
+        }
+      });
+    }
+  }, [treatmentId, getTreatmentById]);
 
   const handleStartDateChange = (event: any, selectedDate?: Date) => {
     setShowStartDatePicker(false);
@@ -49,8 +71,8 @@ const TreatmentForm: React.FC<TreatmentFormProps> = ({
 
   const handleSubmit = async () => {
     try {
-      if (treatment?.id) {
-        await updateTreatment(treatment.id, formData);
+      if (treatmentId) {
+        await updateTreatment(treatmentId, formData);
       } else {
         await addTreatment(formData);
       }
@@ -193,7 +215,7 @@ const TreatmentForm: React.FC<TreatmentFormProps> = ({
           onPress={handleSubmit}
         >
           <Text style={[styles.buttonText, styles.submitButtonText]}>
-            {treatment ? 'Update' : 'Add'} Treatment
+            {treatmentId ? 'Update' : 'Add'} Treatment
           </Text>
         </TouchableOpacity>
       </View>
@@ -204,6 +226,7 @@ const TreatmentForm: React.FC<TreatmentFormProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 16,
   },
   formField: {
     marginBottom: 16,
@@ -211,64 +234,64 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#374151',
-    marginBottom: 4,
+    color: '#1F2937',
+    marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: '#E5E7EB',
     borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 16,
+    padding: 12,
+    fontSize: 14,
     color: '#1F2937',
+    backgroundColor: '#FFFFFF',
   },
   pickerContainer: {
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: '#E5E7EB',
     borderRadius: 8,
-    overflow: 'hidden',
+    backgroundColor: '#FFFFFF',
   },
   picker: {
-    backgroundColor: 'white',
+    color: '#1F2937',
   },
   dateButton: {
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: '#E5E7EB',
     borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    padding: 12,
+    backgroundColor: '#FFFFFF',
   },
   dateButtonText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#1F2937',
   },
   buttonContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 24,
     gap: 12,
-    marginTop: 16,
-    marginBottom: 24,
   },
   button: {
     flex: 1,
-    paddingVertical: 12,
     borderRadius: 8,
+    padding: 12,
     alignItems: 'center',
   },
   cancelButton: {
-    backgroundColor: '#EF4444',
+    backgroundColor: '#F3F4F6',
   },
   submitButton: {
     backgroundColor: '#0D9488',
   },
   buttonText: {
-    color: 'white',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '500',
+    color: '#1F2937',
   },
   submitButtonText: {
-    color: 'white',
-  }
+    color: '#FFFFFF',
+  },
 });
 
 export default TreatmentForm;

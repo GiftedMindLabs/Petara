@@ -1,53 +1,36 @@
+import ExpenseCard from '@/app/components/ExpenseCard';
 import { AddButton } from '@/app/components/ui/AddButton';
 import { IconSymbol } from '@/app/components/ui/IconSymbol';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useExpenses } from '../hooks/useExpenses';
+import { usePets } from '../hooks/usePets';
 
-// Mock expense data since it's not in our main mock data
-const expenses = [{
-  id: '1',
-  petId: '1',
-  amount: 85.5,
-  date: '2023-11-15',
-  category: 'Vet',
-  description: 'Annual checkup',
-  reimbursed: 0
-}, {
-  id: '2',
-  petId: '2',
-  amount: 45.99,
-  date: '2023-11-20',
-  category: 'Food',
-  description: 'Premium cat food (1 month)',
-  reimbursed: 0
-}, {
-  id: '3',
-  petId: '1',
-  amount: 120.0,
-  date: '2023-12-05',
-  category: 'Grooming',
-  description: 'Full service grooming',
-  reimbursed: 0
-}, {
-  id: '4',
-  petId: '3',
-  amount: 250.0,
-  date: '2023-12-10',
-  category: 'Vet',
-  description: 'Dental cleaning',
-  reimbursed: 150.0
-}];
-
-const categories = ['All Categories', 'Vet', 'Food', 'Grooming'];
+const categories = ['All Categories', 'veterinary', 'food', 'supplies', 'grooming', 'medications', 'other'];
 
 const Expenses: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
+  const { expenses, isLoading, loadExpenses, loadExpensesByCategory, totalExpenses, totalReimbursed } = useExpenses();
+  const { pets } = usePets();
 
-  // Calculate total expenses
-  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
-  const totalReimbursed = expenses.reduce((sum, expense) => sum + expense.reimbursed, 0);
+  useEffect(() => {
+    if (selectedCategory === 'All Categories') {
+      loadExpenses();
+    } else {
+      loadExpensesByCategory(selectedCategory);
+    }
+  }, [selectedCategory, loadExpenses, loadExpensesByCategory]);
+
   const netExpenses = totalExpenses - totalReimbursed;
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>
@@ -107,43 +90,36 @@ const Expenses: React.FC = () => {
               styles.filterButtonText,
               selectedCategory === category && styles.filterButtonTextActive
             ]}>
-              {category}
+              {category === 'veterinary' ? 'Veterinary Care' :
+               category === 'medications' ? 'Medications' :
+               category.charAt(0).toUpperCase() + category.slice(1)}
             </Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
 
       <View style={styles.expensesList}>
-        {expenses.map(expense => (
-          <View key={expense.id} style={styles.expenseItem}>
-            <View style={styles.expenseHeader}>
-              <View>
-                <Text style={styles.expenseDescription}>
-                  {expense.description}
-                </Text>
-                <Text style={styles.expenseDate}>
-                  {new Date(expense.date).toLocaleDateString()}
-                </Text>
-              </View>
-              <View style={styles.expenseAmounts}>
-                <Text style={styles.expenseAmount}>
-                  ${expense.amount.toFixed(2)}
-                </Text>
-                {expense.reimbursed > 0 && (
-                  <Text style={styles.reimbursedAmount}>
-                    -${expense.reimbursed.toFixed(2)} reimbursed
-                  </Text>
-                )}
-              </View>
-            </View>
-            <View style={styles.expenseFooter}>
-              <View style={styles.categoryBadge}>
-                <Text style={styles.categoryText}>{expense.category}</Text>
-              </View>
-              <Text style={styles.petId}>Pet ID: {expense.petId}</Text>
-            </View>
+        {expenses.length > 0 ? (
+          expenses.map(expense => {
+            const pet = pets.find(p => p.id === expense.petId);
+            return (
+              <ExpenseCard
+                key={expense.id}
+                expense={expense}
+                pet={pet}
+                showPetInfo={true}
+              />
+            );
+          })
+        ) : (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyText}>
+              {selectedCategory === 'All Categories' 
+                ? 'No expenses found' 
+                : `No ${selectedCategory} expenses found`}
+            </Text>
           </View>
-        ))}
+        )}
       </View>
     </ScrollView>
   );
@@ -234,55 +210,15 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
-    elevation: 2
+    elevation: 2,
+    padding: 12
   },
-  expenseItem: {
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6'
-  },
-  expenseHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start'
-  },
-  expenseDescription: {
-    fontWeight: '500',
-    color: '#1F2937'
-  },
-  expenseDate: {
-    fontSize: 14,
-    color: '#6B7280'
-  },
-  expenseAmounts: {
-    alignItems: 'flex-end'
-  },
-  expenseAmount: {
-    fontWeight: '500',
-    color: '#1F2937'
-  },
-  reimbursedAmount: {
-    fontSize: 12,
-    color: '#059669'
-  },
-  expenseFooter: {
-    flexDirection: 'row',
+  emptyState: {
     alignItems: 'center',
-    marginTop: 8
+    padding: 24
   },
-  categoryBadge: {
-    backgroundColor: '#F3F4F6',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 9999,
-    marginRight: 8
-  },
-  categoryText: {
-    fontSize: 12,
-    color: '#4B5563'
-  },
-  petId: {
-    fontSize: 12,
+  emptyText: {
+    fontSize: 16,
     color: '#6B7280'
   }
 });

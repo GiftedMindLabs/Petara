@@ -2,7 +2,8 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Pet } from "../utils/mockData";
+import { Pet } from "../database/types";
+import { useSelectedPet } from "../providers/SelectedPetProvider";
 
 interface PetCardProps {
   pet: Pet;
@@ -11,13 +12,18 @@ interface PetCardProps {
 
 const PetCard: React.FC<PetCardProps> = ({ pet, showStatus = true }) => {
   const router = useRouter();
+  const { setSelectedPetId } = useSelectedPet();
   // Determine pet status (mock logic)
   const status = pet.id === "1" ? "alert" : "ok";
+
+  const handlePress = () => {
+    setSelectedPetId(pet.id);
+  };
 
   return (
     <TouchableOpacity
       style={styles.container}
-      onPress={() => router.push("/(tabs)/profile")}
+      onPress={handlePress}
     >
       <View style={styles.card}>
         <View style={styles.imageContainer}>
@@ -49,7 +55,7 @@ const PetCard: React.FC<PetCardProps> = ({ pet, showStatus = true }) => {
           </View>
           <Text style={styles.breed}>{pet.breed}</Text>
           <View style={styles.footer}>
-            <Text style={styles.detail}>{Date.now() - pet.birthDate} years</Text>
+            <Text style={styles.detail}>{Math.floor((Date.now() - pet.birthDate) / (365.25 * 24 * 60 * 60 * 1000))} years</Text>
             <Text style={styles.detail}>{pet.weight} lbs</Text>
           </View>
         </View>

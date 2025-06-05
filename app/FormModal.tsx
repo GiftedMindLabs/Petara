@@ -2,6 +2,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import ContactForm from "./components/forms/ContactForm";
+import ExpenseForm from "./components/forms/ExpenseForm";
 import PetForm from "./components/forms/PetForm";
 import TaskForm from "./components/forms/TaskForm";
 import TreatmentForm from "./components/forms/TreatmentForm";
@@ -11,7 +12,7 @@ import { IconSymbol } from "./components/ui/IconSymbol";
 
 export default function FormModal() {
   const router = useRouter();
-  const { title, action, form } = useLocalSearchParams();
+  const { title, action, form, id } = useLocalSearchParams();
 
   const handleSubmit = async (data: any) => {
     try {
@@ -28,35 +29,42 @@ export default function FormModal() {
   };
 
   let children;
-  console.log("params:", useLocalSearchParams());
-  console.log("form:", form);
   switch (form) {
     case "pet":
       children = <PetForm onSubmit={handleSubmit} onCancel={handleCancel} />;
       break;
     case "contact":
       children = (
-        <ContactForm onSubmit={handleSubmit} onCancel={handleCancel} />
+        <ContactForm 
+          contactId={(action === "edit" && id) ? id as string : undefined}
+          onSubmit={handleSubmit} 
+          onCancel={handleCancel} 
+        />
       );
       break;
     case "vaccination":
       children = (
-        <VaccinationForm onSubmit={handleSubmit} onCancel={handleCancel} />
+        <VaccinationForm vaccinationId={(action === "edit" && id) ? id as string : undefined} onSubmit={handleSubmit} onCancel={handleCancel} />
       );
       break;
     case "treatment":
       children = (
-        <TreatmentForm onSubmit={handleSubmit} onCancel={handleCancel} />
+        <TreatmentForm treatmentId={(action === "edit" && id) ? id as string : undefined} onSubmit={handleSubmit} onCancel={handleCancel} />
       );
       break;
     case "vetVisit":
       children = (
-        <VetVisitForm onSubmit={handleSubmit} onCancel={handleCancel} />
+        <VetVisitForm visitId={(action === "edit" && id) ? id as string : undefined} onSubmit={handleSubmit} onCancel={handleCancel} />
+      );
+      break;
+    case "expense":
+      children = (
+        <ExpenseForm expenseId={(action === "edit" && id) ? id as string : undefined} onSubmit={handleSubmit} onCancel={handleCancel} />
       );
       break;
     case "task":
       children = (
-        <TaskForm onSubmit={handleSubmit} onCancel={handleCancel} />
+        <TaskForm taskId={(action === "edit" && id) ? id as string : undefined} onSubmit={handleSubmit} onCancel={handleCancel} />
       );
       break;
     default:

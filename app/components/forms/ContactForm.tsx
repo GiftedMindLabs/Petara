@@ -1,17 +1,10 @@
+import { useContacts } from '@/app/hooks/useContacts';
 import { Picker } from '@react-native-picker/picker';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 interface ContactFormProps {
-  contact?: {
-    id: string;
-    name: string;
-    type: 'veterinarian' | 'groomer' | 'sitter' | 'trainer' | 'other';
-    phone: string;
-    email: string;
-    address: string;
-    notes: string;
-  };
+  contactId?: string;
   onSubmit: (data: any) => void;
   onCancel: () => void;
 }
@@ -19,22 +12,80 @@ interface ContactFormProps {
 type ContactType = 'veterinarian' | 'groomer' | 'sitter' | 'trainer' | 'other';
 
 const ContactForm: React.FC<ContactFormProps> = ({
-  contact,
+  contactId,
   onSubmit,
   onCancel
 }) => {
+  const { addContact, updateContact, getContactById } = useContacts();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    name: contact?.name || '',
-    type: contact?.type || 'veterinarian',
-    phone: contact?.phone || '',
-    email: contact?.email || '',
-    address: contact?.address || '',
-    notes: contact?.notes || ''
+    name: '',
+    type: 'veterinarian' as ContactType,
+    phone: '',
+    email: '',
+    address: '',
+    notes: ''
   });
 
-  const handleSubmit = () => {
-    onSubmit(formData);
+  useEffect(() => {
+    const loadContact = async () => {
+      if (contactId) {
+        try {
+          setIsLoading(true);
+          const contact = await getContactById(contactId);
+          if (contact) {
+            setFormData({
+              name: contact.name,
+              type: contact.type,
+              phone: contact.phone,
+              email: contact.email,
+              address: contact.address,
+              notes: contact.notes
+            });
+          }
+        } catch (err) {
+          console.error('Error loading contact:', err);
+          setError('Failed to load contact');
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadContact();
+  }, [contactId, getContactById]);
+
+  const handleSubmit = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      if (contactId) {
+        await updateContact(contactId, formData);
+      } else {
+        await addContact(formData);
+      }
+
+      onSubmit(formData);
+    } catch (err) {
+      console.error('Error submitting contact:', err);
+      setError('Failed to save contact');
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  if (error) {
+    return (
+      <View style={styles.centerContainer}>
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={onCancel}>
+          <Text style={styles.retryButtonText}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -123,15 +174,17 @@ const ContactForm: React.FC<ContactFormProps> = ({
         <TouchableOpacity
           style={[styles.button, styles.cancelButton]}
           onPress={onCancel}
+          disabled={isLoading}
         >
           <Text style={styles.cancelButtonText}>Cancel</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.button, styles.submitButton]}
           onPress={handleSubmit}
+          disabled={isLoading}
         >
           <Text style={styles.submitButtonText}>
-            {contact ? 'Save Changes' : 'Add Contact'}
+            {isLoading ? 'Saving...' : contactId ? 'Save Changes' : 'Add Contact'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -142,6 +195,29 @@ const ContactForm: React.FC<ContactFormProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 32
+  },
+  errorText: {
+    color: '#EF4444',
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 16
+  },
+  retryButton: {
+    backgroundColor: '#0D9488',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500'
   },
   formField: {
     marginBottom: 16,

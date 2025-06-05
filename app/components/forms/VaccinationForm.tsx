@@ -1,36 +1,61 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Vaccination } from '../../database/types';
 import { usePets } from '../../hooks/usePets';
 import { useVaccinations } from '../../hooks/useVaccinations';
+import { useSelectedPet } from '../../providers/SelectedPetProvider';
 
 interface VaccinationFormProps {
-  vaccination?: Vaccination;
+  vaccinationId?: string;
   onSubmit: (data: Omit<Vaccination, 'id'>) => void;
   onCancel: () => void;
 }
 
 const VaccinationForm: React.FC<VaccinationFormProps> = ({
-  vaccination,
+  vaccinationId,
   onSubmit,
   onCancel
 }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showNextDuePicker, setShowNextDuePicker] = useState(false);
   const { pets } = usePets();
-  const { addVaccination, updateVaccination } = useVaccinations();
+  const { selectedPetId } = useSelectedPet();
+  const { addVaccination, updateVaccination, getVaccinationById } = useVaccinations();
+  const [vaccination, setVaccination] = useState<Vaccination | null>(null);
 
-  const [formData, setFormData] = useState<Omit<Vaccination, 'id'>>({
-    petId: vaccination?.petId || '',
-    name: vaccination?.name || '',
-    dateGiven: vaccination?.dateGiven || new Date().toISOString(),
-    dueDate: vaccination?.dueDate || new Date().toISOString(),
-    administeredBy: vaccination?.administeredBy || '',
-    lotNumber: vaccination?.lotNumber || '',
-    manufacturer: vaccination?.manufacturer || ''
+  const [formData, setFormData] = useState({
+    petId: selectedPetId !== 'all' ? selectedPetId : '',
+    name: '',
+    dateGiven: new Date().toISOString(),
+    dueDate: new Date().toISOString(),
+    administeredBy: '',
+    lotNumber: '',
+    manufacturer: ''
   });
+
+  useEffect(() => {
+    if (vaccinationId) {
+      getVaccinationById(vaccinationId).then(loadedVaccination => {
+        if (loadedVaccination) setVaccination(loadedVaccination);
+      });
+    }
+  }, [vaccinationId, getVaccinationById]);
+
+  useEffect(() => {
+    if (vaccination) {
+      setFormData({
+        petId: vaccination.petId,
+        name: vaccination.name,
+        dateGiven: vaccination.dateGiven,
+        dueDate: vaccination.dueDate,
+        administeredBy: vaccination.administeredBy,
+        lotNumber: vaccination.lotNumber,
+        manufacturer: vaccination.manufacturer
+      });
+    }
+  }, [vaccination]);
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
     setShowDatePicker(false);

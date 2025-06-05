@@ -1,5 +1,7 @@
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useMemo } from 'react';
+import { ContactRepository } from '../database/repositories/contactRepository';
+import { ExpenseRepository } from '../database/repositories/expenseRepository';
 import { PetRepository } from '../database/repositories/petRepository';
 import { TaskRepository } from '../database/repositories/taskRepository';
 import { TreatmentRepository } from '../database/repositories/treatmentRepository';
@@ -15,6 +17,8 @@ export function useRepositories() {
     vetVisitRepository: new VetVisitRepository(db),
     vaccinationRepository: new VaccinationRepository(db),
     treatmentRepository: new TreatmentRepository(db),
+    expenseRepository: new ExpenseRepository(db),
+    contactRepository: new ContactRepository(db)
   }), [db]);
 
   useEffect(() => {

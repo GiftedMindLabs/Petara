@@ -75,6 +75,15 @@ export function useVetVisits() {
     }
   };
 
+  const getVetVisitById = useCallback(async (id: string): Promise<VetVisit | null> => {
+    try {
+      return await vetVisitRepository.getVetVisitById(id);
+    } catch (err) {
+      console.error('Error getting vet visit by id:', err);
+      throw err;
+    }
+  }, [vetVisitRepository]);
+
   useEffect(() => {
     loadVisits();
   }, [loadVisits]);
@@ -86,6 +95,7 @@ export function useVetVisits() {
     loadVisits,
     addVetVisit,
     updateVetVisit,
-    deleteVetVisit
+    deleteVetVisit,
+    getVetVisitById
   };
 } 

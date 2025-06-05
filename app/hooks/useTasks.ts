@@ -49,6 +49,16 @@ export function useTasks() {
     }
   }, [taskRepository]);
 
+  const getTaskById = useCallback(async (id: string) => {
+    try {
+      const task = await taskRepository.getTaskById(id);
+      return task;
+    } catch (err) {
+      console.error('Error getting task by id:', err);
+      throw err;
+    }
+  }, [taskRepository]);
+
   const updateTask = useCallback(async (id: string, updates: Partial<Omit<Task, 'id'>>) => {
     try {
       const success = await taskRepository.updateTask(id, updates);
@@ -95,6 +105,7 @@ export function useTasks() {
     error,
     loadTasks,
     addTask,
+    getTaskById,
     updateTask,
     deleteTask,
     completeTask,

@@ -86,3 +86,24 @@ export interface Vaccination {
   lotNumber: string;
   manufacturer: string;
 }
+
+export interface Expense {
+  id: string;
+  petId: string;
+  date: string;
+  amount: number;
+  category: 'veterinary' | 'food' | 'supplies' | 'grooming' | 'medications' | 'other';
+  description: string;
+  vendor: string;
+  reimbursed: number;
+}
+
+export interface Contact {
+  id: string;
+  name: string;
+  type: 'veterinarian' | 'groomer' | 'sitter' | 'trainer' | 'other';
+  phone: string;
+  email: string;
+  address: string;
+  notes: string;
+}

@@ -93,7 +93,7 @@ const TaskManager: React.FC = () => {
   useEffect(() => {
     loadTasks();
   }, [loadTasks]);
-
+  
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
     await loadTasks();

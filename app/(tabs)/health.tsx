@@ -1,8 +1,11 @@
+import TreatmentCard from '@/app/components/TreatmentCard';
 import { AddButton } from '@/app/components/ui/AddButton';
 import { IconSymbol } from '@/app/components/ui/IconSymbol';
+import VaccinationCard from '@/app/components/VaccinationCard';
+import VetVisitCard from '@/app/components/VetVisitCard';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { usePets } from '../hooks/usePets';
 import { useTreatments } from '../hooks/useTreatments';
 import { useVaccinations } from '../hooks/useVaccinations';
@@ -102,32 +105,12 @@ const VetHealth: React.FC = () => {
             visits.map(visit => {
               const pet = pets.find(p => p.id === visit.petId);
               return (
-                <View key={visit.id} style={styles.card}>
-                  {selectedPetId === 'all' && pet && (
-                    <View style={styles.petInfo}>
-                      <Image source={{ uri: pet.imageUrl }} style={styles.petImage} />
-                      <Text style={styles.petName}>
-                        {pet.name}
-                      </Text>
-                    </View>
-                  )}
-                  <View style={styles.cardContent}>
-                    <Text style={styles.cardTitle}>{visit.reason}</Text>
-                    <Text style={styles.timestamp}>
-                      {new Date(visit.date).toLocaleDateString()}
-                    </Text>
-                  </View>
-                  {visit.notes && <Text style={styles.notes}>{visit.notes}</Text>}
-                  <View style={styles.footer}>
-                    <Text style={styles.footerText}>{visit.vetName}</Text>
-                    {visit.weight && (
-                      <>
-                        <Text style={styles.bullet}>•</Text>
-                        <Text style={styles.footerText}>{visit.weight} lbs</Text>
-                      </>
-                    )}
-                  </View>
-                </View>
+                <VetVisitCard
+                  key={visit.id}
+                  visit={visit}
+                  pet={pet}
+                  showPetInfo={selectedPetId === 'all'}
+                />
               );
             })
           ) : (
@@ -153,45 +136,23 @@ const VetHealth: React.FC = () => {
               })
             }
           />
-          {vaccinations.map(vaccination => {
-            const pet = pets.find(p => p.id === vaccination.petId);
-            return (
-              <View key={vaccination.id} style={styles.card}>
-                {selectedPetId === 'all' && (
-                  <View style={styles.petInfo}>
-                    <Image source={{ uri: pet?.imageUrl }} style={styles.petImage} />
-                    <Text style={styles.petName}>
-                      {pet?.name}
-                    </Text>
-                  </View>
-                )}
-                <View style={styles.cardContent}>
-                  <View style={styles.titleContainer}>
-                    <IconSymbol name="syringe.fill" size={16} color="#0D9488" />
-                    <Text style={styles.cardTitle}>
-                      {vaccination.name}
-                    </Text>
-                  </View>
-                  <View style={styles.dateContainer}>
-                    <Text style={styles.timestamp}>
-                      Given: {new Date(vaccination.dateGiven).toLocaleDateString()}
-                    </Text>
-                    <Text style={styles.timestamp}>
-                      Due: {new Date(vaccination.dueDate).toLocaleDateString()}
-                    </Text>
-                  </View>
-                </View>
-                <Text style={styles.notes}>
-                  Administered by: {vaccination.administeredBy}
-                </Text>
-                <View style={styles.footer}>
-                  <Text style={styles.footerText}>Lot #: {vaccination.lotNumber}</Text>
-                  <Text style={styles.bullet}>•</Text>
-                  <Text style={styles.footerText}>Manufacturer: {vaccination.manufacturer}</Text>
-                </View>
-              </View>
-            );
-          })}
+          {vaccinations.length > 0 ? (
+            vaccinations.map(vaccination => {
+              const pet = pets.find(p => p.id === vaccination.petId);
+              return (
+                <VaccinationCard
+                  key={vaccination.id}
+                  vaccination={vaccination}
+                  pet={pet}
+                  showPetInfo={selectedPetId === 'all'}
+                />
+              );
+            })
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>No vaccinations found</Text>
+            </View>
+          )}
         </View>
       )}
 
@@ -210,60 +171,23 @@ const VetHealth: React.FC = () => {
               })
             }
           />
-          {treatments.map(treatment => {
-            const pet = pets.find(p => p.id === treatment.petId);
-            return (
-              <View key={treatment.id} style={styles.card}>
-                {selectedPetId === 'all' && (
-                  <View style={styles.petInfo}>
-                    <Image source={{ uri: pet?.imageUrl }} style={styles.petImage} />
-                    <Text style={styles.petName}>
-                      {pet?.name}
-                    </Text>
-                  </View>
-                )}
-                <View style={styles.cardContent}>
-                  <View style={styles.titleContainer}>
-                    <IconSymbol name="pill.fill" size={16} color="#0D9488" />
-                    <Text style={styles.cardTitle}>
-                      {treatment.name}
-                    </Text>
-                  </View>
-                  <View style={[
-                    styles.statusBadge,
-                    treatment.status === 'ongoing' ? styles.statusOngoing :
-                    treatment.status === 'completed' ? styles.statusCompleted :
-                    styles.statusPending
-                  ]}>
-                    <Text style={[
-                      styles.statusText,
-                      treatment.status === 'ongoing' ? styles.statusOngoingText :
-                      treatment.status === 'completed' ? styles.statusCompletedText :
-                      styles.statusPendingText
-                    ]}>
-                      {treatment.status}
-                    </Text>
-                  </View>
-                </View>
-                <Text style={styles.notes}>
-                  {treatment.dosage}, {treatment.frequency}
-                </Text>
-                <View style={styles.footer}>
-                  <Text style={styles.footerText}>
-                    Started: {new Date(treatment.startDate).toLocaleDateString()}
-                  </Text>
-                  {treatment.endDate && (
-                    <>
-                      <Text style={styles.bullet}>•</Text>
-                      <Text style={styles.footerText}>
-                        Ended: {new Date(treatment.endDate).toLocaleDateString()}
-                      </Text>
-                    </>
-                  )}
-                </View>
-              </View>
-            );
-          })}
+          {treatments.length > 0 ? (
+            treatments.map(treatment => {
+              const pet = pets.find(p => p.id === treatment.petId);
+              return (
+                <TreatmentCard
+                  key={treatment.id}
+                  treatment={treatment}
+                  pet={pet}
+                  showPetInfo={selectedPetId === 'all'}
+                />
+              );
+            })
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>No treatments found</Text>
+            </View>
+          )}
         </View>
       )}
     </ScrollView>

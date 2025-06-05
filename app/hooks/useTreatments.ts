@@ -17,7 +17,7 @@ export function useTreatments() {
       setIsLoading(true);
       setError(null);
       if (selectedPetId === "all") {
-        const data = await treatmentRepository.getOngoingTreatments()
+        const data = await treatmentRepository.getAllTreatments()
         setTreatments(data)
       } else {
         const data = await treatmentRepository.getTreatmentsForPet(selectedPetId);
@@ -29,7 +29,7 @@ export function useTreatments() {
     } finally {
       setIsLoading(false);
     }
-  }, [treatmentRepository]);
+  }, [treatmentRepository, selectedPetId]);
 
   const loadOngoingTreatments = useCallback(async () => {
     try {
@@ -44,7 +44,7 @@ export function useTreatments() {
     } finally {
       setIsLoading(false);
     }
-  }, [treatmentRepository]);
+  }, [treatmentRepository, selectedPetId]);
 
   useEffect(() => {
     loadTreatments()
@@ -52,8 +52,6 @@ export function useTreatments() {
     const listener = addDatabaseChangeListener((event) => {
       if (event.tableName === "treatments") {
         console.log("Treatments in local database have changed");
-        // Note: We can't automatically reload here because we need context
-        // The component using this hook should call the appropriate load function
         loadTreatments()
       }
     });
@@ -90,6 +88,15 @@ export function useTreatments() {
     }
   }, [treatmentRepository]);
 
+  const getTreatmentById = useCallback(async (id: string): Promise<Treatment | null> => {
+    try {
+      return await treatmentRepository.getTreatmentById(id);
+    } catch (err) {
+      console.error('Error getting treatment by id:', err);
+      throw err;
+    }
+  }, [treatmentRepository]);
+
   return {
     treatments,
     isLoading,
@@ -98,6 +105,7 @@ export function useTreatments() {
     loadOngoingTreatments,
     addTreatment,
     updateTreatment,
-    deleteTreatment
+    deleteTreatment,
+    getTreatmentById
   };
 } 

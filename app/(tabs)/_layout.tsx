@@ -1,23 +1,21 @@
-import { Tabs, useRouter } from "expo-router";
-import React from "react";
-import { Platform, View } from "react-native";
-
 import CustomHeader from "@/app/components/CustomHeader";
 import { HapticTab } from "@/app/components/HapticTab";
 import { IconSymbol } from "@/app/components/ui/IconSymbol";
 import TabBarBackground from "@/app/components/ui/TabBarBackground";
-import { Colors } from "@/constants/Colors";
-import { useColorScheme } from "@/hooks/useColorScheme";
+import { useTheme } from "@/app/providers/ThemeProvider";
+import { Tabs } from "expo-router";
+import React from "react";
+import { Platform, View } from "react-native";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-  const router = useRouter();
+  const { theme } = useTheme();
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
       <Tabs
         screenOptions={{
-          tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+          tabBarActiveTintColor: theme.primary,
+          tabBarInactiveTintColor: theme.textSecondary,
           header: () => <CustomHeader />,
           tabBarButton: HapticTab,
           tabBarBackground: TabBarBackground,
@@ -25,8 +23,11 @@ export default function TabLayout() {
             ios: {
               // Use a transparent background on iOS to show the blur effect
               position: "absolute",
+              backgroundColor: theme.backgroundSecondary,
             },
-            default: {},
+            default: {
+              backgroundColor: theme.backgroundSecondary,
+            },
           }),
         }}
       >
@@ -84,27 +85,27 @@ export default function TabLayout() {
             ),
           }}
         />
+        <Tabs.Screen
+          name="profile"
+          key="profile"
+          options={{
+            title: "Profile",
+            tabBarIcon: ({ color }) => (
+              <IconSymbol size={28} name="person.fill" color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="settings"
+          key="settings"
+          options={{
+            title: "Settings",
+            tabBarIcon: ({ color }) => (
+              <IconSymbol size={28} name="gear" color={color} />
+            ),
+          }}
+        />
       </Tabs>
-      <Tabs.Screen
-        name="profile"
-        key="profile"
-        options={{
-          title: "Profile",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="person.fill" color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        key="settings"
-        options={{
-          title: "Settings",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="gear" color={color} />
-          ),
-        }}
-      />
     </View>
   );
 }

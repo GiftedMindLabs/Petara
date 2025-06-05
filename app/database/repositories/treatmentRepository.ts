@@ -54,6 +54,20 @@ export class TreatmentRepository {
   }
 
   /**
+   * Get all treatments
+  /**
+   * Get all treatments
+   */
+  async getAllTreatments(): Promise<Treatment[]> {
+    const results = await this.db.getAllAsync<TreatmentRow>(
+      'SELECT * FROM treatments ORDER BY startDate DESC',
+      []
+    );
+
+    return results.map(this.mapTreatmentRow);
+  }
+
+  /**
    * Get all treatments for a pet
    */
   async getTreatmentsForPet(petId: string): Promise<Treatment[]> {

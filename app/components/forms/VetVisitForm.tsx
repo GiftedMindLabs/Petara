@@ -1,14 +1,15 @@
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { VetVisit } from '../../database/types';
 import { usePets } from '../../hooks/usePets';
 import { useVetVisits } from '../../hooks/useVetVisits';
+import { useSelectedPet } from '../../providers/SelectedPetProvider';
 
 interface VetVisitFormProps {
-  visit?: VetVisit;
+  visitId?: string;
   onSubmit: (data: Omit<VetVisit, 'id'>) => void;
   onCancel: () => void;
 }
@@ -21,23 +22,46 @@ interface FormErrors {
 }
 
 const VetVisitForm: React.FC<VetVisitFormProps> = ({
-  visit,
+  visitId,
   onSubmit,
   onCancel
 }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const { pets, loadPets } = usePets();
-  const { addVetVisit, updateVetVisit } = useVetVisits();
+  const { selectedPetId } = useSelectedPet();
+  const { addVetVisit, updateVetVisit, getVetVisitById } = useVetVisits();
+  const [visit, setVisit] = useState<VetVisit | null>(null);
 
   const [formData, setFormData] = useState({
-    petId: visit?.petId || '',
-    date: visit?.date ? new Date(visit.date) : new Date(),
-    reason: visit?.reason || '',
-    notes: visit?.notes || '',
-    vetName: visit?.vetName || '',
-    weight: visit?.weight?.toString() || ''
+    petId: selectedPetId !== 'all' ? selectedPetId : "",
+    date: new Date(),
+    reason: "",
+    notes: "",
+    vetName: "",
+    weight: ""
   });
+
+  useEffect(() => {
+    if (visitId) {
+      getVetVisitById(visitId).then(loadedVisit => {
+        if (loadedVisit) setVisit(loadedVisit);
+      });
+    }
+  }, [visitId, getVetVisitById]);
+
+  useEffect(() => {
+    if (visit) {
+      setFormData({
+        petId: visit.petId,
+        date: new Date(visit.date),
+        reason: visit.reason,
+        notes: visit.notes,
+        vetName: visit.vetName,
+        weight: visit.weight?.toString() || ""
+      });
+    }
+  }, [visit]);
 
   // Use useFocusEffect to reload pets when the form comes into focus
   useFocusEffect(

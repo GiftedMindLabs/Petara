@@ -1,3 +1,4 @@
+import { usePets } from "@/app/hooks/usePets";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
 import React, { useEffect, useState } from "react";
@@ -13,14 +14,14 @@ import {
   View,
 } from "react-native";
 import { Task } from "../../database/types";
-import { useRepositories } from "../../hooks/useRepositories";
 import { useTasks } from "../../hooks/useTasks";
+import { useSelectedPet } from '../../providers/SelectedPetProvider';
 
 type TaskType = "feeding" | "medication" | "walk" | "grooming" | "other";
 type RecurrencePattern = "daily" | "weekly" | "monthly" | "yearly";
 
 interface TaskFormProps {
-  task?: Task;
+  taskId?: string;
   onSubmit: (task: Task) => void;
   onCancel: () => void;
 }
@@ -35,42 +36,59 @@ const weekDays = [
   { label: "Saturday", value: 6 },
 ];
 
-const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit, onCancel }) => {
-  const { petRepository } = useRepositories();
-  const { addTask, updateTask } = useTasks();
-  const [pets, setPets] = useState<Array<{ id: string; name: string }>>([]);
+const TaskForm: React.FC<TaskFormProps> = ({ taskId, onSubmit, onCancel }) => {
+  const { addTask, updateTask, getTaskById } = useTasks();
+  const { pets } = usePets();
+  const { selectedPetId } = useSelectedPet();
   
-  useEffect(() => {
-    const loadPets = async () => {
-      try {
-        const allPets = await petRepository.getAllPets();
-        setPets(allPets);
-      } catch (error) {
-        console.error('Error loading pets:', error);
-        Alert.alert("Error", "Failed to load pets");
-      }
-    };
-    loadPets();
-  }, [petRepository]);
-
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [task, setTask] = useState<Task | null>(null);
+
+  console.log("taskId: ", taskId);
+
+  useEffect(() => {
+    if (taskId) {
+      getTaskById(taskId).then(loadedTask => {
+        if (loadedTask) setTask(loadedTask);
+      });
+    }
+  }, [taskId, getTaskById]);
 
   const [formData, setFormData] = useState({
-    petId: task?.petId || "",
-    title: task?.title || "",
-    type: task?.type || "other" as TaskType,
-    dueDate: task?.dueDate ? new Date(task.dueDate) : new Date(),
-    notes: task?.notes || "",
-    recurring: task?.recurring || false,
-    recurrencePattern: task?.recurrencePattern || "daily" as RecurrencePattern,
-    recurrenceInterval: task?.recurrenceInterval || 1,
-    recurrenceWeekDays: task?.recurrenceWeekDays || [],
-    recurrenceMonthDay: task?.recurrenceMonthDay || 1,
-    recurrenceEndDate: task?.recurrenceEndDate ? new Date(task.recurrenceEndDate) : undefined,
-    recurrenceCount: task?.recurrenceCount || undefined,
+    petId: selectedPetId !== 'all' ? selectedPetId : "",
+    title: "",
+    type: "other" as TaskType,
+    dueDate: new Date(),
+    notes: "",
+    recurring: false,
+    recurrencePattern: "daily" as RecurrencePattern,
+    recurrenceInterval: 1,
+    recurrenceWeekDays: [] as number[],
+    recurrenceMonthDay: 1,
+    recurrenceEndDate: undefined as Date | undefined,
+    recurrenceCount: undefined as number | undefined,
   });
+
+  useEffect(() => {
+    if (task) {
+      setFormData({
+        petId: task.petId,
+        title: task.title,
+        type: task.type,
+        dueDate: new Date(task.dueDate),
+        notes: task.notes || "",
+        recurring: task.recurring,
+        recurrencePattern: task.recurrencePattern || "daily",
+        recurrenceInterval: task.recurrenceInterval || 1,
+        recurrenceWeekDays: task.recurrenceWeekDays || [],
+        recurrenceMonthDay: task.recurrenceMonthDay || 1,
+        recurrenceEndDate: task.recurrenceEndDate ? new Date(task.recurrenceEndDate) : undefined,
+        recurrenceCount: task.recurrenceCount,
+      });
+    }
+  }, [task]);
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
     setShowDatePicker(false);

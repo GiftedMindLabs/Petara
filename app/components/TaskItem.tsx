@@ -1,8 +1,9 @@
 import { IconSymbol } from "@/app/components/ui/IconSymbol";
+import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Pet, Task } from "../database/types";
-import { useRepositories } from "../hooks/useRepositories";
+import { usePets } from "../hooks/usePets";
 
 interface TaskItemProps {
   task: Task;
@@ -16,27 +17,20 @@ interface TaskItemProps {
 const TaskItem: React.FC<TaskItemProps> = ({
   task,
   onComplete,
-  onPress,
   style,
   showOverdueIndicator = false,
   showPetInfo,
 }) => {
-  const { petRepository } = useRepositories();
+  const { getPetById } = usePets();
   const [pet, setPet] = useState<Pet | null>(null);
 
   useEffect(() => {
-    const loadPet = async () => {
-      try {
-        const petData = await petRepository.getPetById(task.petId);
-        setPet(petData);
-      } catch (error) {
-        console.error("Error loading pet:", error);
-      }
-    };
     if (showPetInfo) {
-      loadPet();
+      getPetById(task.petId).then((loadedPet) => {
+        if (loadedPet) setPet(loadedPet);
+      });
     }
-  }, [task.petId, petRepository, showPetInfo]);
+  }, [task.petId, getPetById, showPetInfo]);
 
   const getTaskIcon = () => {
     switch (task.type) {
@@ -111,15 +105,24 @@ const TaskItem: React.FC<TaskItemProps> = ({
     </View>
   );
 
-  if (onPress) {
-    return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
-        {renderContent()}
-      </TouchableOpacity>
-    );
-  }
-
-  return renderContent();
+  return (
+    <TouchableOpacity
+      onPress={() =>
+        router.push({
+          pathname: "/FormModal",
+          params: {
+            title: "Edit Task",
+            action: "edit",
+            form: "task",
+            id: task.id,
+          },
+        })
+      }
+      activeOpacity={0.7}
+    >
+      {renderContent()}
+    </TouchableOpacity>
+  );
 };
 
 const styles = StyleSheet.create({

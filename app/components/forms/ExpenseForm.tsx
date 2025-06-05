@@ -1,112 +1,280 @@
-import React, { useState } from 'react';
-import { pets } from '../../utils/mockData';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { Picker } from '@react-native-picker/picker';
+import React, { useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Expense } from '../../database/types';
+import { useExpenses } from '../../hooks/useExpenses';
+import { usePets } from '../../hooks/usePets';
+import { useSelectedPet } from '../../providers/SelectedPetProvider';
+
 interface ExpenseFormProps {
-  expense?: {
-    id: string;
-    petId: string;
-    date: string;
-    amount: number;
-    category: string;
-    description: string;
-    vendor: string;
-  };
-  onSubmit: (data: any) => void;
+  expenseId?: string;
+  onSubmit: (data: Omit<Expense, 'id'>) => void;
   onCancel: () => void;
 }
+
 const ExpenseForm: React.FC<ExpenseFormProps> = ({
-  expense,
+  expenseId,
   onSubmit,
   onCancel
 }) => {
-  const [formData, setFormData] = useState({
-    petId: expense?.petId || '',
-    date: expense?.date || '',
-    amount: expense?.amount || '',
-    category: expense?.category || 'veterinary',
-    description: expense?.description || '',
-    vendor: expense?.vendor || ''
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const { pets } = usePets();
+  const { selectedPetId } = useSelectedPet();
+  const { addExpense, updateExpense, getExpenseById } = useExpenses();
+  const [expense, setExpense] = useState<Expense | null>(null);
+
+  const [formData, setFormData] = useState<Omit<Expense, 'id'>>({
+    petId: selectedPetId !== 'all' ? selectedPetId : '',
+    date: new Date().toISOString(),
+    amount: 0,
+    category: 'veterinary',
+    description: '',
+    vendor: '',
+    reimbursed: 0
   });
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(formData);
+
+  useEffect(() => {
+    if (expenseId) {
+      getExpenseById(expenseId).then(loadedExpense => {
+        if (loadedExpense) {
+          setExpense(loadedExpense);
+          setFormData({
+            petId: loadedExpense.petId,
+            date: loadedExpense.date,
+            amount: loadedExpense.amount,
+            category: loadedExpense.category,
+            description: loadedExpense.description,
+            vendor: loadedExpense.vendor,
+            reimbursed: loadedExpense.reimbursed
+          });
+        }
+      });
+    }
+  }, [expenseId, getExpenseById]);
+
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setFormData({ ...formData, date: selectedDate.toISOString() });
+    }
   };
-  return <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Pet
-        </label>
-        <select value={formData.petId} onChange={e => setFormData({
-        ...formData,
-        petId: e.target.value
-      })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" required>
-          <option value="">Select a pet</option>
-          {pets.map(pet => <option key={pet.id} value={pet.id}>
-              {pet.name}
-            </option>)}
-        </select>
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Date
-          </label>
-          <input type="date" value={formData.date} onChange={e => setFormData({
-          ...formData,
-          date: e.target.value
-        })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" required />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Amount
-          </label>
-          <input type="number" value={formData.amount} onChange={e => setFormData({
-          ...formData,
-          amount: e.target.value
-        })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" min="0" step="0.01" required />
-        </div>
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Category
-        </label>
-        <select value={formData.category} onChange={e => setFormData({
-        ...formData,
-        category: e.target.value
-      })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" required>
-          <option value="veterinary">Veterinary Care</option>
-          <option value="food">Food</option>
-          <option value="supplies">Supplies</option>
-          <option value="grooming">Grooming</option>
-          <option value="medications">Medications</option>
-          <option value="other">Other</option>
-        </select>
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Vendor
-        </label>
-        <input type="text" value={formData.vendor} onChange={e => setFormData({
-        ...formData,
-        vendor: e.target.value
-      })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" required />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Description
-        </label>
-        <textarea value={formData.description} onChange={e => setFormData({
-        ...formData,
-        description: e.target.value
-      })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" rows={3} />
-      </div>
-      <div className="flex space-x-3 pt-4">
-        <button type="button" onClick={onCancel} className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
-          Cancel
-        </button>
-        <button type="submit" className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700">
-          {expense ? 'Save Changes' : 'Add Expense'}
-        </button>
-      </div>
-    </form>;
+
+  const handleSubmit = async () => {
+    try {
+      if (expenseId) {
+        await updateExpense(expenseId, formData);
+      } else {
+        await addExpense(formData);
+      }
+      onSubmit(formData);
+    } catch (error) {
+      console.error('Error saving expense:', error);
+      // You might want to show an error message to the user here
+    }
+  };
+
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString();
+  };
+
+  return (
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <View style={styles.formField}>
+        <Text style={styles.label}>Pet</Text>
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={formData.petId}
+            onValueChange={(value: string) => setFormData({ ...formData, petId: value })}
+            style={styles.picker}
+          >
+            <Picker.Item label="Select a pet" value="" />
+            {pets.map(pet => (
+              <Picker.Item key={pet.id} label={pet.name} value={pet.id} />
+            ))}
+          </Picker>
+        </View>
+      </View>
+
+      <View style={styles.formField}>
+        <Text style={styles.label}>Date</Text>
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setShowDatePicker(true)}
+        >
+          <Text style={styles.dateButtonText}>
+            {formatDate(formData.date)}
+          </Text>
+        </TouchableOpacity>
+        {showDatePicker && (
+          <DateTimePicker
+            value={new Date(formData.date)}
+            mode="date"
+            onChange={handleDateChange}
+          />
+        )}
+      </View>
+
+      <View style={styles.formField}>
+        <Text style={styles.label}>Amount</Text>
+        <TextInput
+          style={styles.input}
+          value={formData.amount.toString()}
+          onChangeText={(value) => setFormData({ ...formData, amount: parseFloat(value) || 0 })}
+          keyboardType="decimal-pad"
+          placeholder="Enter amount"
+          placeholderTextColor="#9CA3AF"
+        />
+      </View>
+
+      <View style={styles.formField}>
+        <Text style={styles.label}>Category</Text>
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={formData.category}
+            onValueChange={(value: 'veterinary' | 'food' | 'supplies' | 'grooming' | 'medications' | 'other') => 
+              setFormData({ ...formData, category: value })}
+            style={styles.picker}
+          >
+            <Picker.Item label="Veterinary Care" value="veterinary" />
+            <Picker.Item label="Food" value="food" />
+            <Picker.Item label="Supplies" value="supplies" />
+            <Picker.Item label="Grooming" value="grooming" />
+            <Picker.Item label="Medications" value="medications" />
+            <Picker.Item label="Other" value="other" />
+          </Picker>
+        </View>
+      </View>
+
+      <View style={styles.formField}>
+        <Text style={styles.label}>Vendor</Text>
+        <TextInput
+          style={styles.input}
+          value={formData.vendor}
+          onChangeText={(value) => setFormData({ ...formData, vendor: value })}
+          placeholder="Enter vendor name"
+          placeholderTextColor="#9CA3AF"
+        />
+      </View>
+
+      <View style={styles.formField}>
+        <Text style={styles.label}>Description</Text>
+        <TextInput
+          style={[styles.input, styles.textArea]}
+          value={formData.description}
+          onChangeText={(value) => setFormData({ ...formData, description: value })}
+          placeholder="Enter description"
+          placeholderTextColor="#9CA3AF"
+          multiline
+          numberOfLines={3}
+        />
+      </View>
+
+      <View style={styles.formField}>
+        <Text style={styles.label}>Reimbursed Amount</Text>
+        <TextInput
+          style={styles.input}
+          value={formData.reimbursed.toString()}
+          onChangeText={(value) => setFormData({ ...formData, reimbursed: parseFloat(value) || 0 })}
+          keyboardType="decimal-pad"
+          placeholder="Enter reimbursed amount"
+          placeholderTextColor="#9CA3AF"
+        />
+      </View>
+
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={[styles.button, styles.cancelButton]}
+          onPress={onCancel}
+        >
+          <Text style={styles.buttonText}>Cancel</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, styles.submitButton]}
+          onPress={handleSubmit}
+        >
+          <Text style={[styles.buttonText, styles.submitButtonText]}>
+            {expenseId ? 'Update' : 'Add'} Expense
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+  },
+  formField: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#1F2937',
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    color: '#1F2937',
+    backgroundColor: '#FFFFFF',
+  },
+  textArea: {
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+  },
+  picker: {
+    color: '#1F2937',
+  },
+  dateButton: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: '#FFFFFF',
+  },
+  dateButtonText: {
+    fontSize: 14,
+    color: '#1F2937',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 24,
+    gap: 12,
+  },
+  button: {
+    flex: 1,
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#F3F4F6',
+  },
+  submitButton: {
+    backgroundColor: '#0D9488',
+  },
+  buttonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#1F2937',
+  },
+  submitButtonText: {
+    color: '#FFFFFF',
+  },
+});
+
 export default ExpenseForm;

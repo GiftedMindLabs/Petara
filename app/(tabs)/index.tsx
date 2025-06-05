@@ -1,12 +1,62 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import TaskItem from '../components/TaskItem';
-import { getTodaysTasks, getUpcomingVetVisits } from '../utils/mockData';
+import { Task, VetVisit } from '../database/types';
+import { useTasks } from '../hooks/useTasks';
+import { useVetVisits } from '../hooks/useVetVisits';
+import { useSelectedPet } from '../providers/SelectedPetProvider';
 
 const Home: React.FC = () => {
-  const todaysTasks = getTodaysTasks();
-  const upcomingVisits = getUpcomingVetVisits();
+  const { selectedPetId } = useSelectedPet();
+  const { tasks, isLoading: tasksLoading, loadTasks } = useTasks();
+  const { visits: vetVisits, isLoading: visitsLoading, loadVisits: loadVetVisits } = useVetVisits();
+  const [todaysTasks, setTodaysTasks] = useState<Task[]>([]);
+  const [upcomingVisits, setUpcomingVisits] = useState<VetVisit[]>([]);
+
+  useEffect(() => {
+    loadTasks();
+    loadVetVisits();
+  }, [loadTasks, loadVetVisits]);
+
+  useEffect(() => {
+    // Filter today's tasks
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const filtered = tasks.filter(task => {
+      const taskDate = new Date(task.dueDate);
+      return taskDate >= today && taskDate < tomorrow;
+    });
+
+    setTodaysTasks(filtered);
+  }, [tasks]);
+
+  useEffect(() => {
+    // Filter upcoming vet visits (next 30 days)
+    const today = new Date();
+    const thirtyDaysFromNow = new Date(today);
+    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+
+    const filtered = vetVisits
+      .filter((visit: VetVisit) => {
+        const visitDate = new Date(visit.date);
+        return visitDate >= today && visitDate <= thirtyDaysFromNow;
+      })
+      .sort((a: VetVisit, b: VetVisit) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    setUpcomingVisits(filtered);
+  }, [vetVisits]);
+
+  if (tasksLoading || visitsLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0D9488" />
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>
@@ -18,7 +68,11 @@ const Home: React.FC = () => {
         {todaysTasks.length > 0 ? (
           <View style={styles.contentCard}>
             {todaysTasks.map(task => (
-              <TaskItem key={task.id} task={task} showPet />
+              <TaskItem 
+                key={task.id} 
+                task={task}
+                showPetInfo={selectedPetId === 'all'} 
+              />
             ))}
           </View>
         ) : (
@@ -64,6 +118,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+    backgroundColor: '#FFFFFF'
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: '#FFFFFF'
   },
   section: {

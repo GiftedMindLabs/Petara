@@ -1,46 +1,17 @@
 import { AddButton } from '@/app/components/ui/AddButton';
 import { IconSymbol } from '@/app/components/ui/IconSymbol';
+import { useContacts } from '@/app/hooks/useContacts';
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
-import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-// Mock contacts data
-const contacts = [{
-  id: '1',
-  name: 'Dr. Johnson',
-  type: 'Vet',
-  phone: '(555) 123-4567',
-  email: 'drjohnson@vetclinic.com',
-  address: '123 Animal Care Lane',
-  notes: 'Primary veterinarian for Buddy'
-}, {
-  id: '2',
-  name: 'Happy Paws Grooming',
-  type: 'Groomer',
-  phone: '(555) 987-6543',
-  email: 'appointments@happypaws.com',
-  address: '456 Fluffy Street',
-  notes: 'Ask for Maria - she knows how to handle Whiskers'
-}, {
-  id: '3',
-  name: 'Pet Sitter Sarah',
-  type: 'Pet Sitter',
-  phone: '(555) 456-7890',
-  email: 'sarah@petsitting.com',
-  address: '',
-  notes: 'Available on weekends and evenings'
-}, {
-  id: '4',
-  name: 'Premium Pet Supplies',
-  type: 'Store',
-  phone: '(555) 234-5678',
-  email: 'info@premiumpet.com',
-  address: '789 Market Street',
-  notes: 'Members discount card #12345'
-}];
+type ContactType = 'veterinarian' | 'groomer' | 'sitter' | 'trainer' | 'other';
 
 const Contacts: React.FC = () => {
+  const { contacts, isLoading, error, loadContactsByType, loadContacts } = useContacts();
+  const [selectedType, setSelectedType] = useState<ContactType | null>(null);
+
   const handleCall = (phone: string) => {
     Linking.openURL(`tel:${phone}`);
   };
@@ -48,6 +19,35 @@ const Contacts: React.FC = () => {
   const handleEmail = (email: string) => {
     Linking.openURL(`mailto:${email}`);
   };
+
+  const handleTypeFilter = (type: ContactType | null) => {
+    setSelectedType(type);
+    if (type) {
+      loadContactsByType(type);
+    } else {
+      loadContacts();
+    }
+  };
+
+  const handleEditContact = (id: string) => {
+    router.push({
+      pathname: "/FormModal",
+      params: {
+        title: "Edit",
+        action: "edit",
+        form: "contact",
+        id
+      },
+    });
+  };
+
+  if (error) {
+    return (
+      <View style={styles.centerContainer}>
+        <Text style={styles.errorText}>{error}</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>
@@ -70,51 +70,93 @@ const Contacts: React.FC = () => {
         }
       />
 
-      <View style={styles.contactsList}>
-        {contacts.map(contact => (
-          <View key={contact.id} style={styles.contactCard}>
-            <View style={styles.cardHeader}>
-              <View>
-                <Text style={styles.contactName}>{contact.name}</Text>
-                <View style={styles.typeBadge}>
-                  <Text style={styles.typeText}>{contact.type}</Text>
-                </View>
-              </View>
-              <TouchableOpacity>
-                <Text style={styles.editButton}>Edit</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.contactDetails}>
-              <TouchableOpacity 
-                style={styles.contactRow}
-                onPress={() => handleCall(contact.phone)}
-              >
-                <IconSymbol name="phone.fill" size={14} color="#6B7280" />
-                <Text style={styles.contactText}>{contact.phone}</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={styles.contactRow}
-                onPress={() => handleEmail(contact.email)}
-              >
-                <IconSymbol name="envelope.fill" size={14} color="#6B7280" />
-                <Text style={styles.contactText}>{contact.email}</Text>
-              </TouchableOpacity>
-
-              {contact.address && (
-                <Text style={styles.address}>{contact.address}</Text>
-              )}
-
-              {contact.notes && (
-                <View style={styles.notesContainer}>
-                  <Text style={styles.notes}>{contact.notes}</Text>
-                </View>
-              )}
-            </View>
-          </View>
-        ))}
+      <View style={styles.filterContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <TouchableOpacity
+            style={[
+              styles.filterButton,
+              !selectedType && styles.filterButtonActive
+            ]}
+            onPress={() => handleTypeFilter(null)}
+          >
+            <Text style={[
+              styles.filterButtonText,
+              !selectedType && styles.filterButtonTextActive
+            ]}>All</Text>
+          </TouchableOpacity>
+          {(['veterinarian', 'groomer', 'sitter', 'trainer', 'other'] as ContactType[]).map((type) => (
+            <TouchableOpacity
+              key={type}
+              style={[
+                styles.filterButton,
+                selectedType === type && styles.filterButtonActive
+              ]}
+              onPress={() => handleTypeFilter(type)}
+            >
+              <Text style={[
+                styles.filterButtonText,
+                selectedType === type && styles.filterButtonTextActive
+              ]}>{type.charAt(0).toUpperCase() + type.slice(1)}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
+
+      {isLoading ? (
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color="#0D9488" />
+        </View>
+      ) : contacts.length === 0 ? (
+        <View style={styles.centerContainer}>
+          <Text style={styles.emptyText}>No contacts found</Text>
+        </View>
+      ) : (
+        <View style={styles.contactsList}>
+          {contacts.map(contact => (
+            <View key={contact.id} style={styles.contactCard}>
+              <View style={styles.cardHeader}>
+                <View>
+                  <Text style={styles.contactName}>{contact.name}</Text>
+                  <View style={styles.typeBadge}>
+                    <Text style={styles.typeText}>{contact.type}</Text>
+                  </View>
+                </View>
+                <TouchableOpacity onPress={() => handleEditContact(contact.id)}>
+                  <Text style={styles.editButton}>Edit</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.contactDetails}>
+                <TouchableOpacity 
+                  style={styles.contactRow}
+                  onPress={() => handleCall(contact.phone)}
+                >
+                  <IconSymbol name="phone.fill" size={14} color="#6B7280" />
+                  <Text style={styles.contactText}>{contact.phone}</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.contactRow}
+                  onPress={() => handleEmail(contact.email)}
+                >
+                  <IconSymbol name="envelope.fill" size={14} color="#6B7280" />
+                  <Text style={styles.contactText}>{contact.email}</Text>
+                </TouchableOpacity>
+
+                {contact.address && (
+                  <Text style={styles.address}>{contact.address}</Text>
+                )}
+
+                {contact.notes && (
+                  <View style={styles.notesContainer}>
+                    <Text style={styles.notes}>{contact.notes}</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
     </ScrollView>
   );
 };
@@ -135,6 +177,43 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#1F2937'
+  },
+  filterContainer: {
+    marginVertical: 16
+  },
+  filterButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+    marginRight: 8
+  },
+  filterButtonActive: {
+    backgroundColor: '#0D9488'
+  },
+  filterButtonText: {
+    color: '#4B5563',
+    fontSize: 14,
+    fontWeight: '500'
+  },
+  filterButtonTextActive: {
+    color: '#FFFFFF'
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 32
+  },
+  errorText: {
+    color: '#EF4444',
+    fontSize: 16,
+    textAlign: 'center'
+  },
+  emptyText: {
+    color: '#6B7280',
+    fontSize: 16,
+    textAlign: 'center'
   },
   contactsList: {
     gap: 16

@@ -73,6 +73,15 @@ export function useVaccinations() {
     }
   }, [vaccinationRepository]);
 
+  const getVaccinationById = useCallback(async (id: string): Promise<Vaccination | null> => {
+    try {
+      return await vaccinationRepository.getVaccinationById(id);
+    } catch (err) {
+      console.error('Error getting vaccination by id:', err);
+      throw err;
+    }
+  }, [vaccinationRepository]);
+
   return {
     vaccinations,
     isLoading,
@@ -80,6 +89,7 @@ export function useVaccinations() {
     loadVaccinations,
     addVaccination,
     updateVaccination,
-    deleteVaccination
+    deleteVaccination,
+    getVaccinationById
   };
 } 
