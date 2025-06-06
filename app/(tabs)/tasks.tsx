@@ -1,5 +1,6 @@
 import { AddButton } from "@/app/components/ui/AddButton";
 import { IconSymbol } from "@/app/components/ui/IconSymbol";
+import UndoDialog from "@/app/components/ui/UndoDialog";
 import { router } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
@@ -23,13 +24,16 @@ const TaskManager: React.FC = () => {
   const [todaysTasks, setTodaysTasks] = useState<Task[]>([]);
   const [upcomingTasks, setUpcomingTasks] = useState<Task[]>([]);
   const [overdueTasks, setOverdueTasks] = useState<Task[]>([]);
+  const [completedTaskId, setCompletedTaskId] = useState<string | null>(null);
+  const [showUndoDialog, setShowUndoDialog] = useState(false);
 
   const {
     tasks,
     isLoading,
     error,
     loadTasks,
-    completeTask: handleTaskComplete,
+    completeTask,
+    undoTaskCompletion,
     clearAllTasks
   } = useTasks();
 
@@ -61,6 +65,35 @@ const TaskManager: React.FC = () => {
     setTodaysTasks(todayList.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()));
     setUpcomingTasks(upcoming.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()));
   }, [tasks, selectedPetId]);
+
+  const handleTaskComplete = async (taskId: string) => {
+    try {
+      await completeTask(taskId);
+      setCompletedTaskId(taskId);
+      setShowUndoDialog(true);
+    } catch (err) {
+      console.error('Error completing task:', err);
+      Alert.alert('Error', 'Failed to complete task. Please try again.');
+    }
+  };
+
+  const handleUndo = async () => {
+    if (completedTaskId) {
+      try {
+        await undoTaskCompletion(completedTaskId);
+      } catch (err) {
+        console.error('Error undoing task completion:', err);
+        Alert.alert('Error', 'Failed to undo task completion. Please try again.');
+      }
+    }
+    setShowUndoDialog(false);
+    setCompletedTaskId(null);
+  };
+
+  const handleDismissUndo = () => {
+    setShowUndoDialog(false);
+    setCompletedTaskId(null);
+  };
 
   const handleClearTasks = useCallback(async () => {
     Alert.alert(
@@ -117,104 +150,112 @@ const TaskManager: React.FC = () => {
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
-      }
-    >
-      <View style={styles.header}>
-        <Text style={styles.title}>Task Manager</Text>
-        <View style={styles.headerRight}>
-          <IconSymbol name="calendar" size={20} color="#0D9488" />
-          <Text style={styles.dateText}>{new Date().toLocaleDateString()}</Text>
-        </View>
-      </View>
-
-      <AddButton
-        label="Add Task"
-        onPress={() =>
-          router.push({
-            pathname: "/FormModal",
-            params: {
-              title: "Add",
-              action: "create",
-              form: "task",
-            },
-          })
-        }
+    <>
+      <UndoDialog
+        message="Task marked as complete"
+        onUndo={handleUndo}
+        onDismiss={handleDismissUndo}
+        isVisible={showUndoDialog}
       />
-
-      <TouchableOpacity
-        style={[styles.clearButton, !tasks.length && styles.clearButtonDisabled]}
-        onPress={handleClearTasks}
-        disabled={!tasks.length}
+      <ScrollView
+        style={styles.container}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+        }
       >
-        <IconSymbol name="trash" size={20} color={tasks.length ? "#DC2626" : "#9CA3AF"} />
-        <Text style={[styles.clearButtonText, !tasks.length && styles.clearButtonTextDisabled]}>
-          Clear All Tasks
-        </Text>
-      </TouchableOpacity>
-
-      {overdueTasks.length > 0 && (
-        <View style={[styles.section, styles.overdueSection]}>
-          <Text style={[styles.sectionTitle, styles.overdueTitle]}>
-            Overdue
-          </Text>
-          <View style={[styles.taskList, styles.overdueTaskList]}>
-            {overdueTasks.map((task) => (
-              <TaskItem
-                key={task.id}
-                task={task}
-                showOverdueIndicator
-                showPetInfo={selectedPetId === "all"}
-                onComplete={() => handleTaskComplete(task.id)}
-              />
-            ))}
+        <View style={styles.header}>
+          <Text style={styles.title}>Task Manager</Text>
+          <View style={styles.headerRight}>
+            <IconSymbol name="calendar" size={20} color="#0D9488" />
+            <Text style={styles.dateText}>{new Date().toLocaleDateString()}</Text>
           </View>
         </View>
-      )}
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Today</Text>
-        {todaysTasks.length > 0 ? (
-          <View style={styles.taskList}>
-            {todaysTasks.map((task) => (
-              <TaskItem
-                key={task.id}
-                task={task}
-                showPetInfo={selectedPetId === "all"}
-                onComplete={() => handleTaskComplete(task.id)}
-              />
-            ))}
-          </View>
-        ) : (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>No tasks for today</Text>
+        <AddButton
+          label="Add Task"
+          onPress={() =>
+            router.push({
+              pathname: "/FormModal",
+              params: {
+                title: "Add",
+                action: "create",
+                form: "task",
+              },
+            })
+          }
+        />
+
+        <TouchableOpacity
+          style={[styles.clearButton, !tasks.length && styles.clearButtonDisabled]}
+          onPress={handleClearTasks}
+          disabled={!tasks.length}
+        >
+          <IconSymbol name="trash" size={20} color={tasks.length ? "#DC2626" : "#9CA3AF"} />
+          <Text style={[styles.clearButtonText, !tasks.length && styles.clearButtonTextDisabled]}>
+            Clear All Tasks
+          </Text>
+        </TouchableOpacity>
+
+        {overdueTasks.length > 0 && (
+          <View style={[styles.section, styles.overdueSection]}>
+            <Text style={[styles.sectionTitle, styles.overdueTitle]}>
+              Overdue
+            </Text>
+            <View style={[styles.taskList, styles.overdueTaskList]}>
+              {overdueTasks.map((task) => (
+                <TaskItem
+                  key={task.id}
+                  task={task}
+                  showOverdueIndicator
+                  showPetInfo={selectedPetId === "all"}
+                  onComplete={() => handleTaskComplete(task.id)}
+                />
+              ))}
+            </View>
           </View>
         )}
-      </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Upcoming</Text>
-        {upcomingTasks.length > 0 ? (
-          <View style={styles.taskList}>
-            {upcomingTasks.map((task) => (
-              <TaskItem
-                key={task.id}
-                task={task}
-                showPetInfo={selectedPetId === "all"}
-                onComplete={() => handleTaskComplete(task.id)}
-              />
-            ))}
-          </View>
-        ) : (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>No upcoming tasks</Text>
-          </View>
-        )}
-      </View>
-    </ScrollView>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Today</Text>
+          {todaysTasks.length > 0 ? (
+            <View style={styles.taskList}>
+              {todaysTasks.map((task) => (
+                <TaskItem
+                  key={task.id}
+                  task={task}
+                  showPetInfo={selectedPetId === "all"}
+                  onComplete={() => handleTaskComplete(task.id)}
+                />
+              ))}
+            </View>
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>No tasks for today</Text>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Upcoming</Text>
+          {upcomingTasks.length > 0 ? (
+            <View style={styles.taskList}>
+              {upcomingTasks.map((task) => (
+                <TaskItem
+                  key={task.id}
+                  task={task}
+                  showPetInfo={selectedPetId === "all"}
+                  onComplete={() => handleTaskComplete(task.id)}
+                />
+              ))}
+            </View>
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>No upcoming tasks</Text>
+            </View>
+          )}
+        </View>
+      </ScrollView>
+    </>
   );
 };
 

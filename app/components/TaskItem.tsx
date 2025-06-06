@@ -99,13 +99,17 @@ const TaskItem: React.FC<TaskItemProps> = ({
         )}
         {task.notes && <Text style={styles.notes}>{task.notes}</Text>}
       </View>
-      <Text style={[styles.time, isOverdue && styles.overdueTime]}>
-        {taskTime}
-      </Text>
+      <View style={styles.rightContainer}>
+        <Text style={[styles.time, isOverdue && styles.overdueTime]}>
+          {taskTime}
+        </Text>
+      </View>
     </View>
   );
 
-  return (
+  return task.isComplete ? (
+    renderContent()
+  ) : (
     <TouchableOpacity
       onPress={() =>
         router.push({
@@ -182,13 +186,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#4B5563",
   },
+  rightContainer: {
+    alignItems: 'flex-end',
+  },
   time: {
     fontSize: 14,
     color: "#6B7280",
   },
   overdueTime: {
     color: "#DC2626",
-  },
+  }
 });
 
 export default TaskItem;

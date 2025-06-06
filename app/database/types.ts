@@ -96,6 +96,8 @@ export interface Expense {
   description: string;
   vendor: string;
   reimbursed: number;
+  linkedVetVisitId?: string;
+  linkedVaccinationId?: string;
 }
 
 export interface Contact {

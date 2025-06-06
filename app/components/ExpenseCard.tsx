@@ -3,6 +3,8 @@ import { router } from "expo-router";
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Expense, Pet } from "../database/types";
+import { useVaccinations } from "../hooks/useVaccinations";
+import { useVetVisits } from "../hooks/useVetVisits";
 
 interface ExpenseCardProps {
   expense: Expense;
@@ -15,6 +17,17 @@ const ExpenseCard: React.FC<ExpenseCardProps> = ({
   pet,
   showPetInfo = false,
 }) => {
+  const { visits } = useVetVisits();
+  const { vaccinations } = useVaccinations();
+
+  const linkedVetVisit = expense.linkedVetVisitId 
+    ? visits.find(v => v.id === expense.linkedVetVisitId)
+    : undefined;
+
+  const linkedVaccination = expense.linkedVaccinationId
+    ? vaccinations.find(v => v.id === expense.linkedVaccinationId)
+    : undefined;
+
   const handlePress = () => {
     router.push({
       pathname: "/FormModal",
@@ -56,6 +69,27 @@ const ExpenseCard: React.FC<ExpenseCardProps> = ({
             <Text style={styles.categoryText}>{expense.category}</Text>
           </View>
         </View>
+
+        {(linkedVetVisit || linkedVaccination) && (
+          <View style={styles.linkedInfo}>
+            {linkedVetVisit && (
+              <View style={styles.linkedItem}>
+                <IconSymbol name="stethoscope" size={14} color="#6B7280" />
+                <Text style={styles.linkedText}>
+                  Visit: {linkedVetVisit.reason} ({new Date(linkedVetVisit.date).toLocaleDateString()})
+                </Text>
+              </View>
+            )}
+            {linkedVaccination && (
+              <View style={styles.linkedItem}>
+                <IconSymbol name="cross.case.fill" size={14} color="#6B7280" />
+                <Text style={styles.linkedText}>
+                  Vaccine: {linkedVaccination.name} ({new Date(linkedVaccination.dateGiven).toLocaleDateString()})
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
 
         <View style={styles.footer}>
           <Text style={styles.vendor}>{expense.vendor}</Text>
@@ -155,6 +189,22 @@ const styles = StyleSheet.create({
   date: {
     fontSize: 14,
     color: '#6B7280',
+  },
+  linkedInfo: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+  },
+  linkedItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  linkedText: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginLeft: 4,
   },
 });
 

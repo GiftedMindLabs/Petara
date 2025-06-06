@@ -10,6 +10,8 @@ type ExpenseRow = {
   description: string;
   vendor: string;
   reimbursed: number;
+  linkedVetVisitId: string | null;
+  linkedVaccinationId: string | null;
 };
 
 type SQLiteValue = string | number | null;
@@ -31,13 +33,16 @@ export class ExpenseRepository {
         expense.category,
         expense.description,
         expense.vendor,
-        expense.reimbursed
+        expense.reimbursed,
+        expense.linkedVetVisitId || null,
+        expense.linkedVaccinationId || null
       ];
 
       await this.db.runAsync(
         `INSERT INTO expenses (
-          id, petId, date, amount, category, description, vendor, reimbursed
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          id, petId, date, amount, category, description, vendor, reimbursed,
+          linkedVetVisitId, linkedVaccinationId
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         params
       );
 
@@ -172,7 +177,9 @@ export class ExpenseRepository {
       category: row.category,
       description: row.description,
       vendor: row.vendor,
-      reimbursed: row.reimbursed
+      reimbursed: row.reimbursed,
+      linkedVetVisitId: row.linkedVetVisitId || undefined,
+      linkedVaccinationId: row.linkedVaccinationId || undefined
     };
   }
 } 

@@ -359,4 +359,36 @@ export class TaskRepository {
 
     return task;
   }
+
+  /**
+   * Get tasks by treatment ID
+   */
+  async getTasksByTreatmentId(treatmentId: string): Promise<Task[]> {
+    const results = await this.db.getAllAsync<TaskRow>(
+      'SELECT * FROM tasks WHERE linkedTreatmentId = ? ORDER BY dueDate ASC',
+      [treatmentId]
+    );
+
+    return results.map(row => this.mapTaskRow(row));
+  }
+
+  /**
+   * Undo task completion
+   */
+  async undoTaskCompletion(id: string): Promise<boolean> {
+    // First, get the task
+    const task = await this.getTaskById(id);
+    if (!task) return false;
+
+    // Execute the update
+    const result = await this.db.runAsync(
+      `UPDATE tasks 
+       SET isComplete = 0, 
+           lastCompletedDate = NULL
+       WHERE id = ?`,
+      [id]
+    );
+
+    return result.changes > 0;
+  }
 }

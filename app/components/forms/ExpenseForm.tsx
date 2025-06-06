@@ -5,6 +5,8 @@ import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 
 import { Expense } from '../../database/types';
 import { useExpenses } from '../../hooks/useExpenses';
 import { usePets } from '../../hooks/usePets';
+import { useVaccinations } from '../../hooks/useVaccinations';
+import { useVetVisits } from '../../hooks/useVetVisits';
 import { useSelectedPet } from '../../providers/SelectedPetProvider';
 
 interface ExpenseFormProps {
@@ -22,6 +24,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
   const { pets } = usePets();
   const { selectedPetId } = useSelectedPet();
   const { addExpense, updateExpense, getExpenseById } = useExpenses();
+  const { visits } = useVetVisits();
+  const { vaccinations } = useVaccinations();
   const [expense, setExpense] = useState<Expense | null>(null);
 
   const [formData, setFormData] = useState<Omit<Expense, 'id'>>({
@@ -31,7 +35,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
     category: 'veterinary',
     description: '',
     vendor: '',
-    reimbursed: 0
+    reimbursed: 0,
+    linkedVetVisitId: undefined,
+    linkedVaccinationId: undefined
   });
 
   useEffect(() => {
@@ -46,7 +52,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
             category: loadedExpense.category,
             description: loadedExpense.description,
             vendor: loadedExpense.vendor,
-            reimbursed: loadedExpense.reimbursed
+            reimbursed: loadedExpense.reimbursed,
+            linkedVetVisitId: loadedExpense.linkedVetVisitId,
+            linkedVaccinationId: loadedExpense.linkedVaccinationId
           });
         }
       });
@@ -132,8 +140,14 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
         <View style={styles.pickerContainer}>
           <Picker
             selectedValue={formData.category}
-            onValueChange={(value: 'veterinary' | 'food' | 'supplies' | 'grooming' | 'medications' | 'other') => 
-              setFormData({ ...formData, category: value })}
+            onValueChange={(value: 'veterinary' | 'food' | 'supplies' | 'grooming' | 'medications' | 'other') => {
+              setFormData({ 
+                ...formData, 
+                category: value,
+                linkedVetVisitId: value !== 'veterinary' ? undefined : formData.linkedVetVisitId,
+                linkedVaccinationId: value !== 'veterinary' ? undefined : formData.linkedVaccinationId
+              });
+            }}
             style={styles.picker}
           >
             <Picker.Item label="Veterinary Care" value="veterinary" />
@@ -145,6 +159,58 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
           </Picker>
         </View>
       </View>
+
+      {formData.category === 'veterinary' && (
+        <>
+          <View style={styles.formField}>
+            <Text style={styles.label}>Link to Vet Visit</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={formData.linkedVetVisitId}
+                onValueChange={(value: string | undefined) => 
+                  setFormData({ ...formData, linkedVetVisitId: value })}
+                style={styles.picker}
+              >
+                <Picker.Item label="None" value={undefined} />
+                {visits
+                  .filter(visit => visit.petId === formData.petId)
+                  .map(visit => (
+                    <Picker.Item 
+                      key={visit.id} 
+                      label={`${new Date(visit.date).toLocaleDateString()} - ${visit.reason}`} 
+                      value={visit.id} 
+                    />
+                  ))
+                }
+              </Picker>
+            </View>
+          </View>
+
+          <View style={styles.formField}>
+            <Text style={styles.label}>Link to Vaccination</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={formData.linkedVaccinationId}
+                onValueChange={(value: string | undefined) => 
+                  setFormData({ ...formData, linkedVaccinationId: value })}
+                style={styles.picker}
+              >
+                <Picker.Item label="None" value={undefined} />
+                {vaccinations
+                  .filter(vacc => vacc.petId === formData.petId)
+                  .map(vacc => (
+                    <Picker.Item 
+                      key={vacc.id} 
+                      label={`${new Date(vacc.dateGiven).toLocaleDateString()} - ${vacc.name}`} 
+                      value={vacc.id} 
+                    />
+                  ))
+                }
+              </Picker>
+            </View>
+          </View>
+        </>
+      )}
 
       <View style={styles.formField}>
         <Text style={styles.label}>Vendor</Text>

@@ -99,6 +99,25 @@ export function useTasks() {
     }
   }, [taskRepository]);
 
+  const getTasksByTreatmentId = useCallback(async (treatmentId: string): Promise<Task[]> => {
+    try {
+      return await taskRepository.getTasksByTreatmentId(treatmentId);
+    } catch (err) {
+      console.error('Error getting tasks by treatment id:', err);
+      throw err;
+    }
+  }, [taskRepository]);
+
+  const undoTaskCompletion = useCallback(async (id: string) => {
+    try {
+      const success = await taskRepository.undoTaskCompletion(id);
+      return success;
+    } catch (err) {
+      console.error('Error undoing task completion:', err);
+      throw err;
+    }
+  }, [taskRepository]);
+
   return {
     tasks,
     isLoading,
@@ -109,6 +128,8 @@ export function useTasks() {
     updateTask,
     deleteTask,
     completeTask,
-    clearAllTasks
+    clearAllTasks,
+    getTasksByTreatmentId,
+    undoTaskCompletion
   };
 } 
