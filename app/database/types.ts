@@ -20,14 +20,14 @@ export interface ResultSet {
 export interface Pet {
   id: string;
   name: string;
-  imageUrl: string;
+  imageUrl: string | null;
   species: 'dog' | 'cat' | 'bird' | 'other';
   breed: string;
   sex: 'male' | 'female';
   birthDate: number;
   allergies: string[];
   weight: number;
-  microchipCode: number;
+  microchipCode: number | null;
   sterilized: boolean;
   deceased: boolean;
 }

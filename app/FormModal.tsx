@@ -31,7 +31,7 @@ export default function FormModal() {
   let children;
   switch (form) {
     case "pet":
-      children = <PetForm onSubmit={handleSubmit} onCancel={handleCancel} />;
+      children = <PetForm petId={(action === "edit" && id) ? id as string : undefined}  onSubmit={handleSubmit} onCancel={handleCancel} />;
       break;
     case "contact":
       children = (
