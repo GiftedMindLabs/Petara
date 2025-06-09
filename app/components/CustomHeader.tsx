@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSelectedPet } from '../providers/SelectedPetProvider';
 import PetSelector from './PetSelector';
 import { IconSymbol } from './ui/IconSymbol';
@@ -12,7 +12,7 @@ export const CustomHeader: React.FC = () => {
       <View style={styles.content}>
         <View style={styles.titleContainer}>
           <Text style={styles.title}>Petara</Text>
-          <IconSymbol name="pawprint.fill" size={24} color="#0D9488" />
+          <Image source={require('../../assets/images/foreground_color.png')} style={styles.logo} />
         </View>
         <View style={styles.actions}>
           <PetSelector
@@ -63,6 +63,11 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 8,
     backgroundColor: '#F9FAFB'
+  },
+  logo: {
+    width: 32,
+    height: 32,
+    resizeMode: 'contain'
   }
 });
 
