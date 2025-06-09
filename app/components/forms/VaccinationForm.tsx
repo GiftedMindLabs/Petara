@@ -28,8 +28,8 @@ const VaccinationForm: React.FC<VaccinationFormProps> = ({
   const [formData, setFormData] = useState({
     petId: selectedPetId !== 'all' ? selectedPetId : '',
     name: '',
-    dateGiven: new Date().toISOString(),
-    dueDate: new Date().toISOString(),
+    dateGiven: new Date().getTime(),
+    dueDate: new Date().getTime(),
     administeredBy: '',
     lotNumber: '',
     manufacturer: ''
@@ -60,14 +60,14 @@ const VaccinationForm: React.FC<VaccinationFormProps> = ({
   const handleDateChange = (event: any, selectedDate?: Date) => {
     setShowDatePicker(false);
     if (selectedDate) {
-      setFormData({ ...formData, dateGiven: selectedDate.toISOString() });
+      setFormData({ ...formData, dateGiven: selectedDate.getTime() });
     }
   };
 
   const handleNextDueChange = (event: any, selectedDate?: Date) => {
     setShowNextDuePicker(false);
     if (selectedDate) {
-      setFormData({ ...formData, dueDate: selectedDate.toISOString() });
+      setFormData({ ...formData, dueDate: selectedDate.getTime() });
     }
   };
 
@@ -85,8 +85,8 @@ const VaccinationForm: React.FC<VaccinationFormProps> = ({
     }
   };
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString();
+  const formatDate = (timestamp: number) => {
+    return new Date(timestamp).toLocaleDateString();
   };
 
   return (
@@ -108,12 +108,12 @@ const VaccinationForm: React.FC<VaccinationFormProps> = ({
       </View>
 
       <View style={styles.formField}>
-        <Text style={styles.label}>Vaccination Name</Text>
+        <Text style={styles.label}>Vaccine Name</Text>
         <TextInput
           style={styles.input}
           value={formData.name}
           onChangeText={(value) => setFormData({ ...formData, name: value })}
-          placeholder="Enter vaccination name"
+          placeholder="Enter vaccine name"
           placeholderTextColor="#9CA3AF"
         />
       </View>

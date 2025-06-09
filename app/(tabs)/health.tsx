@@ -4,7 +4,7 @@ import { IconSymbol } from '@/app/components/ui/IconSymbol';
 import VaccinationCard from '@/app/components/VaccinationCard';
 import VetVisitCard from '@/app/components/VetVisitCard';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { usePets } from '../hooks/usePets';
 import { useTreatments } from '../hooks/useTreatments';
@@ -21,6 +21,24 @@ const VetHealth: React.FC = () => {
   const { vaccinations, isLoading: isLoadingVaccinations } = useVaccinations();
   const { treatments, isLoading: isLoadingTreatments } = useTreatments();
   const { visits, isLoading: isLoadingVisits, error } = useVetVisits();
+
+  const filteredVisits = useMemo(() => {
+    return selectedPetId === 'all' 
+      ? visits 
+      : visits.filter(visit => visit.petId === selectedPetId);
+  }, [visits, selectedPetId]);
+
+  const filteredVaccinations = useMemo(() => {
+    return selectedPetId === 'all'
+      ? vaccinations
+      : vaccinations.filter(vaccination => vaccination.petId === selectedPetId);
+  }, [vaccinations, selectedPetId]);
+
+  const filteredTreatments = useMemo(() => {
+    return selectedPetId === 'all'
+      ? treatments
+      : treatments.filter(treatment => treatment.petId === selectedPetId);
+  }, [treatments, selectedPetId]);
 
   if (isLoadingVaccinations || isLoadingTreatments || isLoadingVisits) {
     return (
@@ -97,12 +115,13 @@ const VetHealth: React.FC = () => {
                   title: "Add",
                   action: "create",
                   form: "vetVisit",
+                  petId: selectedPetId === 'all' ? undefined : selectedPetId,
                 },
               })
             }
           />
-          {visits.length > 0 ? (
-            visits.map(visit => {
+          {filteredVisits.length > 0 ? (
+            filteredVisits.map(visit => {
               const pet = pets.find(p => p.id === visit.petId);
               return (
                 <VetVisitCard
@@ -132,12 +151,13 @@ const VetHealth: React.FC = () => {
                   title: "Add",
                   action: "create",
                   form: "vaccination",
+                  petId: selectedPetId === 'all' ? undefined : selectedPetId,
                 },
               })
             }
           />
-          {vaccinations.length > 0 ? (
-            vaccinations.map(vaccination => {
+          {filteredVaccinations.length > 0 ? (
+            filteredVaccinations.map(vaccination => {
               const pet = pets.find(p => p.id === vaccination.petId);
               return (
                 <VaccinationCard
@@ -167,12 +187,13 @@ const VetHealth: React.FC = () => {
                   title: "Add",
                   action: "create",
                   form: "treatment",
+                  petId: selectedPetId === 'all' ? undefined : selectedPetId,
                 },
               })
             }
           />
-          {treatments.length > 0 ? (
-            treatments.map(treatment => {
+          {filteredTreatments.length > 0 ? (
+            filteredTreatments.map(treatment => {
               const pet = pets.find(p => p.id === treatment.petId);
               return (
                 <TreatmentCard

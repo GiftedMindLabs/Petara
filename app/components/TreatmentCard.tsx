@@ -15,6 +15,10 @@ const TreatmentCard: React.FC<TreatmentCardProps> = ({
   pet,
   showPetInfo = false,
 }) => {
+  const formatDate = (timestamp: number) => {
+    return new Date(timestamp).toLocaleDateString();
+  };
+
   const handlePress = () => {
     router.push({
       pathname: "/FormModal",
@@ -32,7 +36,7 @@ const TreatmentCard: React.FC<TreatmentCardProps> = ({
       <View style={styles.card}>
         {showPetInfo && pet && (
           <View style={styles.petInfo}>
-            <Image source={{ uri: pet.imageUrl }} style={styles.petImage} />
+            {pet.imageUrl ? <Image source={{ uri: pet.imageUrl }} style={styles.petImage} /> : <View style={styles.petImage} />}
             <Text style={styles.petName}>{pet.name}</Text>
           </View>
         )}
@@ -53,7 +57,7 @@ const TreatmentCard: React.FC<TreatmentCardProps> = ({
               treatment.status === 'completed' ? styles.statusCompletedText :
               styles.statusPendingText
             ]}>
-              {treatment.status}
+              {treatment.status.charAt(0).toUpperCase() + treatment.status.slice(1)}
             </Text>
           </View>
         </View>
@@ -62,13 +66,13 @@ const TreatmentCard: React.FC<TreatmentCardProps> = ({
         </Text>
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            Started: {new Date(treatment.startDate).toLocaleDateString()}
+            Started: {formatDate(treatment.startDate)}
           </Text>
           {treatment.endDate && (
             <>
               <Text style={styles.bullet}>•</Text>
               <Text style={styles.footerText}>
-                Ended: {new Date(treatment.endDate).toLocaleDateString()}
+                Ended: {formatDate(treatment.endDate)}
               </Text>
             </>
           )}

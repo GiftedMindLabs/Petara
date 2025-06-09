@@ -25,7 +25,7 @@ export interface Task {
 export interface VetVisit {
   id: string;
   petId: string;
-  date: string;
+  date: number;
   reason: string;
   notes: string;
   vetName: string;
@@ -128,7 +128,7 @@ export const tasks: Task[] = [{
 export const vetVisits: VetVisit[] = [{
   id: '1',
   petId: '1',
-  date: '2023-09-15',
+  date: new Date('2023-09-15').getTime(),
   reason: 'Annual Checkup',
   notes: 'All vaccines updated. Healthy weight.',
   vetName: 'Dr. Johnson',
@@ -136,7 +136,7 @@ export const vetVisits: VetVisit[] = [{
 }, {
   id: '2',
   petId: '2',
-  date: '2023-10-02',
+  date: new Date('2023-10-02').getTime(),
   reason: 'Dental Cleaning',
   notes: 'Minor tartar buildup. Schedule follow-up in 6 months.',
   vetName: 'Dr. Martinez',
@@ -201,8 +201,10 @@ export const getTodaysTasks = () => {
 };
 // Helper function to get upcoming vet visits
 export const getUpcomingVetVisits = () => {
-  const today = new Date();
-  return vetVisits.filter(visit => new Date(visit.date) >= today).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const today = new Date().getTime();
+  return vetVisits
+    .filter(visit => visit.date >= today)
+    .sort((a, b) => a.date - b.date);
 };
 // Helper function to get tasks for a specific pet
 export const getTasksForPet = (petId: string) => {

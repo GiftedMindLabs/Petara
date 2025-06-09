@@ -152,7 +152,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ taskId, onSubmit, onCancel }) => {
         petId: formData.petId,
         title: formData.title,
         type: formData.type,
-        dueDate: formData.dueDate.toISOString(),
+        dueDate: formData.dueDate.getTime(),
         notes: formData.notes,
         isComplete: false,
         recurring: formData.recurring,
@@ -161,7 +161,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ taskId, onSubmit, onCancel }) => {
           recurrenceInterval: formData.recurrenceInterval,
           recurrenceWeekDays: formData.recurrenceWeekDays,
           recurrenceMonthDay: formData.recurrenceMonthDay,
-          recurrenceEndDate: formData.recurrenceEndDate?.toISOString(),
+          recurrenceEndDate: formData.recurrenceEndDate?.getTime(),
           recurrenceCount: formData.recurrenceCount,
         }),
       };
@@ -239,11 +239,11 @@ const TaskForm: React.FC<TaskFormProps> = ({ taskId, onSubmit, onCancel }) => {
         <View style={[styles.formField, styles.flex1]}>
           <Text style={styles.label}>Date</Text>
           <TouchableOpacity
-            style={styles.input}
+            style={styles.dateButton}
             onPress={() => setShowDatePicker(true)}
           >
-            <Text style={styles.dateTimeText}>
-              {formData.dueDate.toLocaleDateString()}
+            <Text style={styles.dateButtonText}>
+              {formatDate(formData.dueDate)}
             </Text>
           </TouchableOpacity>
           {showDatePicker && (
@@ -259,10 +259,10 @@ const TaskForm: React.FC<TaskFormProps> = ({ taskId, onSubmit, onCancel }) => {
         <View style={[styles.formField, styles.flex1]}>
           <Text style={styles.label}>Time</Text>
           <TouchableOpacity
-            style={styles.input}
+            style={styles.dateButton}
             onPress={() => setShowTimePicker(true)}
           >
-            <Text style={styles.dateTimeText}>
+            <Text style={styles.dateButtonText}>
               {formatTime(formData.dueDate)}
             </Text>
           </TouchableOpacity>
@@ -592,6 +592,19 @@ const styles = StyleSheet.create({
   },
   weekDayTextSelected: {
     color: "#FFFFFF",
+  },
+  dateButton: {
+    backgroundColor: "#F9FAFB",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 6,
+    padding: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dateButtonText: {
+    fontSize: 16,
+    color: "#1F2937",
   },
 });
 

@@ -5,8 +5,8 @@ type VaccinationRow = {
   id: string;
   petId: string;
   name: string;
-  dateGiven: string;
-  dueDate: string;
+  dateGiven: number;
+  dueDate: number;
   administeredBy: string;
   lotNumber: string;
   manufacturer: string;
@@ -110,6 +110,13 @@ export class VaccinationRepository {
     );
 
     return result.changes > 0;
+  }
+
+  async getAllVaccinations(): Promise<Vaccination[]> {
+    const results = await this.db.getAllAsync<VaccinationRow>(
+      'SELECT * FROM vaccinations ORDER BY dateGiven DESC'
+    );
+    return results.map(this.mapVaccinationRow);
   }
 
   /**

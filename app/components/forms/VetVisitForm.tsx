@@ -35,7 +35,7 @@ const VetVisitForm: React.FC<VetVisitFormProps> = ({
 
   const [formData, setFormData] = useState({
     petId: selectedPetId !== 'all' ? selectedPetId : "",
-    date: new Date(),
+    date: new Date().getTime(),
     reason: "",
     notes: "",
     vetName: "",
@@ -54,7 +54,7 @@ const VetVisitForm: React.FC<VetVisitFormProps> = ({
     if (visit) {
       setFormData({
         petId: visit.petId,
-        date: new Date(visit.date),
+        date: visit.date,
         reason: visit.reason,
         notes: visit.notes,
         vetName: visit.vetName,
@@ -73,7 +73,7 @@ const VetVisitForm: React.FC<VetVisitFormProps> = ({
   const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
     setShowDatePicker(Platform.OS === 'ios');
     if (selectedDate) {
-      setFormData({ ...formData, date: selectedDate });
+      setFormData({ ...formData, date: selectedDate.getTime() });
     }
   };
 
@@ -107,7 +107,7 @@ const VetVisitForm: React.FC<VetVisitFormProps> = ({
 
     const visitData = {
       petId: formData.petId,
-      date: formData.date.toISOString().split('T')[0], // Format as YYYY-MM-DD
+      date: formData.date,
       reason: formData.reason.trim(),
       notes: formData.notes.trim(),
       vetName: formData.vetName.trim(),
@@ -127,8 +127,8 @@ const VetVisitForm: React.FC<VetVisitFormProps> = ({
     }
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString();
+  const formatDate = (date: number) => {
+    return new Date(date).toLocaleDateString();
   };
 
   return (
@@ -156,18 +156,18 @@ const VetVisitForm: React.FC<VetVisitFormProps> = ({
       <View style={styles.formField}>
         <Text style={styles.label}>Date</Text>
         <TouchableOpacity
-          style={styles.input}
+          style={styles.dateButton}
           onPress={() => setShowDatePicker(true)}
         >
-          <Text style={styles.dateText}>{formatDate(formData.date)}</Text>
+          <Text style={styles.dateButtonText}>
+            {formatDate(formData.date)}
+          </Text>
         </TouchableOpacity>
         {showDatePicker && (
           <DateTimePicker
-            value={formData.date}
+            value={new Date(formData.date)}
             mode="date"
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
             onChange={handleDateChange}
-            maximumDate={new Date()}
           />
         )}
       </View>
@@ -296,7 +296,14 @@ const styles = StyleSheet.create({
     minHeight: 80,
     textAlignVertical: 'top',
   },
-  dateText: {
+  dateButton: {
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  dateButtonText: {
     fontSize: 16,
     color: '#1F2937',
   },

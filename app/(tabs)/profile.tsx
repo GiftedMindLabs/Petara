@@ -167,7 +167,7 @@ const Profile: React.FC = () => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.imageContainer}>
-        <Image source={{ uri: pet.imageUrl }} style={styles.coverImage} />
+        {pet.imageUrl ? <Image source={{ uri: pet.imageUrl }} style={styles.coverImage} /> : <View style={styles.coverImage} />}
         <TouchableOpacity 
           style={styles.editButton}
           onPress={() => router.push({

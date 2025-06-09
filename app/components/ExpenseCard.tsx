@@ -46,7 +46,7 @@ const ExpenseCard: React.FC<ExpenseCardProps> = ({
         <View style={styles.cardHeader}>
           {showPetInfo && pet && (
             <View style={styles.petInfo}>
-              <Image source={{ uri: pet.imageUrl }} style={styles.petImage} />
+              {pet.imageUrl && <Image source={{ uri: pet.imageUrl }} style={styles.petImage} />}
               <Text style={styles.petName}>{pet.name}</Text>
             </View>
           )}

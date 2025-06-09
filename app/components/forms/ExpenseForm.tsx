@@ -30,7 +30,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
   const [formData, setFormData] = useState<Omit<Expense, 'id'>>({
     petId: selectedPetId !== 'all' ? selectedPetId : '',
-    date: new Date().toISOString(),
+    date: new Date().getTime(),
     amount: 0,
     category: 'veterinary',
     description: '',
@@ -64,7 +64,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
   const handleDateChange = (event: any, selectedDate?: Date) => {
     setShowDatePicker(false);
     if (selectedDate) {
-      setFormData({ ...formData, date: selectedDate.toISOString() });
+      setFormData({ ...formData, date: selectedDate.getTime() });
     }
   };
 
@@ -82,8 +82,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
     }
   };
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString();
+  const formatDate = (timestamp: number) => {
+    return new Date(timestamp).toLocaleDateString();
   };
 
   return (

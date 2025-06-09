@@ -37,7 +37,7 @@ export interface Task {
   petId: string;
   title: string;
   type: 'feeding' | 'medication' | 'walk' | 'grooming' | 'other';
-  dueDate: string;
+  dueDate: number;
   isComplete: boolean;
   notes?: string;
   recurring: boolean;
@@ -45,10 +45,10 @@ export interface Task {
   recurrenceInterval?: number;
   recurrenceWeekDays?: number[];
   recurrenceMonthDay?: number;
-  recurrenceEndDate?: string;
+  recurrenceEndDate?: number;
   recurrenceCount?: number;
-  lastCompletedDate?: string;
-  nextDueDate?: string;
+  lastCompletedDate?: number;
+  nextDueDate?: number;
   linkedTreatmentId?: string;
   linkedVaccinationId?: string;
   linkedVetVisitId?: string;
@@ -57,7 +57,7 @@ export interface Task {
 export interface VetVisit {
   id: string;
   petId: string;
-  date: string;
+  date: number;
   reason: string;
   notes: string;
   vetName: string;
@@ -69,8 +69,8 @@ export interface Treatment {
   petId: string;
   name: string;
   type: string;
-  startDate: string;
-  endDate?: string;
+  startDate: number;
+  endDate?: number;
   frequency: string;
   dosage: string;
   status: 'ongoing' | 'scheduled' | 'completed';
@@ -80,8 +80,8 @@ export interface Vaccination {
   id: string;
   petId: string;
   name: string;
-  dateGiven: string;
-  dueDate: string;
+  dateGiven: number;
+  dueDate: number;
   administeredBy: string;
   lotNumber: string;
   manufacturer: string;
@@ -90,7 +90,7 @@ export interface Vaccination {
 export interface Expense {
   id: string;
   petId: string;
-  date: string;
+  date: number;
   amount: number;
   category: 'veterinary' | 'food' | 'supplies' | 'grooming' | 'medications' | 'other';
   description: string;

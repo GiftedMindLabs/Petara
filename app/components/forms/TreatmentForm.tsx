@@ -90,7 +90,8 @@ const TreatmentForm: React.FC<TreatmentFormProps> = ({
     petId: selectedPetId !== 'all' ? selectedPetId : '',
     name: '',
     type: '',
-    startDate: new Date().toISOString(),
+    startDate: new Date().getTime(),
+    endDate: undefined,
     frequency: '',
     dosage: '',
     status: 'scheduled',
@@ -131,14 +132,14 @@ const TreatmentForm: React.FC<TreatmentFormProps> = ({
   const handleStartDateChange = (event: any, selectedDate?: Date) => {
     setShowStartDatePicker(false);
     if (selectedDate) {
-      setFormData({ ...formData, startDate: selectedDate.toISOString() });
+      setFormData({ ...formData, startDate: selectedDate.getTime() });
     }
   };
 
   const handleEndDateChange = (event: any, selectedDate?: Date) => {
     setShowEndDatePicker(false);
     if (selectedDate) {
-      setFormData({ ...formData, endDate: selectedDate.toISOString() });
+      setFormData({ ...formData, endDate: selectedDate.getTime() });
     }
   };
 
@@ -232,8 +233,8 @@ const TreatmentForm: React.FC<TreatmentFormProps> = ({
     }
   };
 
-  const formatDate = (date?: string) => {
-    return date ? new Date(date).toLocaleDateString() : '';
+  const formatDate = (timestamp: number) => {
+    return new Date(timestamp).toLocaleDateString();
   };
 
   return (
@@ -321,7 +322,7 @@ const TreatmentForm: React.FC<TreatmentFormProps> = ({
       {formData.recurring && (
         <>
           <View style={styles.formField}>
-            <Text style={styles.label}>Recurrence Pattern</Text>
+            <Text style={styles.label}>Frequency</Text>
             <View style={styles.pickerContainer}>
               <Picker
                 selectedValue={formData.recurrencePattern}
@@ -339,24 +340,20 @@ const TreatmentForm: React.FC<TreatmentFormProps> = ({
           </View>
 
           <View style={styles.formField}>
-            <Text style={styles.label}>Repeat every</Text>
-            <View style={styles.row}>
-              <TextInput
-                style={[styles.input, styles.flex1]}
-                value={formData.recurrenceInterval.toString()}
-                onChangeText={(value) =>
-                  setFormData({
-                    ...formData,
-                    recurrenceInterval: parseInt(value) || 1,
-                  })
-                }
-                keyboardType="number-pad"
-              />
-              <Text style={styles.intervalText}>
-                {formData.recurrencePattern}
-                {formData.recurrenceInterval > 1 ? "s" : ""}
-              </Text>
-            </View>
+            <Text style={styles.label}>Interval</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.recurrenceInterval.toString()}
+              onChangeText={(value) =>
+                setFormData({
+                  ...formData,
+                  recurrenceInterval: parseInt(value) || 1,
+                })
+              }
+              keyboardType="number-pad"
+              placeholder="Enter interval"
+              placeholderTextColor="#9CA3AF"
+            />
           </View>
 
           {formData.recurrencePattern === "weekly" && (
@@ -415,7 +412,7 @@ const TreatmentForm: React.FC<TreatmentFormProps> = ({
               onPress={() => setShowEndDatePicker(true)}
             >
               <Text style={styles.dateButtonText}>
-                {formatDate(formData.endDate)}
+                {formData.endDate ? formatDate(formData.endDate) : 'Select end date'}
               </Text>
             </TouchableOpacity>
             {showEndDatePicker && (
@@ -452,14 +449,14 @@ const TreatmentForm: React.FC<TreatmentFormProps> = ({
           style={[styles.button, styles.cancelButton]}
           onPress={onCancel}
         >
-          <Text style={styles.buttonText}>Cancel</Text>
+          <Text style={styles.cancelButtonText}>Cancel</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.button, styles.submitButton]}
           onPress={handleSubmit}
         >
-          <Text style={[styles.buttonText, styles.submitButtonText]}>
-            {treatmentId ? 'Update' : 'Add'} Treatment
+          <Text style={styles.submitButtonText}>
+            {treatmentId ? 'Save Changes' : 'Add Treatment'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -471,81 +468,83 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    paddingHorizontal: 36,
   },
   formField: {
     marginBottom: 16,
   },
   label: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#1F2937',
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#374151",
     marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: "#D1D5DB",
     borderRadius: 8,
-    padding: 12,
-    fontSize: 14,
-    color: '#1F2937',
-    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 16,
+    color: "#374151",
   },
   pickerContainer: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: "#D1D5DB",
     borderRadius: 8,
-    backgroundColor: '#FFFFFF',
+    overflow: "hidden",
   },
   picker: {
-    color: '#1F2937',
+    backgroundColor: "transparent",
   },
   dateButton: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: "#D1D5DB",
     borderRadius: 8,
-    padding: 12,
-    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   dateButtonText: {
-    fontSize: 14,
-    color: '#1F2937',
+    fontSize: 16,
+    color: "#374151",
   },
   buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 16,
     marginTop: 24,
-    gap: 12,
+    marginBottom: 32,
   },
   button: {
     flex: 1,
+    paddingVertical: 12,
     borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   cancelButton: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: "#F3F4F6",
   },
   submitButton: {
-    backgroundColor: '#0D9488',
+    backgroundColor: "#0D9488",
   },
-  buttonText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#1F2937',
+  cancelButtonText: {
+    color: "#374151",
+    fontSize: 16,
+    fontWeight: "500",
   },
   submitButtonText: {
-    color: '#FFFFFF',
+    color: "white",
+    fontSize: 16,
+    fontWeight: "500",
   },
   switchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 16,
   },
   switchLabel: {
     marginLeft: 8,
     fontSize: 16,
-    color: '#1F2937',
+    color: "#374151",
   },
   row: {
     flexDirection: 'row',
