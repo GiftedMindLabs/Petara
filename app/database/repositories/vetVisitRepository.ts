@@ -4,7 +4,7 @@ import { VetVisit } from '../types';
 type VetVisitRow = {
   id: string;
   petId: string;
-  date: string;
+  date: number;
   reason: string;
   notes: string | null;
   vetName: string;
@@ -113,7 +113,7 @@ export class VetVisitRepository {
    * Get upcoming vet visits
    */
   async getUpcomingVetVisits(): Promise<VetVisit[]> {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().getTime();
     const results = await this.db.getAllAsync<VetVisitRow>(
       "SELECT * FROM vet_visits WHERE date >= ? ORDER BY date ASC",
       [today]

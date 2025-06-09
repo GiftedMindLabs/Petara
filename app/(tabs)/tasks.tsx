@@ -46,24 +46,25 @@ const TaskManager: React.FC = () => {
     }
 
     const now = new Date();
-    const today = now.toISOString().split('T')[0];
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
     const filteredTasks = selectedPetId === "all" ? tasks : tasks.filter(task => task.petId === selectedPetId);
 
     const overdue = filteredTasks.filter(task => 
-      !task.isComplete && new Date(task.dueDate) < now && task.dueDate.split('T')[0] < today
+      !task.isComplete && task.dueDate < startOfToday
     );
 
     const todayList = filteredTasks.filter(task => 
-      !task.isComplete && task.dueDate.startsWith(today)
+      !task.isComplete && task.dueDate >= startOfToday && task.dueDate <= endOfToday
     );
 
     const upcoming = filteredTasks.filter(task => 
-      !task.isComplete && task.dueDate.split('T')[0] > today
+      !task.isComplete && task.dueDate > endOfToday
     );
 
-    setOverdueTasks(overdue.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()));
-    setTodaysTasks(todayList.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()));
-    setUpcomingTasks(upcoming.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()));
+    setOverdueTasks(overdue.sort((a, b) => a.dueDate - b.dueDate));
+    setTodaysTasks(todayList.sort((a, b) => a.dueDate - b.dueDate));
+    setUpcomingTasks(upcoming.sort((a, b) => a.dueDate - b.dueDate));
   }, [tasks, selectedPetId]);
 
   const handleTaskComplete = async (taskId: string) => {

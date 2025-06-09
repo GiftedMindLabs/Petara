@@ -6,8 +6,8 @@ type TreatmentRow = {
   petId: string;
   name: string;
   type: string;
-  startDate: string;
-  endDate: string | null;
+  startDate: number;
+  endDate: number | null;
   frequency: string;
   dosage: string;
   status: 'ongoing' | 'scheduled' | 'completed';

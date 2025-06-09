@@ -16,7 +16,7 @@ export function useVaccinations() {
       console.log("Loading vaccinations for pet:", selectedPetId);
       setIsLoading(true);
       if (selectedPetId === "all") {
-        const data = await vaccinationRepository.getUpcomingVaccinations();
+        const data = await vaccinationRepository.getAllVaccinations();
         setVaccinations(data);
       } else {
         const data = await vaccinationRepository.getVaccinationsForPet(selectedPetId);
@@ -73,6 +73,15 @@ export function useVaccinations() {
     }
   }, [vaccinationRepository]);
 
+  const getAllVaccinations = useCallback(async (): Promise<Vaccination[]> => {
+    try {
+      return await vaccinationRepository.getAllVaccinations();
+    } catch (err) {
+      console.error('Error getting all vaccinations:', err);
+      throw err;
+    }
+  }, [vaccinationRepository]);
+
   const getVaccinationById = useCallback(async (id: string): Promise<Vaccination | null> => {
     try {
       return await vaccinationRepository.getVaccinationById(id);
@@ -90,6 +99,7 @@ export function useVaccinations() {
     addVaccination,
     updateVaccination,
     deleteVaccination,
-    getVaccinationById
+    getVaccinationById,
+    getAllVaccinations
   };
 } 

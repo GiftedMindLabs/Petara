@@ -4,7 +4,7 @@ import { Expense } from '../types';
 type ExpenseRow = {
   id: string;
   petId: string;
-  date: string;
+  date: number;
   amount: number;
   category: 'veterinary' | 'food' | 'supplies' | 'grooming' | 'medications' | 'other';
   description: string;

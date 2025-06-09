@@ -6,7 +6,7 @@ type TaskRow = {
   petId: string;
   title: string;
   type: 'feeding' | 'medication' | 'walk' | 'grooming' | 'other';
-  dueDate: string;
+  dueDate: number;
   isComplete: number;
   notes: string | null;
   recurring: number;
@@ -14,10 +14,10 @@ type TaskRow = {
   recurrenceInterval: number | null;
   recurrenceWeekDays: string | null;
   recurrenceMonthDay: number | null;
-  recurrenceEndDate: string | null;
+  recurrenceEndDate: number | null;
   recurrenceCount: number | null;
-  lastCompletedDate: string | null;
-  nextDueDate: string | null;
+  lastCompletedDate: number | null;
+  nextDueDate: number | null;
   linkedTreatmentId: string | null;
   linkedVaccinationId: string | null;
   linkedVetVisitId: string | null;

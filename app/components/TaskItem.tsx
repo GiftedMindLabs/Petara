@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Pet, Task } from "../database/types";
 import { usePets } from "../hooks/usePets";
+import { useTasks } from "../hooks/useTasks";
 
 interface TaskItemProps {
   task: Task;
@@ -22,7 +23,9 @@ const TaskItem: React.FC<TaskItemProps> = ({
   showPetInfo,
 }) => {
   const { getPetById } = usePets();
+  const { updateTask } = useTasks();
   const [pet, setPet] = useState<Pet | null>(null);
+  const [isComplete, setIsComplete] = useState(task.isComplete);
 
   useEffect(() => {
     if (showPetInfo) {
@@ -47,10 +50,28 @@ const TaskItem: React.FC<TaskItemProps> = ({
     }
   };
 
-  const taskTime = new Date(task.dueDate).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const formatDate = (timestamp: number) => {
+    return new Date(timestamp).toLocaleDateString();
+  };
+
+  const formatTime = (timestamp: number) => {
+    return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const handleToggleComplete = async () => {
+    try {
+      const newIsComplete = !isComplete;
+      await updateTask(task.id, {
+        isComplete: newIsComplete,
+        lastCompletedDate: newIsComplete ? new Date().getTime() : undefined
+      });
+      setIsComplete(newIsComplete);
+    } catch (error) {
+      console.error('Error updating task:', error);
+      // Revert the checkbox state if the update fails
+      setIsComplete(!isComplete);
+    }
+  };
 
   const shouldShowPet = showPetInfo && pet !== null;
   const isOverdue = showOverdueIndicator && new Date(task.dueDate) < new Date();
@@ -61,14 +82,12 @@ const TaskItem: React.FC<TaskItemProps> = ({
     >
       <TouchableOpacity
         style={styles.checkboxContainer}
-        onPress={onComplete}
+        onPress={handleToggleComplete}
         disabled={task.isComplete}
       >
-        {task.isComplete ? (
-          <IconSymbol name="checkmark.circle.fill" size={20} color="#22C55E" />
-        ) : (
-          <IconSymbol name="circle" size={20} color="#D1D5DB" />
-        )}
+        <View style={[styles.checkbox, isComplete && styles.checkboxChecked]}>
+          {isComplete && <View style={styles.checkmark} />}
+        </View>
       </TouchableOpacity>
       <View style={styles.contentContainer}>
         <View style={styles.titleContainer}>
@@ -93,7 +112,11 @@ const TaskItem: React.FC<TaskItemProps> = ({
         </View>
         {shouldShowPet && pet && (
           <View style={styles.petContainer}>
-            <Image source={{ uri: pet.imageUrl }} style={styles.petImage} />
+            {pet.imageUrl ? (
+              <Image source={{ uri: pet.imageUrl }} style={styles.petImage} />
+            ) : (
+              <View style={[styles.petImage, styles.placeholderImage]} />
+            )}
             <Text style={styles.petName}>{pet.name}</Text>
           </View>
         )}
@@ -101,7 +124,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
       </View>
       <View style={styles.rightContainer}>
         <Text style={[styles.time, isOverdue && styles.overdueTime]}>
-          {taskTime}
+          {formatDate(task.dueDate)} at {formatTime(task.dueDate)}
         </Text>
       </View>
     </View>
@@ -133,16 +156,15 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 12,
+    padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
+    borderBottomColor: "#E5E7EB",
   },
   overdueContainer: {
     backgroundColor: "#FEF2F2",
   },
   checkboxContainer: {
     marginRight: 12,
-    padding: 4,
   },
   contentContainer: {
     flex: 1,
@@ -172,13 +194,16 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   petImage: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    marginRight: 8,
+  },
+  placeholderImage: {
+    backgroundColor: "#F3F4F6",
   },
   petName: {
-    marginLeft: 4,
-    fontSize: 12,
+    fontSize: 14,
     color: "#6B7280",
   },
   notes: {
@@ -195,7 +220,29 @@ const styles = StyleSheet.create({
   },
   overdueTime: {
     color: "#DC2626",
-  }
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: "#D1D5DB",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  checkboxChecked: {
+    backgroundColor: "#0D9488",
+    borderColor: "#0D9488",
+  },
+  checkmark: {
+    width: 10,
+    height: 6,
+    borderLeftWidth: 2,
+    borderBottomWidth: 2,
+    borderColor: "white",
+    transform: [{ rotate: "-45deg" }],
+    marginTop: -2,
+  },
 });
 
 export default TaskItem;
