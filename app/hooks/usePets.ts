@@ -11,7 +11,6 @@ export function usePets() {
 
   const loadPets = useCallback(async () => {
     try {
-      console.log("Loading pets");
       setIsLoading(true);
       setError(null);
       const data = await petRepository.getAllPets();

@@ -1,16 +1,17 @@
-import { SQLiteDatabase } from 'expo-sqlite';
-import { Task } from '../types';
+import * as Notifications from "expo-notifications";
+import { SQLiteDatabase } from "expo-sqlite";
+import { Task } from "../types";
 
 type TaskRow = {
   id: string;
   petId: string;
   title: string;
-  type: 'feeding' | 'medication' | 'walk' | 'grooming' | 'other';
+  type: "feeding" | "medication" | "walk" | "grooming" | "other";
   dueDate: number;
   isComplete: number;
   notes: string | null;
   recurring: number;
-  recurrencePattern: 'daily' | 'weekly' | 'monthly' | 'yearly' | null;
+  recurrencePattern: "daily" | "weekly" | "monthly" | "yearly" | null;
   recurrenceInterval: number | null;
   recurrenceWeekDays: string | null;
   recurrenceMonthDay: number | null;
@@ -25,7 +26,7 @@ type TaskRow = {
 
 type SQLiteValue = string | number | null;
 
-type TaskInput = Omit<Task, 'id'>;
+type TaskInput = Omit<Task, "id">;
 type TaskUpdate = Partial<TaskInput>;
 
 export class TaskRepository {
@@ -47,7 +48,9 @@ export class TaskRepository {
         task.recurring ? 1 : 0,
         task.recurrencePattern ?? null,
         task.recurrenceInterval ?? null,
-        task.recurrenceWeekDays ? JSON.stringify(task.recurrenceWeekDays) : null,
+        task.recurrenceWeekDays
+          ? JSON.stringify(task.recurrenceWeekDays)
+          : null,
         task.recurrenceMonthDay ?? null,
         task.recurrenceEndDate ?? null,
         task.recurrenceCount ?? null,
@@ -55,7 +58,7 @@ export class TaskRepository {
         task.nextDueDate || task.dueDate,
         task.linkedTreatmentId ?? null,
         task.linkedVaccinationId ?? null,
-        task.linkedVetVisitId ?? null
+        task.linkedVetVisitId ?? null,
       ];
 
       await this.db.runAsync(
@@ -88,12 +91,12 @@ export class TaskRepository {
         nextDueDate: task.nextDueDate || task.dueDate,
         linkedTreatmentId: task.linkedTreatmentId,
         linkedVaccinationId: task.linkedVaccinationId,
-        linkedVetVisitId: task.linkedVetVisitId
+        linkedVetVisitId: task.linkedVetVisitId,
       };
 
       return newTask;
     } catch (error) {
-      console.error('Error in createTask:', error);
+      console.error("Error in createTask:", error);
       throw error;
     }
   }
@@ -103,11 +106,11 @@ export class TaskRepository {
    */
   async getAllTasks(): Promise<Task[]> {
     const results = await this.db.getAllAsync<TaskRow>(
-      'SELECT * FROM tasks',
+      "SELECT * FROM tasks",
       []
     );
 
-    return results.map(row => this.mapTaskRow(row));
+    return results.map((row) => this.mapTaskRow(row));
   }
 
   /**
@@ -115,7 +118,7 @@ export class TaskRepository {
    */
   async getTaskById(id: string): Promise<Task | null> {
     const result = await this.db.getFirstAsync<TaskRow>(
-      'SELECT * FROM tasks WHERE id = ?',
+      "SELECT * FROM tasks WHERE id = ?",
       [id]
     );
 
@@ -131,22 +134,24 @@ export class TaskRepository {
     const fields = Object.keys(updates) as Array<keyof TaskUpdate>;
     if (fields.length === 0) return false;
 
-    const setClause = fields.map(field => {
-      if (field === 'isComplete' || field === 'recurring') {
+    const setClause = fields
+      .map((field) => {
+        if (field === "isComplete" || field === "recurring") {
+          return `${field} = ?`;
+        }
+        if (field === "recurrenceWeekDays") {
+          return `${field} = ?`;
+        }
         return `${field} = ?`;
-      }
-      if (field === 'recurrenceWeekDays') {
-        return `${field} = ?`;
-      }
-      return `${field} = ?`;
-    }).join(', ');
+      })
+      .join(", ");
 
-    const values: SQLiteValue[] = fields.map(field => {
+    const values: SQLiteValue[] = fields.map((field) => {
       const value = updates[field];
-      if (field === 'isComplete' || field === 'recurring') {
+      if (field === "isComplete" || field === "recurring") {
         return (value as boolean) ? 1 : 0;
       }
-      if (field === 'recurrenceWeekDays' && value) {
+      if (field === "recurrenceWeekDays" && value) {
         return JSON.stringify(value);
       }
       if (value === undefined) {
@@ -198,19 +203,19 @@ export class TaskRepository {
 
     const interval = task.recurrenceInterval || 1;
     const currentDate = new Date(fromDate);
-    
+
     switch (task.recurrencePattern) {
-      case 'daily':
+      case "daily":
         currentDate.setDate(currentDate.getDate() + interval);
         break;
 
-      case 'weekly':
+      case "weekly":
         if (task.recurrenceWeekDays && task.recurrenceWeekDays.length > 0) {
           // Find the next weekday that matches
           let found = false;
           const maxIterations = 7; // Prevent infinite loop
           let iterations = 0;
-          
+
           while (!found && iterations < maxIterations) {
             currentDate.setDate(currentDate.getDate() + 1);
             if (task.recurrenceWeekDays.includes(currentDate.getDay())) {
@@ -218,26 +223,28 @@ export class TaskRepository {
             }
             iterations++;
           }
-          
+
           if (!found) {
-            currentDate.setDate(currentDate.getDate() + (7 * (interval - 1)));
+            currentDate.setDate(currentDate.getDate() + 7 * (interval - 1));
           }
         } else {
-          currentDate.setDate(currentDate.getDate() + (7 * interval));
+          currentDate.setDate(currentDate.getDate() + 7 * interval);
         }
         break;
 
-      case 'monthly':
+      case "monthly":
         if (task.recurrenceMonthDay) {
           // Set to the specified day of the next month
           currentDate.setMonth(currentDate.getMonth() + interval);
-          currentDate.setDate(Math.min(task.recurrenceMonthDay, this.getDaysInMonth(currentDate)));
+          currentDate.setDate(
+            Math.min(task.recurrenceMonthDay, this.getDaysInMonth(currentDate))
+          );
         } else {
           currentDate.setMonth(currentDate.getMonth() + interval);
         }
         break;
 
-      case 'yearly':
+      case "yearly":
         currentDate.setFullYear(currentDate.getFullYear() + interval);
         break;
 
@@ -260,60 +267,59 @@ export class TaskRepository {
    */
   async getTasksForPet(petId: string): Promise<Task[]> {
     const results = await this.db.getAllAsync<TaskRow>(
-      'SELECT * FROM tasks WHERE petId = ? ORDER BY dueDate ASC',
+      "SELECT * FROM tasks WHERE petId = ? ORDER BY dueDate ASC",
       [petId]
     );
 
-    return results.map(row => this.mapTaskRow(row));
+    return results.map((row) => this.mapTaskRow(row));
   }
 
   /**
    * Get tasks for today
    */
   async getTodaysTasks(): Promise<Task[]> {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
     const results = await this.db.getAllAsync<TaskRow>(
       "SELECT * FROM tasks WHERE date(dueDate) = date(?) AND isComplete = 0 ORDER BY dueDate ASC",
       [today]
     );
 
-    return results.map(row => this.mapTaskRow(row));
+    return results.map((row) => this.mapTaskRow(row));
   }
 
   /**
    * Get upcoming tasks
    */
   async getUpcomingTasks(): Promise<Task[]> {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
     const results = await this.db.getAllAsync<TaskRow>(
       "SELECT * FROM tasks WHERE date(dueDate) > date(?) AND isComplete = 0 ORDER BY dueDate ASC",
       [today]
     );
 
-    return results.map(row => this.mapTaskRow(row));
+    return results.map((row) => this.mapTaskRow(row));
   }
 
   /**
    * Get overdue tasks
    */
   async getOverdueTasks(): Promise<Task[]> {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
     const results = await this.db.getAllAsync<TaskRow>(
       "SELECT * FROM tasks WHERE date(dueDate) < date(?) AND isComplete = 0 ORDER BY dueDate ASC",
       [today]
     );
 
-    return results.map(row => this.mapTaskRow(row));
+    return results.map((row) => this.mapTaskRow(row));
   }
 
   /**
    * Delete a task
    */
   async deleteTask(id: string): Promise<boolean> {
-    const result = await this.db.runAsync(
-      'DELETE FROM tasks WHERE id = ?',
-      [id]
-    );
+    const result = await this.db.runAsync("DELETE FROM tasks WHERE id = ?", [
+      id,
+    ]);
 
     return result.changes > 0;
   }
@@ -323,10 +329,10 @@ export class TaskRepository {
    */
   async clearAllTasks(): Promise<boolean> {
     try {
-      await this.db.runAsync('DELETE FROM tasks', []);
+      await this.db.runAsync("DELETE FROM tasks", []);
       return true;
     } catch (error) {
-      console.error('Error clearing tasks:', error);
+      console.error("Error clearing tasks:", error);
       return false;
     }
   }
@@ -346,7 +352,9 @@ export class TaskRepository {
       recurring: Boolean(row.recurring),
       recurrencePattern: row.recurrencePattern ?? undefined,
       recurrenceInterval: row.recurrenceInterval ?? undefined,
-      recurrenceWeekDays: row.recurrenceWeekDays ? JSON.parse(row.recurrenceWeekDays) : undefined,
+      recurrenceWeekDays: row.recurrenceWeekDays
+        ? JSON.parse(row.recurrenceWeekDays)
+        : undefined,
       recurrenceMonthDay: row.recurrenceMonthDay ?? undefined,
       recurrenceEndDate: row.recurrenceEndDate ?? undefined,
       recurrenceCount: row.recurrenceCount ?? undefined,
@@ -354,7 +362,7 @@ export class TaskRepository {
       nextDueDate: row.nextDueDate ?? undefined,
       linkedTreatmentId: row.linkedTreatmentId ?? undefined,
       linkedVaccinationId: row.linkedVaccinationId ?? undefined,
-      linkedVetVisitId: row.linkedVetVisitId ?? undefined
+      linkedVetVisitId: row.linkedVetVisitId ?? undefined,
     };
 
     return task;
@@ -365,11 +373,11 @@ export class TaskRepository {
    */
   async getTasksByTreatmentId(treatmentId: string): Promise<Task[]> {
     const results = await this.db.getAllAsync<TaskRow>(
-      'SELECT * FROM tasks WHERE linkedTreatmentId = ? ORDER BY dueDate ASC',
+      "SELECT * FROM tasks WHERE linkedTreatmentId = ? ORDER BY dueDate ASC",
       [treatmentId]
     );
 
-    return results.map(row => this.mapTaskRow(row));
+    return results.map((row) => this.mapTaskRow(row));
   }
 
   /**
@@ -390,5 +398,61 @@ export class TaskRepository {
     );
 
     return result.changes > 0;
+  }
+
+  async scheduleTaskNotification(task: Task): Promise<boolean> {
+    try {
+      if (task.recurring){
+        const nextOccurrence =
+        this.calculateNextOccurrence(task, new Date())
+      if (!nextOccurrence) return false;
+
+      let reccurenceTriggerType: Notifications.SchedulableTriggerInputTypes;
+      switch (task.recurrencePattern) {
+        case "daily":
+          reccurenceTriggerType = Notifications.SchedulableTriggerInputTypes.DAILY;
+          break;
+        case "weekly":
+          reccurenceTriggerType = Notifications.SchedulableTriggerInputTypes.WEEKLY;
+          break;
+        case "monthly":
+          reccurenceTriggerType = Notifications.SchedulableTriggerInputTypes.MONTHLY;
+          break;
+        case "yearly":
+          reccurenceTriggerType = Notifications.SchedulableTriggerInputTypes.YEARLY;
+          break;
+        default:
+          return false;
+      }
+
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: task.title,
+          body: task.notes ?? "",
+        },
+        trigger: {
+          type: reccurenceTriggerType,
+          hour: 4,
+          repeats: true,
+        },
+      });
+      } else {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: task.title,
+            body: task.notes ?? "",
+          },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+            seconds: ((new Date(task.dueDate)).getTime() - Date.now()) / 1000,
+          },
+        });
+      }
+      console.log("Task notification scheduled:", task.title);
+      return true;
+    } catch (error) {
+      console.error("Error scheduling task notification:", error);
+      return false;
+    }
   }
 }

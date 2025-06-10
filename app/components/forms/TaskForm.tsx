@@ -46,8 +46,6 @@ const TaskForm: React.FC<TaskFormProps> = ({ taskId, onSubmit, onCancel }) => {
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [task, setTask] = useState<Task | null>(null);
 
-  console.log("taskId: ", taskId);
-
   useEffect(() => {
     if (taskId) {
       getTaskById(taskId).then(loadedTask => {
