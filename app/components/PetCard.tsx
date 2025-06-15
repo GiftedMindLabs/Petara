@@ -27,10 +27,12 @@ const PetCard: React.FC<PetCardProps> = ({ pet, showStatus = true }) => {
     >
       <View style={styles.card}>
         <View style={styles.imageContainer}>
-          <Image
-            source={{ uri: pet.imageUrl }}
-            style={styles.image}
-          />
+          {pet.imageUrl && (
+            <Image
+              source={{ uri: pet.imageUrl }}
+              style={styles.image}
+            />
+          )}
         </View>
         <View style={styles.content}>
           <View style={styles.header}>

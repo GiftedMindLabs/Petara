@@ -9,8 +9,15 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View
 type ContactType = 'veterinarian' | 'groomer' | 'sitter' | 'trainer' | 'other';
 
 const Contacts: React.FC = () => {
-  const { contacts, isLoading, error, loadContactsByType, loadContacts } = useContacts();
+  const { contacts, isLoading, error } = useContacts();
   const [selectedType, setSelectedType] = useState<ContactType | null>(null);
+
+  const filteredContacts = contacts.filter(contact => {
+    if (selectedType === null) {
+      return true;
+    }
+    return contact.type === selectedType;
+  });
 
   const handleCall = (phone: string) => {
     Linking.openURL(`tel:${phone}`);
@@ -22,11 +29,6 @@ const Contacts: React.FC = () => {
 
   const handleTypeFilter = (type: ContactType | null) => {
     setSelectedType(type);
-    if (type) {
-      loadContactsByType(type);
-    } else {
-      loadContacts();
-    }
   };
 
   const handleEditContact = (id: string) => {
@@ -112,7 +114,7 @@ const Contacts: React.FC = () => {
         </View>
       ) : (
         <View style={styles.contactsList}>
-          {contacts.map(contact => (
+          {filteredContacts.map(contact => (
             <View key={contact.id} style={styles.contactCard}>
               <View style={styles.cardHeader}>
                 <View>

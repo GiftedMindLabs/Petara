@@ -126,8 +126,6 @@ export function useExpenses() {
     totalReimbursed,
     isLoading,
     error,
-    loadExpenses,
-    loadExpensesByCategory,
     getTotalExpenses,
     getTotalReimbursed,
     addExpense,

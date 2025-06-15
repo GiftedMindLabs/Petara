@@ -1,4 +1,3 @@
-import { router } from "expo-router";
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Pet, Treatment, VetVisit } from "../database/types";
@@ -28,18 +27,6 @@ const TreatmentCard: React.FC<TreatmentCardProps> = ({
 
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleDateString();
-  };
-
-  const handlePress = () => {
-    router.push({
-      pathname: "/FormModal",
-      params: {
-        title: "Edit",
-        action: "edit",
-        form: "treatment",
-        id: treatment.id,
-      },
-    });
   };
 
   return (

@@ -24,7 +24,7 @@ const PetSelector: React.FC<PetSelectorProps> = ({
         style={styles.selectorButton}
         onPress={() => setIsModalVisible(true)}
       >
-        {selectedPetId !== 'all' && selectedPet ? (
+        {selectedPetId !== 'all' && selectedPet && selectedPet.imageUrl ? (
           <Image
             source={{ uri: selectedPet.imageUrl }}
             style={styles.petImage}
@@ -85,10 +85,12 @@ const PetSelector: React.FC<PetSelectorProps> = ({
                   setIsModalVisible(false);
                 }}
               >
-                <Image
-                  source={{ uri: pet.imageUrl }}
-                  style={styles.petImage}
-                />
+                {pet.imageUrl && (
+                  <Image
+                    source={{ uri: pet.imageUrl }}
+                    style={styles.petImage}
+                  />
+                )}
                 <Text style={[
                   styles.optionText,
                   selectedPetId === pet.id && styles.selectedOptionText

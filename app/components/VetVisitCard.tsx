@@ -62,7 +62,6 @@ const VetVisitCard: React.FC<VetVisitCardProps> = ({
           <Text style={styles.reason}>{visit.reason}</Text>
           {visit.notes && <Text style={styles.notes}>{visit.notes}</Text>}
           <View style={styles.vetInfoContainer}>
-            <Text style={styles.vet}>Dr. {visit.vetName}</Text>
             {vetContact && (
               <View style={styles.contactInfo}>
                 {vetContact.phone && (

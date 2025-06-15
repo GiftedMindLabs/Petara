@@ -124,7 +124,6 @@ export function useVetVisits() {
     visits,
     isLoading,
     error,
-    loadVisits,
     addVetVisit,
     updateVetVisit,
     deleteVetVisit,

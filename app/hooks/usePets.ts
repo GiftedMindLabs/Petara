@@ -104,7 +104,6 @@ export function usePets() {
     isLoading,
     error,
     getPetById,
-    loadPets,
     addPet,
     updatePet,
     deletePet,

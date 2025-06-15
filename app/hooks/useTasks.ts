@@ -164,7 +164,6 @@ export function useTasks() {
     tasks,
     isLoading,
     error,
-    loadTasks,
     addTask,
     getTaskById,
     updateTask,

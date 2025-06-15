@@ -39,7 +39,7 @@ const TreatmentForm: React.FC<TreatmentFormProps> = ({
   const { pets } = usePets();
   const { selectedPetId } = useSelectedPet();
   const { addTreatment, updateTreatment, getTreatmentById } = useTreatments();
-  const { visits: vetVisits, loadVisits: loadVetVisits } = useVetVisits();
+  const { visits: vetVisits } = useVetVisits();
   const { addTask, getTasksByTreatmentId, deleteTask } = useTasks();
   const [treatment, setTreatment] = useState<Treatment | null>(null);
   const router = useRouter();
@@ -94,12 +94,6 @@ const TreatmentForm: React.FC<TreatmentFormProps> = ({
       });
     }
   }, [treatmentId, getTreatmentById]);
-
-  useEffect(() => {
-    if (formData.petId) {
-      loadVetVisits();
-    }
-  }, [formData.petId, loadVetVisits]);
 
   const handleVetVisitSelect = (vetVisitId: string) => {
     const selectedVisit = vetVisits.find((v: VetVisit) => v.id === vetVisitId);

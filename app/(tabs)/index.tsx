@@ -9,15 +9,10 @@ import { useSelectedPet } from '../providers/SelectedPetProvider';
 
 const Home: React.FC = () => {
   const { selectedPetId } = useSelectedPet();
-  const { tasks, isLoading: tasksLoading, loadTasks } = useTasks();
-  const { visits: vetVisits, isLoading: visitsLoading, loadVisits: loadVetVisits } = useVetVisits();
+  const { tasks, isLoading: tasksLoading } = useTasks();
+  const { visits: vetVisits, isLoading: visitsLoading } = useVetVisits();
   const [todaysTasks, setTodaysTasks] = useState<Task[]>([]);
   const [upcomingVisits, setUpcomingVisits] = useState<VetVisit[]>([]);
-
-  useEffect(() => {
-    loadTasks();
-    loadVetVisits();
-  }, [loadTasks, loadVetVisits]);
 
   useEffect(() => {
     // Filter today's tasks
@@ -97,8 +92,6 @@ const Home: React.FC = () => {
                     <Text style={styles.detailText}>
                       {new Date(visit.date).toLocaleDateString()}
                     </Text>
-                    <Text style={styles.bullet}>•</Text>
-                    <Text style={styles.detailText}>{visit.vetName}</Text>
                   </View>
                 </View>
               </View>

@@ -25,7 +25,7 @@ const VaccinationForm: React.FC<VaccinationFormProps> = ({
   const { pets } = usePets();
   const { selectedPetId } = useSelectedPet();
   const { addVaccination, updateVaccination, getVaccinationById } = useVaccinations();
-  const { visits: vetVisits, loadVisits: loadVetVisits } = useVetVisits();
+  const { visits: vetVisits } = useVetVisits();
   const [vaccination, setVaccination] = useState<Vaccination | null>(null);
 
   const [formData, setFormData] = useState({
@@ -56,12 +56,6 @@ const VaccinationForm: React.FC<VaccinationFormProps> = ({
       });
     }
   }, [vaccinationId, getVaccinationById]);
-
-  useEffect(() => {
-    if (formData.petId) {
-      loadVetVisits();
-    }
-  }, [formData.petId, loadVetVisits]);
 
   const handleVetVisitSelect = (vetVisitId: string) => {
     const selectedVisit = vetVisits.find((v: VetVisit) => v.id === vetVisitId);

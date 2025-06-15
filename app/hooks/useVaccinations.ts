@@ -95,7 +95,6 @@ export function useVaccinations() {
     vaccinations,
     isLoading,
     error,
-    loadVaccinations,
     addVaccination,
     updateVaccination,
     deleteVaccination,

@@ -2,7 +2,7 @@ import ExpenseCard from '@/app/components/ExpenseCard';
 import { AddButton } from '@/app/components/ui/AddButton';
 import { IconSymbol } from '@/app/components/ui/IconSymbol';
 import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useExpenses } from '../hooks/useExpenses';
 import { usePets } from '../hooks/usePets';
@@ -11,16 +11,15 @@ const categories = ['All Categories', 'veterinary', 'food', 'supplies', 'groomin
 
 const Expenses: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
-  const { expenses, isLoading, loadExpenses, loadExpensesByCategory, totalExpenses, totalReimbursed } = useExpenses();
+  const { expenses, isLoading, totalExpenses, totalReimbursed } = useExpenses();
   const { pets } = usePets();
 
-  useEffect(() => {
+  const filteredExpenses = expenses.filter(expense => {
     if (selectedCategory === 'All Categories') {
-      loadExpenses();
-    } else {
-      loadExpensesByCategory(selectedCategory);
+      return true;
     }
-  }, [selectedCategory, loadExpenses, loadExpensesByCategory]);
+    return expense.category === selectedCategory;
+  });
 
   const netExpenses = totalExpenses - totalReimbursed;
 
@@ -99,8 +98,8 @@ const Expenses: React.FC = () => {
       </ScrollView>
 
       <View style={styles.expensesList}>
-        {expenses.length > 0 ? (
-          expenses.map(expense => {
+        {filteredExpenses.length > 0 ? (
+          filteredExpenses.map(expense => {
             const pet = pets.find(p => p.id === expense.petId);
             return (
               <ExpenseCard

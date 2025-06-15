@@ -6,12 +6,10 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import TaskItem from "../components/TaskItem";
 import { Task } from "../database/types";
@@ -20,7 +18,6 @@ import { useSelectedPet } from "../providers/SelectedPetProvider";
 
 const TaskManager: React.FC = () => {
   const { selectedPetId } = useSelectedPet();
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [todaysTasks, setTodaysTasks] = useState<Task[]>([]);
   const [upcomingTasks, setUpcomingTasks] = useState<Task[]>([]);
   const [overdueTasks, setOverdueTasks] = useState<Task[]>([]);
@@ -31,11 +28,13 @@ const TaskManager: React.FC = () => {
     tasks,
     isLoading,
     error,
-    loadTasks,
     completeTask,
     undoTaskCompletion,
-    clearAllTasks
   } = useTasks();
+
+  useEffect(() => {
+    filterAndSortTasks();
+  }, [tasks, selectedPetId]);
 
   const filterAndSortTasks = useCallback(() => {
     if (!tasks.length) {
@@ -50,21 +49,42 @@ const TaskManager: React.FC = () => {
     const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
     const filteredTasks = selectedPetId === "all" ? tasks : tasks.filter(task => task.petId === selectedPetId);
 
-    const overdue = filteredTasks.filter(task => 
-      !task.isComplete && task.dueDate < startOfToday
-    );
+    // Helper function to get the effective due date for a task
+    const getEffectiveDueDate = (task: Task) => {
+      if (task.recurring && task.nextDueDate) {
+        return task.nextDueDate;
+      }
+      return task.dueDate;
+    };
 
-    const todayList = filteredTasks.filter(task => 
-      !task.isComplete && task.dueDate >= startOfToday && task.dueDate <= endOfToday
-    );
+    const overdue = filteredTasks.filter(task => {
+      if (task.isComplete) return false;
+      const effectiveDueDate = getEffectiveDueDate(task);
+      return effectiveDueDate < startOfToday;
+    });
 
-    const upcoming = filteredTasks.filter(task => 
-      !task.isComplete && task.dueDate > endOfToday
-    );
+    const todayList = filteredTasks.filter(task => {
+      if (task.isComplete) return false;
+      const effectiveDueDate = getEffectiveDueDate(task);
+      return effectiveDueDate >= startOfToday && effectiveDueDate <= endOfToday;
+    });
 
-    setOverdueTasks(overdue.sort((a, b) => a.dueDate - b.dueDate));
-    setTodaysTasks(todayList.sort((a, b) => a.dueDate - b.dueDate));
-    setUpcomingTasks(upcoming.sort((a, b) => a.dueDate - b.dueDate));
+    const upcoming = filteredTasks.filter(task => {
+      if (task.isComplete) return false;
+      const effectiveDueDate = getEffectiveDueDate(task);
+      return effectiveDueDate > endOfToday;
+    });
+
+    // Sort tasks by their effective due date
+    const sortByEffectiveDueDate = (a: Task, b: Task) => {
+      const dateA = getEffectiveDueDate(a);
+      const dateB = getEffectiveDueDate(b);
+      return dateA - dateB;
+    };
+
+    setOverdueTasks(overdue.sort(sortByEffectiveDueDate));
+    setTodaysTasks(todayList.sort(sortByEffectiveDueDate));
+    setUpcomingTasks(upcoming.sort(sortByEffectiveDueDate));
   }, [tasks, selectedPetId]);
 
   const handleTaskComplete = async (taskId: string) => {
@@ -96,44 +116,6 @@ const TaskManager: React.FC = () => {
     setCompletedTaskId(null);
   };
 
-  const handleClearTasks = useCallback(async () => {
-    Alert.alert(
-      "Clear All Tasks",
-      "Are you sure you want to delete all tasks? This action cannot be undone.",
-      [
-        {
-          text: "Cancel",
-          style: "cancel"
-        },
-        {
-          text: "Clear All",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await clearAllTasks();
-            } catch (err) {
-              Alert.alert("Error", "Failed to clear tasks. Please try again.");
-            }
-          }
-        }
-      ]
-    );
-  }, [clearAllTasks]);
-
-  useEffect(() => {
-    filterAndSortTasks();
-  }, [filterAndSortTasks]);
-
-  useEffect(() => {
-    loadTasks();
-  }, [loadTasks]);
-  
-  const onRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    await loadTasks();
-    setIsRefreshing(false);
-  }, [loadTasks]);
-
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -160,9 +142,6 @@ const TaskManager: React.FC = () => {
       />
       <ScrollView
         style={styles.container}
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
-        }
       >
         <View style={styles.header}>
           <Text style={styles.title}>Task Manager</Text>
@@ -185,18 +164,6 @@ const TaskManager: React.FC = () => {
             })
           }
         />
-
-        <TouchableOpacity
-          style={[styles.clearButton, !tasks.length && styles.clearButtonDisabled]}
-          onPress={handleClearTasks}
-          disabled={!tasks.length}
-        >
-          <IconSymbol name="trash" size={20} color={tasks.length ? "#DC2626" : "#9CA3AF"} />
-          <Text style={[styles.clearButtonText, !tasks.length && styles.clearButtonTextDisabled]}>
-            Clear All Tasks
-          </Text>
-        </TouchableOpacity>
-
         {overdueTasks.length > 0 && (
           <View style={[styles.section, styles.overdueSection]}>
             <Text style={[styles.sectionTitle, styles.overdueTitle]}>

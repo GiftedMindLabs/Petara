@@ -201,7 +201,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
                   .map(vacc => (
                     <Picker.Item 
                       key={vacc.id} 
-                      label={`${new Date(vacc.dateGiven).toLocaleDateString()} - ${vacc.name}`} 
+                      label={`${new Date(vacc.startDate).toLocaleDateString()} - ${vacc.name}`} 
                       value={vacc.id} 
                     />
                   ))

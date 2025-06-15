@@ -149,8 +149,8 @@ const Profile: React.FC = () => {
 
   // Calculate next vaccination
   const upcomingVaccinations = vaccinations
-    .filter(v => v.petId === pet.id && new Date(v.dueDate) > new Date())
-    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+    .filter(v => v.petId === pet.id && new Date(v.startDate) > new Date())
+    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
   const nextVaccination = upcomingVaccinations[0];
 
   // Get active treatments
@@ -222,7 +222,7 @@ const Profile: React.FC = () => {
               <Text style={styles.label}>Next Vaccination Due</Text>
               <Text style={styles.value}>
                 {nextVaccination 
-                  ? `${nextVaccination.name} on ${new Date(nextVaccination.dueDate).toLocaleDateString()}`
+                  ? `${nextVaccination.name} on ${new Date(nextVaccination.startDate).toLocaleDateString()}`
                   : 'No upcoming vaccinations'}
               </Text>
             </View>

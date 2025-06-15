@@ -92,8 +92,6 @@ export function useContacts() {
     contacts,
     isLoading,
     error,
-    loadContacts,
-    loadContactsByType,
     addContact,
     updateContact,
     deleteContact,

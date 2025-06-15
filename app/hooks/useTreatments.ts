@@ -101,8 +101,6 @@ export function useTreatments() {
     treatments,
     isLoading,
     error,
-    loadTreatments,
-    loadOngoingTreatments,
     addTreatment,
     updateTreatment,
     deleteTreatment,

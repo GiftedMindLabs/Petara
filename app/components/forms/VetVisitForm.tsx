@@ -1,8 +1,7 @@
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
-import { useFocusEffect } from '@react-navigation/native';
 import { router } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { VetVisit } from '../../database/types';
 import { useContacts } from '../../hooks/useContacts';
@@ -32,7 +31,7 @@ const VetVisitForm: React.FC<VetVisitFormProps> = ({
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
-  const { pets, loadPets } = usePets();
+  const { pets } = usePets();
   const { selectedPetId } = useSelectedPet();
   const { addVetVisit, updateVetVisit, getVetVisitById } = useVetVisits();
   const { contacts } = useContacts();
@@ -64,13 +63,6 @@ const VetVisitForm: React.FC<VetVisitFormProps> = ({
       });
     }
   }, [visitId, getVetVisitById]);
-
-  // Use useFocusEffect to reload pets when the form comes into focus
-  useFocusEffect(
-    useCallback(() => {
-      loadPets();
-    }, [loadPets])
-  );
 
   const handleContactSelect = (contactId: string) => {
     const selectedContact = contacts.find(c => c.id === contactId);

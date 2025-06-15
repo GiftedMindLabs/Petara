@@ -84,7 +84,7 @@ const ExpenseCard: React.FC<ExpenseCardProps> = ({
               <View style={styles.linkedItem}>
                 <IconSymbol name="cross.case.fill" size={14} color="#6B7280" />
                 <Text style={styles.linkedText}>
-                  Vaccine: {linkedVaccination.name} ({new Date(linkedVaccination.dateGiven).toLocaleDateString()})
+                  Vaccine: {linkedVaccination.name} ({new Date(linkedVaccination.startDate).toLocaleDateString()})
                 </Text>
               </View>
             )}
