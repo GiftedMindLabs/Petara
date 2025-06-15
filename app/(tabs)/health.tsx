@@ -201,6 +201,18 @@ const VetHealth: React.FC = () => {
                   treatment={treatment}
                   pet={pet}
                   showPetInfo={selectedPetId === 'all'}
+                  onPress={() => {
+                    router.push({
+                      pathname: "/FormModal",
+                      params: {
+                        title: "Edit",
+                        action: "edit",
+                        form: "treatment",
+                        petId: selectedPetId === 'all' ? undefined : selectedPetId,
+                        id: treatment.id,
+                      },
+                    });
+                  }}
                 />
               );
             })

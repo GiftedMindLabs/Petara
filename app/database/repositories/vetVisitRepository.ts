@@ -1,3 +1,4 @@
+import * as Notifications from 'expo-notifications';
 import { SQLiteDatabase } from 'expo-sqlite';
 import { VetVisit } from '../types';
 
@@ -7,8 +8,9 @@ type VetVisitRow = {
   date: number;
   reason: string;
   notes: string | null;
-  vetName: string;
   weight: number | null;
+  notificationIdentifier: string | null;
+  contactId: string | null;
 };
 
 type SQLiteValue = string | number | null;
@@ -28,12 +30,12 @@ export class VetVisitRepository {
         visit.date,
         visit.reason,
         visit.notes ?? null,
-        visit.vetName,
-        visit.weight ?? null
+        visit.weight ?? null,
+        visit.contactId ?? null
       ];
 
       await this.db.runAsync(
-        `INSERT INTO vet_visits (id, petId, date, reason, notes, vetName, weight)
+        `INSERT INTO vet_visits (id, petId, date, reason, notes, weight, contactId)
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
         params
       );
@@ -46,6 +48,13 @@ export class VetVisitRepository {
       console.error('Error in createVetVisit:', error);
       throw error;
     }
+  }
+
+  async getAllVetVisits(): Promise<VetVisit[]> {
+    const results = await this.db.getAllAsync<VetVisitRow>(
+      'SELECT * FROM vet_visits ORDER BY date DESC'
+    );
+    return results.map(this.mapVetVisitRow);
   }
 
   /**
@@ -122,6 +131,58 @@ export class VetVisitRepository {
     return results.map(this.mapVetVisitRow);
   }
 
+  async scheduleVetVisitNotification(visit: VetVisit): Promise<string> {
+    try {
+      // Schedule main notification for the visit
+      const notificationTrigger = await getVetVisitNotificationInput(visit);
+      const notificationId = await Notifications.scheduleNotificationAsync(notificationTrigger);
+
+      // Schedule a reminder 24 hours before
+      const visitDate = new Date(visit.date);
+      const reminderDate = new Date(visit.date - 24 * 60 * 60 * 1000); // 24 hours before
+      const timeStr = visitDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      const reminderTrigger: Notifications.NotificationRequestInput = {
+        content: {
+          title: `Vet Visit Tomorrow at ${timeStr}`,
+          body: `Reminder: ${visit.reason} ${visit.notes ? `\n${visit.notes}` : ''}`
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+          repeats: false,
+          seconds: Math.max(1, (reminderDate.getTime() - Date.now()) / 1000)
+        } as Notifications.TimeIntervalTriggerInput
+      };
+      
+      await Notifications.scheduleNotificationAsync(reminderTrigger);
+      
+      console.log("Vet visit notifications scheduled:", visit.reason);
+      return notificationId;
+    } catch (error) {
+      console.error("Error scheduling vet visit notification:", error);
+      throw error;
+    }
+  }
+
+  async storeVetVisitNotificationIdentifier(visitId: string, notificationIdentifier: string): Promise<boolean> {
+    const result = await this.db.runAsync(
+      "UPDATE vet_visits SET notificationIdentifier = ? WHERE id = ?",
+      [notificationIdentifier, visitId]
+    );
+    return result.changes > 0;
+  }
+
+  async cancelVetVisitNotification(notificationIdentifier: string): Promise<boolean> {
+    try {
+      await Notifications.cancelScheduledNotificationAsync(notificationIdentifier);
+      console.log("Vet visit notification canceled successfully");
+      return true;
+    } catch (error) {
+      console.error("Error canceling vet visit notification:", error);
+      return false;
+    }
+  }
+
   /**
    * Map a database row to a VetVisit object
    */
@@ -132,8 +193,37 @@ export class VetVisitRepository {
       date: row.date,
       reason: row.reason,
       notes: row.notes ?? '',
-      vetName: row.vetName,
-      weight: row.weight ?? undefined
+      weight: row.weight ?? undefined,
+      notificationIdentifier: row.notificationIdentifier ?? undefined,
+      contactId: row.contactId ?? undefined
     };
+  }
+}
+
+async function getVetVisitNotificationInput(visit: VetVisit): Promise<Notifications.NotificationRequestInput> {
+  try {
+    const visitDate = new Date(visit.date);
+    const trigger: Notifications.TimeIntervalTriggerInput = {
+      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+      repeats: false,
+      seconds: Math.max(1, (visitDate.getTime() - Date.now()) / 1000)
+    };
+
+    // Format time for the notification message
+    const timeStr = visitDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    const input: Notifications.NotificationRequestInput = {
+      content: {
+        title: `Vet Visit Today at ${timeStr}`,
+        body: `Time for ${visit.reason} ${visit.notes ? `\n${visit.notes}` : ''}`
+      },
+      trigger: trigger
+    };
+    
+    console.log("Vet visit notification input:", input);
+    return input;
+  } catch (error) {
+    console.error("Error getting vet visit notification input:", error);
+    throw error;
   }
 } 

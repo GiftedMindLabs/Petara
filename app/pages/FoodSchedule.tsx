@@ -1,9 +1,10 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { pets } from '../utils/mockData';
+import { usePets } from '../hooks/usePets';
 
 const FoodSchedule: React.FC = () => {
+  const { pets } = usePets();
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
@@ -16,7 +17,7 @@ const FoodSchedule: React.FC = () => {
           <View key={pet.id} style={styles.scheduleCard}>
             <View style={styles.petHeader}>
               <Image 
-                source={{ uri: pet.imageUrl }} 
+                source={{ uri: pet.imageUrl ?? undefined }} 
                 style={styles.petImage} 
               />
               <Text style={styles.petName}>{pet.name}</Text>

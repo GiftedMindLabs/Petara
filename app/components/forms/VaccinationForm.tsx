@@ -1,10 +1,12 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
+import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { Vaccination } from '../../database/types';
+import { Vaccination, VetVisit } from '../../database/types';
 import { usePets } from '../../hooks/usePets';
 import { useVaccinations } from '../../hooks/useVaccinations';
+import { useVetVisits } from '../../hooks/useVetVisits';
 import { useSelectedPet } from '../../providers/SelectedPetProvider';
 
 interface VaccinationFormProps {
@@ -23,51 +25,77 @@ const VaccinationForm: React.FC<VaccinationFormProps> = ({
   const { pets } = usePets();
   const { selectedPetId } = useSelectedPet();
   const { addVaccination, updateVaccination, getVaccinationById } = useVaccinations();
+  const { visits: vetVisits, loadVisits: loadVetVisits } = useVetVisits();
   const [vaccination, setVaccination] = useState<Vaccination | null>(null);
 
   const [formData, setFormData] = useState({
     petId: selectedPetId !== 'all' ? selectedPetId : '',
     name: '',
-    dateGiven: new Date().getTime(),
-    dueDate: new Date().getTime(),
-    administeredBy: '',
+    startDate: new Date().getTime(),
+    endDate: undefined as number | undefined,
     lotNumber: '',
-    manufacturer: ''
+    manufacturer: '',
+    vetVisitId: ''
   });
 
   useEffect(() => {
     if (vaccinationId) {
       getVaccinationById(vaccinationId).then(loadedVaccination => {
-        if (loadedVaccination) setVaccination(loadedVaccination);
+        if (loadedVaccination) {
+          setVaccination(loadedVaccination);
+          setFormData({
+            petId: loadedVaccination.petId,
+            name: loadedVaccination.name,
+            startDate: loadedVaccination.startDate,
+            endDate: loadedVaccination.endDate,
+            lotNumber: loadedVaccination.lotNumber,
+            manufacturer: loadedVaccination.manufacturer,
+            vetVisitId: loadedVaccination.vetVisitId || ''
+          });
+        }
       });
     }
   }, [vaccinationId, getVaccinationById]);
 
   useEffect(() => {
-    if (vaccination) {
-      setFormData({
-        petId: vaccination.petId,
-        name: vaccination.name,
-        dateGiven: vaccination.dateGiven,
-        dueDate: vaccination.dueDate,
-        administeredBy: vaccination.administeredBy,
-        lotNumber: vaccination.lotNumber,
-        manufacturer: vaccination.manufacturer
-      });
+    if (formData.petId) {
+      loadVetVisits();
     }
-  }, [vaccination]);
+  }, [formData.petId, loadVetVisits]);
 
-  const handleDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setFormData({ ...formData, dateGiven: selectedDate.getTime() });
+  const handleVetVisitSelect = (vetVisitId: string) => {
+    const selectedVisit = vetVisits.find((v: VetVisit) => v.id === vetVisitId);
+    if (selectedVisit) {
+      setFormData(prev => ({
+        ...prev,
+        vetVisitId,
+      }));
     }
   };
 
-  const handleNextDueChange = (event: any, selectedDate?: Date) => {
+  const handleAddNewVetVisit = () => {
+    router.push({
+      pathname: "/FormModal",
+      params: {
+        title: "Add",
+        action: "create",
+        form: "vetVisit",
+        petId: formData.petId
+      }
+    });
+  };
+
+  const handleStartDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setFormData({ ...formData, startDate: selectedDate.getTime() });
+    }
+  };
+
+  const handleEndDateChange = (event: any, selectedDate?: Date) => {
     setShowNextDuePicker(false);
     if (selectedDate) {
-      setFormData({ ...formData, dueDate: selectedDate.getTime() });
+      setFormData({ ...formData, endDate: selectedDate.getTime() });
     }
   };
 
@@ -81,7 +109,6 @@ const VaccinationForm: React.FC<VaccinationFormProps> = ({
       onSubmit(formData);
     } catch (error) {
       console.error('Error saving vaccination:', error);
-      // You might want to show an error message to the user here
     }
   };
 
@@ -119,52 +146,67 @@ const VaccinationForm: React.FC<VaccinationFormProps> = ({
       </View>
 
       <View style={styles.formField}>
-        <Text style={styles.label}>Date Given</Text>
+        <Text style={styles.label}>Start Date</Text>
         <TouchableOpacity
           style={styles.dateButton}
           onPress={() => setShowDatePicker(true)}
         >
           <Text style={styles.dateButtonText}>
-            {formatDate(formData.dateGiven)}
+            {formatDate(formData.startDate)}
           </Text>
         </TouchableOpacity>
         {showDatePicker && (
           <DateTimePicker
-            value={new Date(formData.dateGiven)}
+            value={new Date(formData.startDate)}
             mode="date"
-            onChange={handleDateChange}
+            onChange={handleStartDateChange}
           />
         )}
       </View>
 
       <View style={styles.formField}>
-        <Text style={styles.label}>Due Date</Text>
+        <Text style={styles.label}>End Date (Optional)</Text>
         <TouchableOpacity
           style={styles.dateButton}
           onPress={() => setShowNextDuePicker(true)}
         >
           <Text style={styles.dateButtonText}>
-            {formatDate(formData.dueDate)}
+            {formData.endDate ? formatDate(formData.endDate) : 'Not set'}
           </Text>
         </TouchableOpacity>
         {showNextDuePicker && (
           <DateTimePicker
-            value={new Date(formData.dueDate)}
+            value={formData.endDate ? new Date(formData.endDate) : new Date()}
             mode="date"
-            onChange={handleNextDueChange}
+            onChange={handleEndDateChange}
           />
         )}
       </View>
 
       <View style={styles.formField}>
-        <Text style={styles.label}>Administered By</Text>
-        <TextInput
-          style={styles.input}
-          value={formData.administeredBy}
-          onChangeText={(value) => setFormData({ ...formData, administeredBy: value })}
-          placeholder="Enter administrator name"
-          placeholderTextColor="#9CA3AF"
-        />
+        <Text style={styles.label}>Vet Visit</Text>
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={formData.vetVisitId}
+            onValueChange={handleVetVisitSelect}
+            style={styles.picker}
+          >
+            <Picker.Item label="Select a vet visit" value="" />
+            {vetVisits.map((visit: VetVisit) => (
+              <Picker.Item 
+                key={visit.id} 
+                label={`${new Date(visit.date).toLocaleDateString()} - ${visit.reason}`} 
+                value={visit.id} 
+              />
+            ))}
+          </Picker>
+        </View>
+        <TouchableOpacity
+          style={styles.addVetButton}
+          onPress={handleAddNewVetVisit}
+        >
+          <Text style={styles.addVetButtonText}>Add New Visit</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.formField}>
@@ -235,7 +277,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#D1D5DB',
     borderRadius: 8,
-    overflow: 'hidden',
   },
   picker: {
     backgroundColor: 'white',
@@ -276,6 +317,19 @@ const styles = StyleSheet.create({
   },
   submitButtonText: {
     color: 'white',
+  },
+  addVetButton: {
+    backgroundColor: '#0D9488',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 6,
+    marginTop: 8,
+    alignSelf: 'flex-start',
+  },
+  addVetButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
   }
 });
 

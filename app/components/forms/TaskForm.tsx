@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import {
   Alert,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Switch,
@@ -37,7 +38,7 @@ const weekDays = [
 ];
 
 const TaskForm: React.FC<TaskFormProps> = ({ taskId, onSubmit, onCancel }) => {
-  const { addTask, updateTask, getTaskById } = useTasks();
+  const { addTask, updateTask, getTaskById, deleteTask } = useTasks();
   const { pets } = usePets();
   const { selectedPetId } = useSelectedPet();
   
@@ -67,6 +68,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ taskId, onSubmit, onCancel }) => {
     recurrenceMonthDay: 1,
     recurrenceEndDate: undefined as Date | undefined,
     recurrenceCount: undefined as number | undefined,
+    notificationIdentifier: undefined as string | undefined,
   });
 
   useEffect(() => {
@@ -83,7 +85,8 @@ const TaskForm: React.FC<TaskFormProps> = ({ taskId, onSubmit, onCancel }) => {
         recurrenceWeekDays: task.recurrenceWeekDays || [],
         recurrenceMonthDay: task.recurrenceMonthDay || 1,
         recurrenceEndDate: task.recurrenceEndDate ? new Date(task.recurrenceEndDate) : undefined,
-        recurrenceCount: task.recurrenceCount,
+        recurrenceCount: task.recurrenceCount,  
+        notificationIdentifier: task.notificationIdentifier,
       });
     }
   }, [task]);
@@ -162,6 +165,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ taskId, onSubmit, onCancel }) => {
           recurrenceEndDate: formData.recurrenceEndDate?.getTime(),
           recurrenceCount: formData.recurrenceCount,
         }),
+        notificationIdentifier: formData.notificationIdentifier,
       };
 
       if (task?.id) {
@@ -186,6 +190,11 @@ const TaskForm: React.FC<TaskFormProps> = ({ taskId, onSubmit, onCancel }) => {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.formField}>
+        {taskId && (
+          <Pressable style={styles.deleteButton} onPress={() => deleteTask(taskId)}>
+            <Text>Delete</Text>
+          </Pressable>
+        )}
         <Text style={styles.label}>Pet</Text>
         <View style={styles.pickerContainer}>
           <Picker
@@ -390,11 +399,11 @@ const TaskForm: React.FC<TaskFormProps> = ({ taskId, onSubmit, onCancel }) => {
             </View>
           )}
 
-          <View style={styles.formField}>
+          {/*<View style={styles.formField}>
             <Text style={styles.label}>End</Text>
             <View style={styles.pickerContainer}>
               <Picker
-                selectedValue={formData.recurrenceCount ? "count" : "date"}
+                selectedValue={formData.recurrenceCount ? "count" : formData.recurrenceEndDate ? "date" : "never"}
                 onValueChange={(value) => {
                   if (value === "count") {
                     setFormData({
@@ -402,16 +411,23 @@ const TaskForm: React.FC<TaskFormProps> = ({ taskId, onSubmit, onCancel }) => {
                       recurrenceCount: 10,
                       recurrenceEndDate: undefined,
                     });
-                  } else {
+                  } else if (value === "date") {
                     setFormData({
                       ...formData,
                       recurrenceCount: undefined,
                       recurrenceEndDate: new Date(),
                     });
+                  } else {
+                    setFormData({
+                      ...formData,
+                      recurrenceCount: undefined,
+                      recurrenceEndDate: undefined,
+                    });
                   }
                 }}
                 style={styles.picker}
               >
+                <Picker.Item label="Never" value="never" />
                 <Picker.Item label="After number of occurrences" value="count" />
                 <Picker.Item label="On date" value="date" />
               </Picker>
@@ -445,14 +461,14 @@ const TaskForm: React.FC<TaskFormProps> = ({ taskId, onSubmit, onCancel }) => {
                   <DateTimePicker
                     value={formData.recurrenceEndDate}
                     mode="date"
-                    display={Platform.OS === "ios" ? "spinner" : "default"}
-                    onChange={handleEndDateChange}
-                    minimumDate={formData.dueDate}
-                  />
-                )}
-              </>
-            )}
-          </View>
+                      display={Platform.OS === "ios" ? "spinner" : "default"}
+                      onChange={handleEndDateChange}
+                      minimumDate={formData.dueDate}
+                    />
+                  )}
+                </>
+              )}
+            </View>*/}
         </>
       )}
 
@@ -603,6 +619,13 @@ const styles = StyleSheet.create({
   dateButtonText: {
     fontSize: 16,
     color: "#1F2937",
+  },
+  deleteButton: {
+    backgroundColor: "#F3F4F6",
+    borderRadius: 6,
+    padding: 12,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 

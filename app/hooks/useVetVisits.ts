@@ -16,7 +16,7 @@ export function useVetVisits() {
       setIsLoading(true);
       let visitsData: VetVisit[];
       if (selectedPetId === 'all') {
-        visitsData = await vetVisitRepository.getUpcomingVetVisits();
+        visitsData = await vetVisitRepository.getAllVetVisits();
       } else {
         visitsData = await vetVisitRepository.getVetVisitsForPet(selectedPetId);
       }
@@ -41,10 +41,15 @@ export function useVetVisits() {
     });
     return () => listener.remove();
   }, [vetVisitRepository, selectedPetId]);
+  
 
   const addVetVisit = async (visit: Omit<VetVisit, 'id'>): Promise<void> => {
     try {
-      await vetVisitRepository.createVetVisit(visit);
+      const newVisit = await vetVisitRepository.createVetVisit(visit);
+      
+      // Schedule notification for the new visit
+      const notificationId = await vetVisitRepository.scheduleVetVisitNotification(newVisit);
+      await vetVisitRepository.storeVetVisitNotificationIdentifier(newVisit.id, notificationId);
     } catch (err) {
       console.error('Error adding vet visit:', err);
       throw err;
@@ -53,9 +58,26 @@ export function useVetVisits() {
 
   const updateVetVisit = async (id: string, updates: Partial<Omit<VetVisit, 'id'>>): Promise<void> => {
     try {
+      const currentVisit = await vetVisitRepository.getVetVisitById(id);
+      if (!currentVisit) {
+        throw new Error('Vet visit not found');
+      }
+
+      // Cancel existing notification if it exists
+      if (currentVisit.notificationIdentifier) {
+        await vetVisitRepository.cancelVetVisitNotification(currentVisit.notificationIdentifier);
+      }
+
       const success = await vetVisitRepository.updateVetVisit(id, updates);
       if (!success) {
         throw new Error('Failed to update vet visit');
+      }
+
+      // Schedule new notification if date is updated or it's a future visit
+      const updatedVisit = await vetVisitRepository.getVetVisitById(id);
+      if (updatedVisit && (updates.date || updatedVisit.date > Date.now())) {
+        const notificationId = await vetVisitRepository.scheduleVetVisitNotification(updatedVisit);
+        await vetVisitRepository.storeVetVisitNotificationIdentifier(id, notificationId);
       }
     } catch (err) {
       console.error('Error updating vet visit:', err);
@@ -65,6 +87,16 @@ export function useVetVisits() {
 
   const deleteVetVisit = async (id: string): Promise<void> => {
     try {
+      const visit = await vetVisitRepository.getVetVisitById(id);
+      if (!visit) {
+        throw new Error('Vet visit not found');
+      }
+
+      // Cancel notification if it exists
+      if (visit.notificationIdentifier) {
+        await vetVisitRepository.cancelVetVisitNotification(visit.notificationIdentifier);
+      }
+
       const success = await vetVisitRepository.deleteVetVisit(id);
       if (!success) {
         throw new Error('Failed to delete vet visit');

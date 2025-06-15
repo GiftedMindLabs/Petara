@@ -1,9 +1,11 @@
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import { useFocusEffect } from '@react-navigation/native';
+import { router } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { VetVisit } from '../../database/types';
+import { useContacts } from '../../hooks/useContacts';
 import { usePets } from '../../hooks/usePets';
 import { useVetVisits } from '../../hooks/useVetVisits';
 import { useSelectedPet } from '../../providers/SelectedPetProvider';
@@ -19,6 +21,7 @@ interface FormErrors {
   reason?: string;
   vetName?: string;
   weight?: string;
+  contactId?: string;
 }
 
 const VetVisitForm: React.FC<VetVisitFormProps> = ({
@@ -27,41 +30,40 @@ const VetVisitForm: React.FC<VetVisitFormProps> = ({
   onCancel
 }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const { pets, loadPets } = usePets();
   const { selectedPetId } = useSelectedPet();
   const { addVetVisit, updateVetVisit, getVetVisitById } = useVetVisits();
+  const { contacts } = useContacts();
   const [visit, setVisit] = useState<VetVisit | null>(null);
 
   const [formData, setFormData] = useState({
     petId: selectedPetId !== 'all' ? selectedPetId : "",
-    date: new Date().getTime(),
+    date: new Date(),
     reason: "",
     notes: "",
-    vetName: "",
-    weight: ""
+    weight: "",
+    contactId: ""
   });
 
   useEffect(() => {
     if (visitId) {
       getVetVisitById(visitId).then(loadedVisit => {
-        if (loadedVisit) setVisit(loadedVisit);
+        if (loadedVisit) {
+          setVisit(loadedVisit);
+          setFormData({
+            petId: loadedVisit.petId,
+            date: new Date(loadedVisit.date),
+            reason: loadedVisit.reason,
+            notes: loadedVisit.notes,
+            weight: loadedVisit.weight?.toString() || "",
+            contactId: loadedVisit.contactId || ""
+          });
+        }
       });
     }
   }, [visitId, getVetVisitById]);
-
-  useEffect(() => {
-    if (visit) {
-      setFormData({
-        petId: visit.petId,
-        date: visit.date,
-        reason: visit.reason,
-        notes: visit.notes,
-        vetName: visit.vetName,
-        weight: visit.weight?.toString() || ""
-      });
-    }
-  }, [visit]);
 
   // Use useFocusEffect to reload pets when the form comes into focus
   useFocusEffect(
@@ -70,10 +72,47 @@ const VetVisitForm: React.FC<VetVisitFormProps> = ({
     }, [loadPets])
   );
 
+  const handleContactSelect = (contactId: string) => {
+    const selectedContact = contacts.find(c => c.id === contactId);
+    if (selectedContact) {
+      setFormData(prev => ({
+        ...prev,
+        contactId,
+        vetName: selectedContact.name
+      }));
+    }
+  };
+
+  const handleAddNewVet = () => {
+    router.push({
+      pathname: "/FormModal",
+      params: {
+        title: "Add",
+        action: "create",
+        form: "contact",
+        type: "veterinarian"
+      }
+    });
+  };
+
   const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
     setShowDatePicker(Platform.OS === 'ios');
     if (selectedDate) {
-      setFormData({ ...formData, date: selectedDate.getTime() });
+      const newDate = new Date(selectedDate);
+      // Preserve the existing time when changing date
+      newDate.setHours(formData.date.getHours());
+      newDate.setMinutes(formData.date.getMinutes());
+      setFormData({ ...formData, date: newDate });
+    }
+  };
+
+  const handleTimeChange = (event: DateTimePickerEvent, selectedTime?: Date) => {
+    setShowTimePicker(Platform.OS === 'ios');
+    if (selectedTime) {
+      const newDate = new Date(formData.date);
+      newDate.setHours(selectedTime.getHours());
+      newDate.setMinutes(selectedTime.getMinutes());
+      setFormData({ ...formData, date: newDate });
     }
   };
 
@@ -88,12 +127,12 @@ const VetVisitForm: React.FC<VetVisitFormProps> = ({
       newErrors.reason = 'Please enter a reason for the visit';
     }
 
-    if (!formData.vetName.trim()) {
-      newErrors.vetName = 'Please enter the veterinarian\'s name';
-    }
-
     if (formData.weight && !/^\d*\.?\d*$/.test(formData.weight)) {
       newErrors.weight = 'Please enter a valid weight';
+    }
+
+    if (!formData.contactId) {
+      newErrors.contactId = 'Please select a veterinarian';
     }
 
     setErrors(newErrors);
@@ -107,11 +146,11 @@ const VetVisitForm: React.FC<VetVisitFormProps> = ({
 
     const visitData = {
       petId: formData.petId,
-      date: formData.date,
+      date: formData.date.getTime(),
       reason: formData.reason.trim(),
       notes: formData.notes.trim(),
-      vetName: formData.vetName.trim(),
       weight: formData.weight ? parseFloat(formData.weight) : undefined,
+      contactId: formData.contactId || undefined
     };
 
     try {
@@ -123,12 +162,16 @@ const VetVisitForm: React.FC<VetVisitFormProps> = ({
       onSubmit(visitData);
     } catch (error) {
       console.error('Error saving vet visit:', error);
-      // You might want to show an error message to the user here
+      Alert.alert('Error', 'Failed to save vet visit. Please try again.');
     }
   };
 
-  const formatDate = (date: number) => {
-    return new Date(date).toLocaleDateString();
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString();
+  };
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   return (
@@ -165,9 +208,28 @@ const VetVisitForm: React.FC<VetVisitFormProps> = ({
         </TouchableOpacity>
         {showDatePicker && (
           <DateTimePicker
-            value={new Date(formData.date)}
+            value={formData.date}
             mode="date"
             onChange={handleDateChange}
+          />
+        )}
+      </View>
+
+      <View style={styles.formField}>
+        <Text style={styles.label}>Time</Text>
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setShowTimePicker(true)}
+        >
+          <Text style={styles.dateButtonText}>
+            {formatTime(formData.date)}
+          </Text>
+        </TouchableOpacity>
+        {showTimePicker && (
+          <DateTimePicker
+            value={formData.date}
+            mode="time"
+            onChange={handleTimeChange}
           />
         )}
       </View>
@@ -189,17 +251,28 @@ const VetVisitForm: React.FC<VetVisitFormProps> = ({
 
       <View style={styles.formField}>
         <Text style={styles.label}>Veterinarian</Text>
-        <TextInput
-          style={[styles.input, errors.vetName && styles.inputError]}
-          value={formData.vetName}
-          onChangeText={(value) => {
-            setFormData({ ...formData, vetName: value });
-            setErrors(prev => ({ ...prev, vetName: undefined }));
-          }}
-          placeholder="Enter veterinarian name"
-          placeholderTextColor="#9CA3AF"
-        />
-        {errors.vetName && <Text style={styles.errorText}>{errors.vetName}</Text>}
+        <View style={[styles.pickerContainer, errors.contactId && styles.inputError]}>
+          <Picker
+            selectedValue={formData.contactId}
+            onValueChange={(value: string) => {
+              handleContactSelect(value);
+              setErrors(prev => ({ ...prev, contactId: undefined }));
+            }}
+            style={styles.picker}
+          >
+            <Picker.Item label="Select a veterinarian" value="" />
+            {contacts.map((contact) => (
+              <Picker.Item key={contact.id} label={contact.name} value={contact.id} />
+            ))}
+          </Picker>
+        </View>
+        {errors.contactId && <Text style={styles.errorText}>{errors.contactId}</Text>}
+        <TouchableOpacity
+          style={styles.addVetButton}
+          onPress={handleAddNewVet}
+        >
+          <Text style={styles.addVetButtonText}>Add New</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.formField}>
@@ -287,7 +360,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#D1D5DB',
     borderRadius: 8,
-    overflow: 'hidden',
   },
   picker: {
     backgroundColor: 'white',
@@ -336,6 +408,23 @@ const styles = StyleSheet.create({
     color: '#4B5563',
     fontWeight: '500',
     fontSize: 16,
+  },
+  vetSelectionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  addVetButton: {
+    backgroundColor: '#0D9488',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 6,
+    marginLeft: 8,
+  },
+  addVetButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
 

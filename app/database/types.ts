@@ -52,6 +52,7 @@ export interface Task {
   linkedTreatmentId?: string;
   linkedVaccinationId?: string;
   linkedVetVisitId?: string;
+  notificationIdentifier?: string;
 }
 
 export interface VetVisit {
@@ -60,8 +61,9 @@ export interface VetVisit {
   date: number;
   reason: string;
   notes: string;
-  vetName: string;
   weight?: number;
+  notificationIdentifier?: string;
+  contactId?: string;
 }
 
 export interface Treatment {
@@ -74,17 +76,18 @@ export interface Treatment {
   frequency: string;
   dosage: string;
   status: 'ongoing' | 'scheduled' | 'completed';
+  vetVisitId?: string;
 }
 
 export interface Vaccination {
   id: string;
   petId: string;
   name: string;
-  dateGiven: number;
-  dueDate: number;
-  administeredBy: string;
+  startDate: number;
+  endDate?: number;
   lotNumber: string;
   manufacturer: string;
+  vetVisitId?: string;
 }
 
 export interface Expense {

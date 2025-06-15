@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Pet, Vaccination } from "../database/types";
+import { useVetVisits } from "../hooks/useVetVisits";
 
 interface VaccinationCardProps {
   vaccination: Vaccination;
@@ -15,6 +16,9 @@ const VaccinationCard: React.FC<VaccinationCardProps> = ({
   pet,
   showPetInfo = false,
 }) => {
+  const { visits: vetVisits } = useVetVisits();
+  const vetVisit = vaccination.vetVisitId ? vetVisits.find(v => v.id === vaccination.vetVisitId) : null;
+
   const handlePress = () => {
     router.push({
       pathname: "/FormModal",
@@ -32,7 +36,9 @@ const VaccinationCard: React.FC<VaccinationCardProps> = ({
       <View style={styles.card}>
         {showPetInfo && pet && (
           <View style={styles.petInfo}>
-            <Image source={{ uri: pet.imageUrl }} style={styles.petImage} />
+            {pet.imageUrl && (
+              <Image source={{ uri: pet.imageUrl }} style={styles.petImage} />
+            )}
             <Text style={styles.petName}>{pet.name}</Text>
           </View>
         )}
@@ -43,15 +49,22 @@ const VaccinationCard: React.FC<VaccinationCardProps> = ({
           </View>
           <View style={styles.dateContainer}>
             <Text style={styles.timestamp}>
-              Given: {new Date(vaccination.dateGiven).toLocaleDateString()}
+              Start: {new Date(vaccination.startDate).toLocaleDateString()}
             </Text>
-            <Text style={styles.timestamp}>
-              Due: {new Date(vaccination.dueDate).toLocaleDateString()}
-            </Text>
+            {vaccination.endDate && (
+              <Text style={styles.timestamp}>
+                End: {new Date(vaccination.endDate).toLocaleDateString()}
+              </Text>
+            )}
           </View>
         </View>
         <Text style={styles.notes}>
-          Administered by: {vaccination.administeredBy}
+          {vetVisit && (
+            <Text style={styles.vetInfo}>
+              {` • During visit: ${new Date(vetVisit.date).toLocaleDateString()}`}
+              {vetVisit.reason && ` • Reason: ${vetVisit.reason}`}
+            </Text>
+          )}
         </Text>
         <View style={styles.footer}>
           <Text style={styles.footerText}>Lot #: {vaccination.lotNumber}</Text>
@@ -67,17 +80,20 @@ const VaccinationCard: React.FC<VaccinationCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 8,
+    backgroundColor: 'white',
+    borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#F3F4F6",
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   petInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
   },
   petImage: {
     width: 32,
@@ -86,47 +102,52 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   petName: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#4B5563",
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#1F2937',
   },
   cardContent: {
-    marginBottom: 8,
+    marginBottom: 12,
   },
   titleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   cardTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1F2937",
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1F2937',
     marginLeft: 8,
   },
   dateContainer: {
-    gap: 4,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   timestamp: {
     fontSize: 14,
-    color: "#6B7280",
+    color: '#6B7280',
   },
   notes: {
     fontSize: 14,
-    color: "#4B5563",
+    color: '#4B5563',
     marginBottom: 8,
   },
+  vetInfo: {
+    color: '#6B7280',
+  },
   footer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   footerText: {
     fontSize: 14,
-    color: "#6B7280",
+    color: '#6B7280',
   },
   bullet: {
-    marginHorizontal: 6,
-    color: "#6B7280",
+    fontSize: 14,
+    color: '#6B7280',
+    marginHorizontal: 8,
   },
 });
 

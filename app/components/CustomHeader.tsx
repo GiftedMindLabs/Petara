@@ -1,8 +1,7 @@
 import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import { useSelectedPet } from '../providers/SelectedPetProvider';
 import PetSelector from './PetSelector';
-import { IconSymbol } from './ui/IconSymbol';
 
 export const CustomHeader: React.FC = () => {
   const { selectedPetId, setSelectedPetId } = useSelectedPet();
@@ -19,11 +18,6 @@ export const CustomHeader: React.FC = () => {
             selectedPetId={selectedPetId}
             onPetChange={setSelectedPetId}
           />
-          <TouchableOpacity
-            style={styles.notificationButton}
-          >
-            <IconSymbol name="bell.fill" size={20} color="#6B7280" />
-          </TouchableOpacity>
         </View>
       </View>
     </View>

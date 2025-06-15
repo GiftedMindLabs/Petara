@@ -2,11 +2,15 @@ import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import TaskItem from '../components/TaskItem';
-import { pets, Task, tasks } from '../utils/mockData';
+import { Task } from '../database';
+import { usePets } from '../hooks/usePets';
+import { useTasks } from '../hooks/useTasks';
 
 const PetDetail: React.FC = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { pets } = usePets();
   const pet = pets.find(p => p.id === id);
+  const { tasks } = useTasks();
   const petTasks = tasks.filter(task => task.petId === id);
 
   if (!pet) {
@@ -24,7 +28,7 @@ const PetDetail: React.FC = () => {
         {petTasks.length > 0 ? (
           <View style={styles.taskList}>
             {petTasks.map((task: Task) => (
-              <TaskItem key={task.id} task={task} />
+              <TaskItem key={task.id} task={task} showPetInfo={false} />
             ))}
           </View>
         ) : (

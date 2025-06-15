@@ -41,7 +41,8 @@ export function useTasks() {
       try {
         const newTask = await taskRepository.createTask(task);
         if (newTask) {
-          scheduleTaskNotification(newTask);
+          const notificationIdentifier = await scheduleTaskNotification(newTask);
+          await taskRepository.storeTaskNotificationIdentifier(newTask.id, notificationIdentifier);
         }
         return newTask;
       } catch (err) {
@@ -93,9 +94,15 @@ export function useTasks() {
   );
 
   const deleteTask = useCallback(
-    async (id: string) => {
+    async (taskId: string) => {
       try {
-        const success = await taskRepository.deleteTask(id);
+        const success = await taskRepository.deleteTask(taskId);
+        // Delete task scheduled notification
+        const task = await taskRepository.getTaskById(taskId);
+        if (task?.notificationIdentifier) {
+          await taskRepository.cancelTaskNotification(task.notificationIdentifier);
+        }
+        console.log("Task deleted successfully");
         return success;
       } catch (err) {
         console.error("Error deleting task:", err);

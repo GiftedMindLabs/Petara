@@ -1,7 +1,9 @@
 import { router } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Pet, VetVisit } from "../database/types";
+import { Contact, Pet, VetVisit } from "../database/types";
+import { useContacts } from "../hooks/useContacts";
+import { IconSymbol } from "./ui/IconSymbol";
 
 interface VetVisitCardProps {
   visit: VetVisit;
@@ -14,8 +16,26 @@ const VetVisitCard: React.FC<VetVisitCardProps> = ({
   pet,
   showPetInfo = false,
 }) => {
+  const { contacts } = useContacts();
+  const [vetContact, setVetContact] = useState<Contact | null>(null);
+
+  useEffect(() => {
+    if (visit.contactId) {
+      const contact = contacts.find(c => c.id === visit.contactId);
+      if (contact) {
+        setVetContact(contact);
+      }
+    }
+  }, [visit.contactId, contacts]);
+
   const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleDateString();
+    const date = new Date(timestamp);
+    return date.toLocaleDateString();
+  };
+
+  const formatTime = (timestamp: number) => {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   return (
@@ -35,10 +55,31 @@ const VetVisitCard: React.FC<VetVisitCardProps> = ({
     >
       <View style={styles.content}>
         <View style={styles.details}>
-          <Text style={styles.date}>{formatDate(visit.date)}</Text>
+          <View style={styles.dateTimeContainer}>
+            <Text style={styles.date}>{formatDate(visit.date)}</Text>
+            <Text style={styles.time}>{formatTime(visit.date)}</Text>
+          </View>
           <Text style={styles.reason}>{visit.reason}</Text>
           {visit.notes && <Text style={styles.notes}>{visit.notes}</Text>}
-          <Text style={styles.vet}>Dr. {visit.vetName}</Text>
+          <View style={styles.vetInfoContainer}>
+            <Text style={styles.vet}>Dr. {visit.vetName}</Text>
+            {vetContact && (
+              <View style={styles.contactInfo}>
+                {vetContact.phone && (
+                  <View style={styles.contactDetail}>
+                    <IconSymbol name="phone.fill" size={12} color="#6B7280" />
+                    <Text style={styles.contactText}>{vetContact.phone}</Text>
+                  </View>
+                )}
+                {vetContact.address && (
+                  <View style={styles.contactDetail}>
+                    <IconSymbol name="location.fill" size={12} color="#6B7280" />
+                    <Text style={styles.contactText}>{vetContact.address}</Text>
+                  </View>
+                )}
+              </View>
+            )}
+          </View>
           {visit.weight && (
             <Text style={styles.weight}>Weight: {visit.weight} lbs</Text>
           )}
@@ -88,9 +129,19 @@ const styles = StyleSheet.create({
   details: {
     flexDirection: "column",
   },
+  dateTimeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
   date: {
     fontSize: 14,
-    color: "#6B7280",
+    color: '#4B5563',
+    marginRight: 8,
+  },
+  time: {
+    fontSize: 14,
+    color: '#4B5563',
   },
   reason: {
     fontSize: 16,
@@ -113,6 +164,22 @@ const styles = StyleSheet.create({
   },
   placeholderImage: {
     backgroundColor: "#F3F4F6",
+  },
+  vetInfoContainer: {
+    marginTop: 8,
+  },
+  contactInfo: {
+    marginTop: 4,
+  },
+  contactDetail: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  contactText: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginLeft: 4,
   },
 });
 

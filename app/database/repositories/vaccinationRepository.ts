@@ -5,11 +5,11 @@ type VaccinationRow = {
   id: string;
   petId: string;
   name: string;
-  dateGiven: number;
-  dueDate: number;
-  administeredBy: string;
+  startDate: number;
+  endDate: number | null;
   lotNumber: string;
   manufacturer: string;
+  vetVisitId: string | null;
 };
 
 type SQLiteValue = string | number | null;
@@ -27,16 +27,16 @@ export class VaccinationRepository {
         id,
         vaccination.petId,
         vaccination.name,
-        vaccination.dateGiven,
-        vaccination.dueDate,
-        vaccination.administeredBy,
+        vaccination.startDate,
+        vaccination.endDate || null,
         vaccination.lotNumber,
-        vaccination.manufacturer
+        vaccination.manufacturer,
+        vaccination.vetVisitId || null
       ];
 
       await this.db.runAsync(
         `INSERT INTO vaccinations (
-          id, petId, name, dateGiven, dueDate, administeredBy, lotNumber, manufacturer
+          id, petId, name, startDate, endDate, lotNumber, manufacturer, vetVisitId
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         params
       );
@@ -56,7 +56,7 @@ export class VaccinationRepository {
    */
   async getVaccinationsForPet(petId: string): Promise<Vaccination[]> {
     const results = await this.db.getAllAsync<VaccinationRow>(
-      'SELECT * FROM vaccinations WHERE petId = ? ORDER BY dateGiven DESC',
+      'SELECT * FROM vaccinations WHERE petId = ? ORDER BY startDate DESC',
       [petId]
     );
 
@@ -114,7 +114,7 @@ export class VaccinationRepository {
 
   async getAllVaccinations(): Promise<Vaccination[]> {
     const results = await this.db.getAllAsync<VaccinationRow>(
-      'SELECT * FROM vaccinations ORDER BY dateGiven DESC'
+      'SELECT * FROM vaccinations ORDER BY startDate DESC'
     );
     return results.map(this.mapVaccinationRow);
   }
@@ -125,7 +125,7 @@ export class VaccinationRepository {
   async getUpcomingVaccinations(): Promise<Vaccination[]> {
     const today = new Date().toISOString().split('T')[0];
     const results = await this.db.getAllAsync<VaccinationRow>(
-      "SELECT * FROM vaccinations WHERE dueDate >= ? ORDER BY dueDate ASC",
+      "SELECT * FROM vaccinations WHERE endDate >= ? ORDER BY endDate ASC",
       [today]
     );
 
@@ -138,7 +138,7 @@ export class VaccinationRepository {
   async getExpiredVaccinations(): Promise<Vaccination[]> {
     const today = new Date().toISOString().split('T')[0];
     const results = await this.db.getAllAsync<VaccinationRow>(
-      "SELECT * FROM vaccinations WHERE dueDate < ? ORDER BY dueDate DESC",
+      "SELECT * FROM vaccinations WHERE endDate < ? ORDER BY endDate DESC",
       [today]
     );
 
@@ -153,11 +153,11 @@ export class VaccinationRepository {
       id: row.id,
       petId: row.petId,
       name: row.name,
-      dateGiven: row.dateGiven,
-      dueDate: row.dueDate,
-      administeredBy: row.administeredBy,
+      startDate: row.startDate,
+      endDate: row.endDate || undefined,
       lotNumber: row.lotNumber,
-      manufacturer: row.manufacturer
+      manufacturer: row.manufacturer,
+      vetVisitId: row.vetVisitId || undefined
     };
   }
 } 

@@ -58,6 +58,7 @@ export function generateTasksFromTreatment({ treatment, generateForMonths = 3 }:
   
   const tasks: Omit<Task, 'id'>[] = [];
   let currentDate = startDate;
+  let occurrenceCount = 0;
   
   while (currentDate <= endDate) {
     // Create task for current date
@@ -65,15 +66,18 @@ export function generateTasksFromTreatment({ treatment, generateForMonths = 3 }:
       petId: treatment.petId,
       title: `${treatment.name} - ${treatment.dosage}`,
       type: 'medication',
-      dueDate: currentDate.toISOString(),
+      dueDate: currentDate.getTime(),
       isComplete: false,
       notes: `Treatment: ${treatment.dosage}`,
       recurring: true,
       recurrencePattern: pattern,
       recurrenceInterval: interval,
+      recurrenceEndDate: treatment.endDate ? new Date(treatment.endDate).getTime() : undefined,
       linkedTreatmentId: treatment.id,
-      nextDueDate: currentDate.toISOString()
+      nextDueDate: currentDate.getTime()
     });
+    
+    occurrenceCount++;
     
     // Calculate next date based on pattern and interval
     switch (pattern) {
@@ -86,15 +90,17 @@ export function generateTasksFromTreatment({ treatment, generateForMonths = 3 }:
               petId: treatment.petId,
               title: `${treatment.name} - ${treatment.dosage} (Evening)`,
               type: 'medication',
-              dueDate: secondDose.toISOString(),
+              dueDate: secondDose.getTime(),
               isComplete: false,
               notes: `Treatment: ${treatment.dosage}`,
               recurring: true,
               recurrencePattern: pattern,
               recurrenceInterval: interval,
+              recurrenceEndDate: treatment.endDate ? new Date(treatment.endDate).getTime() : undefined,
               linkedTreatmentId: treatment.id,
-              nextDueDate: secondDose.toISOString()
+              nextDueDate: secondDose.getTime()
             });
+            occurrenceCount++;
           }
           currentDate = new Date(currentDate.getTime() + (24 * 60 * 60 * 1000));
         } else {

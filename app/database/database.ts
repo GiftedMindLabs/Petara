@@ -40,6 +40,7 @@ export const migrateDatabase = async (db: SQLite.SQLiteDatabase) => {
         linkedTreatmentId TEXT,
         linkedVaccinationId TEXT,
         linkedVetVisitId TEXT,
+        notificationIdentifier TEXT UNIQUE,
         FOREIGN KEY (petId) REFERENCES pets (id) ON DELETE CASCADE,
         FOREIGN KEY (linkedTreatmentId) REFERENCES treatments (id) ON DELETE SET NULL,
         FOREIGN KEY (linkedVaccinationId) REFERENCES vaccinations (id) ON DELETE SET NULL,
@@ -52,9 +53,11 @@ export const migrateDatabase = async (db: SQLite.SQLiteDatabase) => {
         date INTEGER NOT NULL,
         reason TEXT NOT NULL,
         notes TEXT,
-        vetName TEXT NOT NULL,
         weight REAL,
-        FOREIGN KEY (petId) REFERENCES pets (id) ON DELETE CASCADE
+        notificationIdentifier TEXT UNIQUE,
+        contactId TEXT,
+        FOREIGN KEY (petId) REFERENCES pets (id) ON DELETE CASCADE,
+        FOREIGN KEY (contactId) REFERENCES contacts (id) ON DELETE SET NULL
       );
   
       CREATE TABLE IF NOT EXISTS treatments (
@@ -67,19 +70,23 @@ export const migrateDatabase = async (db: SQLite.SQLiteDatabase) => {
         frequency TEXT NOT NULL,
         dosage TEXT NOT NULL,
         status TEXT NOT NULL CHECK(status IN ('ongoing', 'scheduled', 'completed')),
-        FOREIGN KEY (petId) REFERENCES pets (id) ON DELETE CASCADE
+        notes TEXT,
+        vetVisitId TEXT,
+        FOREIGN KEY (petId) REFERENCES pets (id) ON DELETE CASCADE,
+        FOREIGN KEY (vetVisitId) REFERENCES vet_visits (id) ON DELETE SET NULL
       );
   
       CREATE TABLE IF NOT EXISTS vaccinations (
         id TEXT PRIMARY KEY,
         petId TEXT NOT NULL,
         name TEXT NOT NULL,
-        dateGiven INTEGER NOT NULL,
-        dueDate INTEGER NOT NULL,
-        administeredBy TEXT NOT NULL,
+        startDate INTEGER NOT NULL,
+        endDate INTEGER,
         lotNumber TEXT NOT NULL,
         manufacturer TEXT NOT NULL,
-        FOREIGN KEY (petId) REFERENCES pets (id) ON DELETE CASCADE
+        vetVisitId TEXT,
+        FOREIGN KEY (petId) REFERENCES pets (id) ON DELETE CASCADE,
+        FOREIGN KEY (vetVisitId) REFERENCES vet_visits (id) ON DELETE SET NULL
       );
   
       CREATE TABLE IF NOT EXISTS expenses (

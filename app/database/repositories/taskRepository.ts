@@ -22,6 +22,7 @@ type TaskRow = {
   linkedTreatmentId: string | null;
   linkedVaccinationId: string | null;
   linkedVetVisitId: string | null;
+  notificationIdentifier: string | null;
 };
 
 type SQLiteValue = string | number | null;
@@ -30,7 +31,7 @@ type TaskInput = Omit<Task, "id">;
 type TaskUpdate = Partial<TaskInput>;
 
 export class TaskRepository {
-  constructor(public db: SQLiteDatabase) {}
+  constructor(public db: SQLiteDatabase) { }
   /**
    * Create a new task
    */
@@ -400,59 +401,144 @@ export class TaskRepository {
     return result.changes > 0;
   }
 
-  async scheduleTaskNotification(task: Task): Promise<boolean> {
-    try {
-      if (task.recurring){
-        const nextOccurrence =
-        this.calculateNextOccurrence(task, new Date())
-      if (!nextOccurrence) return false;
+  async scheduleTaskNotification(task: Task): Promise<string> {
+    try { 
+      // Schedule main notification
+      const taskNotificationInput = await getTaskNotificationInput(task);
+      const notificationId = await Notifications.scheduleNotificationAsync(taskNotificationInput);
 
-      let reccurenceTriggerType: Notifications.SchedulableTriggerInputTypes;
-      switch (task.recurrencePattern) {
-        case "daily":
-          reccurenceTriggerType = Notifications.SchedulableTriggerInputTypes.DAILY;
-          break;
-        case "weekly":
-          reccurenceTriggerType = Notifications.SchedulableTriggerInputTypes.WEEKLY;
-          break;
-        case "monthly":
-          reccurenceTriggerType = Notifications.SchedulableTriggerInputTypes.MONTHLY;
-          break;
-        case "yearly":
-          reccurenceTriggerType = Notifications.SchedulableTriggerInputTypes.YEARLY;
-          break;
-        default:
-          return false;
-      }
-
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: task.title,
-          body: task.notes ?? "",
-        },
-        trigger: {
-          type: reccurenceTriggerType,
-          hour: 4,
-          repeats: true,
-        },
-      });
-      } else {
-        await Notifications.scheduleNotificationAsync({
+      // For important tasks (medication, feeding), schedule a reminder 30 minutes before
+      if (task.type === 'medication' || task.type === 'feeding') {
+        const reminderDate = new Date(task.dueDate - 30 * 60 * 1000); // 30 minutes before
+        const reminderTrigger: Notifications.NotificationRequestInput = {
           content: {
-            title: task.title,
-            body: task.notes ?? "",
+            title: `Reminder: ${task.title} due soon`,
+            body: `This task is due in 30 minutes${task.notes ? `\n${task.notes}` : ''}`
           },
           trigger: {
             type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-            seconds: ((new Date(task.dueDate)).getTime() - Date.now()) / 1000,
-          },
-        });
+            repeats: false,
+            seconds: Math.max(1, (reminderDate.getTime() - Date.now()) / 1000)
+          } as Notifications.TimeIntervalTriggerInput
+        };
+        
+        await Notifications.scheduleNotificationAsync(reminderTrigger);
       }
+
       console.log("Task notification scheduled:", task.title);
-      return true;
+      return notificationId;
     } catch (error) {
       console.error("Error scheduling task notification:", error);
+      throw error;
+    }
+  }
+
+  async storeTaskNotificationIdentifier(taskId: string, notificationIdentifier: string): Promise<boolean> {
+    const result = await this.db.runAsync(
+      "UPDATE tasks SET notificationIdentifier = ? WHERE id = ?",
+      [notificationIdentifier, taskId]
+    );
+    return result.changes > 0;
+  }
+
+
+  async cancelTaskNotification(notificationIdentifier: string): Promise<boolean> {
+    try {
+      await Notifications.cancelScheduledNotificationAsync(notificationIdentifier);
+      console.log("Task canceled successfuly")
+      return true;
+    } catch (error) {
+      console.error("Error canceling task notification:", error);
       return false;
     }
   }
+}
+
+async function getTaskNotificationInput(task: Task): Promise<Notifications.NotificationRequestInput> {
+  try {
+    const trigger = await getTaskNotificationTrigger(task);
+    
+    // Create a more descriptive notification message
+    let body = '';
+    if (task.type === 'medication') {
+      body = `Time for medication${task.notes ? `: ${task.notes}` : ''}`;
+    } else if (task.type === 'feeding') {
+      body = `Time to feed${task.notes ? `: ${task.notes}` : ''}`;
+    } else if (task.type === 'walk') {
+      body = `Time for a walk${task.notes ? `: ${task.notes}` : ''}`;
+    } else if (task.type === 'grooming') {
+      body = `Time for grooming${task.notes ? `: ${task.notes}` : ''}`;
+    } else {
+      body = task.notes ?? '';
+    }
+
+    // Add recurrence info if task is recurring
+    if (task.recurring && task.recurrencePattern) {
+      body += `\nRecurs ${task.recurrencePattern}`;
+      if (task.recurrenceInterval && task.recurrenceInterval > 1) {
+        body += ` (every ${task.recurrenceInterval} ${task.recurrencePattern}s)`;
+      }
+    }
+
+    const input: Notifications.NotificationRequestInput = {
+      content: {
+        title: task.title,
+        body: body
+      },
+      trigger: trigger
+    };
+    
+    console.log("Task notification input:", input);
+    return input;
+  } catch (error) {
+    console.error("Error getting task notification input:", error);
+    throw error;
+  }
+}
+
+
+async function getTaskNotificationTrigger(
+  task: Task
+): Promise<Notifications.NotificationTriggerInput> {
+  const triggerDate = new Date(task.dueDate);
+
+  let trigger: Notifications.NotificationTriggerInput;
+
+  if (task.recurring) {
+    if (task.recurrencePattern === 'daily') {
+      trigger = {
+        type: Notifications.SchedulableTriggerInputTypes.DAILY,
+        hour: triggerDate.getHours(),
+        minute: triggerDate.getMinutes(),
+      };
+    } else if (task.recurrencePattern === 'weekly') {
+      trigger = {
+        type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+        weekday: triggerDate.getDay() === 0 ? 7 : triggerDate.getDay(), // convert Sunday (0) to 7
+        hour: triggerDate.getHours(),
+        minute: triggerDate.getMinutes(),
+      };
+    } else if (task.recurrencePattern === 'monthly') {
+      trigger = {
+        type: Notifications.SchedulableTriggerInputTypes.MONTHLY,
+        day: triggerDate.getDate(),
+        hour: triggerDate.getHours(),
+        minute: triggerDate.getMinutes(),
+      };
+    } else if (task.recurrencePattern === 'yearly') {
+      trigger = {
+        type: Notifications.SchedulableTriggerInputTypes.YEARLY,
+        month: triggerDate.getMonth() + 1, // JS: 0-11, Expo: 1-12
+        day: triggerDate.getDate(),
+        hour: triggerDate.getHours(),
+        minute: triggerDate.getMinutes(),
+      };
+    }
+  } else {
+    trigger = {
+      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+      seconds: ((new Date(task.dueDate)).getTime() - Date.now()) / 1000,
+    }
+  }
+  return trigger!;
 }

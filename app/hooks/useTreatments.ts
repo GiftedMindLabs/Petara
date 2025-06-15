@@ -20,7 +20,7 @@ export function useTreatments() {
         const data = await treatmentRepository.getAllTreatments()
         setTreatments(data)
       } else {
-        const data = await treatmentRepository.getTreatmentsForPet(selectedPetId);
+        const data = await treatmentRepository.getTreatmentsByPetId(selectedPetId);
         setTreatments(data)
       }
     } catch (err) {
@@ -60,7 +60,7 @@ export function useTreatments() {
 
   const addTreatment = useCallback(async (treatment: Omit<Treatment, 'id'>) => {
     try {
-      const newTreatment = await treatmentRepository.createTreatment(treatment);
+      const newTreatment = await treatmentRepository.addTreatment(treatment);
       return newTreatment;
     } catch (err) {
       console.error('Error adding treatment:', err);
