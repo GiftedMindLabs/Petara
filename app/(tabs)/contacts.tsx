@@ -1,4 +1,4 @@
-import { AddButton } from '@/app/components/ui/AddButton';
+import AddButton from '@/app/components/ui/AddButton';
 import { IconSymbol } from '@/app/components/ui/IconSymbol';
 import { useContacts } from '@/app/hooks/useContacts';
 import * as Linking from 'expo-linking';

@@ -1,4 +1,4 @@
-import { AddButton } from "@/app/components/ui/AddButton";
+import AddButton from "@/app/components/ui/AddButton";
 import { IconSymbol } from "@/app/components/ui/IconSymbol";
 import UndoDialog from "@/app/components/ui/UndoDialog";
 import { router } from "expo-router";

@@ -7,7 +7,7 @@ interface AddButtonProps {
   label: string;
 }
 
-export const AddButton: React.FC<AddButtonProps> = ({ onPress, label }) => {
+ const AddButton: React.FC<AddButtonProps> = ({ onPress, label }) => {
   return (
     <TouchableOpacity style={styles.button} onPress={onPress}>
       <IconSymbol name="plus" size={20} color="#FFFFFF" />
@@ -33,3 +33,5 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
 }); 
+
+export default AddButton;

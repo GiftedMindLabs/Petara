@@ -4,13 +4,14 @@ import { Stack } from "expo-router";
 import { SQLiteProvider } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { Platform, SafeAreaView } from "react-native";
+import { ActivityIndicator, Platform, SafeAreaView, View } from "react-native";
 import "react-native-reanimated";
 import { migrateDatabase } from "./database/database";
 import { registerForPushNotificationsAsync } from "./notifications";
 import { SelectedPetProvider } from "./providers/SelectedPetProvider";
 import { ThemeProvider, useTheme } from "./providers/ThemeProvider";
 
+// Configure notifications
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldPlaySound: false,
@@ -21,38 +22,59 @@ Notifications.setNotificationHandler({
 });
 
 export default function RootLayout() {
+  const [isReady, setIsReady] = useState(false);
   const [expoPushToken, setExpoPushToken] = useState('');
   const [channels, setChannels] = useState<Notifications.NotificationChannel[]>([]);
-  const [notification, setNotification] = useState<Notifications.Notification | undefined>(
-    undefined
-  );
-
-  useEffect(() => {
-    registerForPushNotificationsAsync().then(token => token && setExpoPushToken(token));
-
-    if (Platform.OS === 'android') {
-      Notifications.getNotificationChannelsAsync().then(value => setChannels(value ?? []));
-    }
-    const notificationListener = Notifications.addNotificationReceivedListener(notification => {
-      setNotification(notification);
-    });
-
-    const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
-      console.log(response);
-    });
-
-    return () => {
-      notificationListener.remove();
-      responseListener.remove();
-    };
-  }, []);
+  const [notification, setNotification] = useState<Notifications.Notification | undefined>(undefined);
   
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
 
-  if (!loaded) {
-    return null;
+  useEffect(() => {
+    async function prepare() {
+      try {
+        // Register for push notifications
+        const token = await registerForPushNotificationsAsync();
+        if (token) {
+          setExpoPushToken(token);
+        }
+
+        if (Platform.OS === 'android') {
+          const value = await Notifications.getNotificationChannelsAsync();
+          setChannels(value ?? []);
+        }
+
+        const notificationListener = Notifications.addNotificationReceivedListener(notification => {
+          setNotification(notification);
+        });
+
+        const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
+          console.log(response);
+        });
+
+        setIsReady(true);
+
+        return () => {
+          notificationListener.remove();
+          responseListener.remove();
+        };
+      } catch (error) {
+        console.error('Error during app initialization:', error);
+        // Still set ready to true to prevent infinite loading
+        setIsReady(true);
+      }
+    }
+
+    prepare();
+  }, []);
+
+  if (!loaded || !isReady) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#0D9488" />
+      </View>
+    );
   }
 
   return (

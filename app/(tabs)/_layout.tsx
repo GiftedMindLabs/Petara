@@ -1,5 +1,5 @@
 import CustomHeader from "@/app/components/CustomHeader";
-import { HapticTab } from "@/app/components/HapticTab";
+import HapticTab from "@/app/components/HapticTab";
 import { IconSymbol } from "@/app/components/ui/IconSymbol";
 import TabBarBackground from "@/app/components/ui/TabBarBackground";
 import { useTheme } from "@/app/providers/ThemeProvider";

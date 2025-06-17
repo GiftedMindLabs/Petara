@@ -1,5 +1,5 @@
 import TreatmentCard from '@/app/components/TreatmentCard';
-import { AddButton } from '@/app/components/ui/AddButton';
+import AddButton from '@/app/components/ui/AddButton';
 import { IconSymbol } from '@/app/components/ui/IconSymbol';
 import VaccinationCard from '@/app/components/VaccinationCard';
 import VetVisitCard from '@/app/components/VetVisitCard';

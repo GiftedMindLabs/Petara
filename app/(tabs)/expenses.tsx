@@ -1,5 +1,5 @@
 import ExpenseCard from '@/app/components/ExpenseCard';
-import { AddButton } from '@/app/components/ui/AddButton';
+import AddButton from '@/app/components/ui/AddButton';
 import { IconSymbol } from '@/app/components/ui/IconSymbol';
 import { router } from 'expo-router';
 import React, { useState } from 'react';

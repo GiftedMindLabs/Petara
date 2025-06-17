@@ -20,7 +20,8 @@
         "foregroundImage": "./assets/images/foreground.png",
         "backgroundColor": "#F1592A"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.giftedmindlabs.Petara"
     },
     "plugins": [
       "expo-router",
