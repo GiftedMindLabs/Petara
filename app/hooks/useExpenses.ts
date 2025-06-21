@@ -13,7 +13,7 @@ export function useExpenses() {
   const [error, setError] = useState<string | null>(null);
   const { expenseRepository } = useRepositories();
 
-  const loadExpenses = useCallback(async () => {
+  const loadExpenses = async () => {
     try {
       console.log("Loading expenses for pet:", selectedPetId);
       setIsLoading(true);
@@ -35,7 +35,7 @@ export function useExpenses() {
     } finally {
       setIsLoading(false);
     }
-  }, [expenseRepository, selectedPetId]);
+  };
 
   const loadExpensesByCategory = useCallback(async (category: string) => {
     try {

@@ -11,7 +11,7 @@ export function useTreatments() {
   const [error, setError] = useState<string | null>(null);
   const { treatmentRepository } = useRepositories();
 
-  const loadTreatments = useCallback(async () => {
+  const loadTreatments = async () => {
     try {
       console.log("Loading treatments for pet:", selectedPetId);
       setIsLoading(true);
@@ -29,7 +29,7 @@ export function useTreatments() {
     } finally {
       setIsLoading(false);
     }
-  }, [treatmentRepository, selectedPetId]);
+  };
 
   const loadOngoingTreatments = useCallback(async () => {
     try {

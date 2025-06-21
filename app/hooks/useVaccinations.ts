@@ -11,7 +11,7 @@ export function useVaccinations() {
   const { vaccinationRepository } = useRepositories();
   const { selectedPetId } = useSelectedPet()
 
-  const loadVaccinations = useCallback(async () => {
+  const loadVaccinations = async () => {
     try {
       console.log("Loading vaccinations for pet:", selectedPetId);
       setIsLoading(true);
@@ -29,7 +29,7 @@ export function useVaccinations() {
     } finally {
       setIsLoading(false);
     }
-  }, [vaccinationRepository, selectedPetId]);
+  };
 
   useEffect(() => {
     loadVaccinations()

@@ -1,4 +1,5 @@
 import { useFonts } from "expo-font";
+import { EventSubscription } from "expo-modules-core";
 import * as Notifications from "expo-notifications";
 import { Stack } from "expo-router";
 import { SQLiteProvider } from "expo-sqlite";
@@ -30,44 +31,45 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
-
   useEffect(() => {
+    let notificationListener: EventSubscription;
+    let responseListener: EventSubscription;
+  
     async function prepare() {
       try {
-        // Register for push notifications
         const token = await registerForPushNotificationsAsync();
         if (token) {
           setExpoPushToken(token);
         }
-
+  
         if (Platform.OS === 'android') {
           const value = await Notifications.getNotificationChannelsAsync();
           setChannels(value ?? []);
         }
-
-        const notificationListener = Notifications.addNotificationReceivedListener(notification => {
+  
+        notificationListener = Notifications.addNotificationReceivedListener(notification => {
           setNotification(notification);
         });
-
-        const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
+  
+        responseListener = Notifications.addNotificationResponseReceivedListener(response => {
           console.log(response);
         });
-
+  
         setIsReady(true);
-
-        return () => {
-          notificationListener.remove();
-          responseListener.remove();
-        };
       } catch (error) {
         console.error('Error during app initialization:', error);
-        // Still set ready to true to prevent infinite loading
-        setIsReady(true);
+        setIsReady(true); // prevent infinite loader
       }
     }
-
+  
     prepare();
+  
+    return () => {
+      if (notificationListener) notificationListener.remove();
+      if (responseListener) responseListener.remove();
+    };
   }, []);
+  
 
   if (!loaded || !isReady) {
     return (

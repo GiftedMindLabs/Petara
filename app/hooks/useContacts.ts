@@ -9,7 +9,7 @@ export function useContacts() {
   const [error, setError] = useState<string | null>(null);
   const { contactRepository } = useRepositories();
 
-  const loadContacts = useCallback(async () => {
+  const loadContacts = async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -21,7 +21,7 @@ export function useContacts() {
     } finally {
       setIsLoading(false);
     }
-  }, [contactRepository]);
+  };
 
   const loadContactsByType = useCallback(async (type: string) => {
     try {

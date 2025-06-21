@@ -11,7 +11,7 @@ export function useVetVisits() {
   const { vetVisitRepository } = useRepositories();
   const { selectedPetId } = useSelectedPet();
 
-  const loadVisits = useCallback(async () => {
+  const loadVisits = async () => {
     try {
       setIsLoading(true);
       let visitsData: VetVisit[];
@@ -28,7 +28,7 @@ export function useVetVisits() {
     } finally {
       setIsLoading(false);
     }
-  }, [vetVisitRepository, selectedPetId]);
+  };
 
   useEffect(() => {
     loadVisits()

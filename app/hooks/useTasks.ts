@@ -9,7 +9,7 @@ export function useTasks() {
   const [error, setError] = useState<string | null>(null);
   const { taskRepository } = useRepositories();
 
-  const loadTasks = useCallback(async () => {
+  const loadTasks = async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -21,7 +21,7 @@ export function useTasks() {
     } finally {
       setIsLoading(false);
     }
-  }, [taskRepository]);
+  };
 
   useEffect(() => {
     // Initial fetch of the data

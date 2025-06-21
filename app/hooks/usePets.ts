@@ -9,7 +9,7 @@ export function usePets() {
   const [error, setError] = useState<string | null>(null);
   const { petRepository } = useRepositories();
 
-  const loadPets = useCallback(async () => {
+  const loadPets = async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -21,7 +21,7 @@ export function usePets() {
     } finally {
       setIsLoading(false);
     }
-  }, [petRepository]);
+  };
 
   useEffect(() => {
     // Initial fetch of the data
