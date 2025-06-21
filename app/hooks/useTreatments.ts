@@ -56,7 +56,7 @@ export function useTreatments() {
       }
     });
     return () => listener.remove();
-  }, [loadTreatments, selectedPetId]);
+  }, [selectedPetId]);
 
   const addTreatment = useCallback(async (treatment: Omit<Treatment, 'id'>) => {
     try {

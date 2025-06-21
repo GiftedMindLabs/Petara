@@ -14,6 +14,7 @@ export function useVetVisits() {
   const loadVisits = async () => {
     try {
       setIsLoading(true);
+      setError(null);
       let visitsData: VetVisit[];
       if (selectedPetId === 'all') {
         visitsData = await vetVisitRepository.getAllVetVisits();
@@ -21,7 +22,6 @@ export function useVetVisits() {
         visitsData = await vetVisitRepository.getVetVisitsForPet(selectedPetId);
       }
       setVisits(visitsData);
-      setError(null);
     } catch (err) {
       console.error('Error loading visits:', err);
       setError('Failed to load vet visits');
@@ -31,6 +31,8 @@ export function useVetVisits() {
   };
 
   useEffect(() => {
+    console.log("vetVisitRepository changed", vetVisitRepository);
+
     loadVisits()
     // Local listener
     const listener = addDatabaseChangeListener((event) => {
@@ -41,12 +43,12 @@ export function useVetVisits() {
     });
     return () => listener.remove();
   }, [vetVisitRepository, selectedPetId]);
-  
+
 
   const addVetVisit = async (visit: Omit<VetVisit, 'id'>): Promise<void> => {
     try {
       const newVisit = await vetVisitRepository.createVetVisit(visit);
-      
+
       // Schedule notification for the new visit
       const notificationId = await vetVisitRepository.scheduleVetVisitNotification(newVisit);
       await vetVisitRepository.storeVetVisitNotificationIdentifier(newVisit.id, notificationId);
@@ -115,10 +117,6 @@ export function useVetVisits() {
       throw err;
     }
   }, [vetVisitRepository]);
-
-  useEffect(() => {
-    loadVisits();
-  }, [loadVisits]);
 
   return {
     visits,

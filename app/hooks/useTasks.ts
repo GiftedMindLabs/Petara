@@ -10,6 +10,7 @@ export function useTasks() {
   const { taskRepository } = useRepositories();
 
   const loadTasks = async () => {
+    console.log("Loading tasks...");
     try {
       setIsLoading(true);
       setError(null);

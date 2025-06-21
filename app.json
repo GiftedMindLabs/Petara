@@ -2,23 +2,25 @@
   "expo": {
     "name": "Petara",
     "slug": "Petara",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/images/logo01.png",
     "scheme": "petara",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.giftedmindlabs.Petara",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": ["remote-notification"],
+        "NSUserNotificationAlertUsageDescription": "Allow notifications to stay updated about your pet's needs."
       }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/foreground.png",
-        "backgroundColor": "#F1592A"
+        "backgroundColor": "#18968A"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.giftedmindlabs.Petara"
@@ -31,10 +33,11 @@
           "image": "./assets/images/foreground.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#F1592A"
+          "backgroundColor": "#18968A"
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

@@ -47,7 +47,7 @@ export function useContacts() {
       }
     });
     return () => listener.remove();
-  }, [loadContacts]);
+  }, []);
 
   const addContact = useCallback(async (contact: Omit<Contact, 'id'>) => {
     try {

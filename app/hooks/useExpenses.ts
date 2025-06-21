@@ -79,7 +79,7 @@ export function useExpenses() {
       }
     });
     return () => listener.remove();
-  }, [loadExpenses]);
+  }, []);
 
   const addExpense = useCallback(async (expense: Omit<Expense, 'id'>) => {
     try {

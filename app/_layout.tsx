@@ -1,5 +1,4 @@
 import { useFonts } from "expo-font";
-import * as Notifications from "expo-notifications";
 import { Stack } from "expo-router";
 import { SQLiteProvider } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
@@ -10,14 +9,14 @@ import { SelectedPetProvider } from "./providers/SelectedPetProvider";
 import { ThemeProvider, useTheme } from "./providers/ThemeProvider";
 
 // Configure notifications
-Notifications.setNotificationHandler({
+/*Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldPlaySound: false,
     shouldSetBadge: false,
     shouldShowBanner: true,
     shouldShowList: true,
   }),
-});
+});*/
 
 export default function RootLayout() {
   /*const [isReady, setIsReady] = useState(false);

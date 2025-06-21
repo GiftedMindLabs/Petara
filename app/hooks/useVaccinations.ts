@@ -41,7 +41,7 @@ export function useVaccinations() {
       }
     });
     return () => listener.remove();
-  }, [loadVaccinations, selectedPetId]);
+  }, [selectedPetId]);
 
   const addVaccination = useCallback(async (vaccination: Omit<Vaccination, 'id'>) => {
     try {
