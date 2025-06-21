@@ -64,9 +64,9 @@ export function useVetVisits() {
       }
 
       // Cancel existing notification if it exists
-      if (currentVisit.notificationIdentifier) {
+      /*if (currentVisit.notificationIdentifier) {
         await vetVisitRepository.cancelVetVisitNotification(currentVisit.notificationIdentifier);
-      }
+      }*/
 
       const success = await vetVisitRepository.updateVetVisit(id, updates);
       if (!success) {
@@ -74,11 +74,11 @@ export function useVetVisits() {
       }
 
       // Schedule new notification if date is updated or it's a future visit
-      const updatedVisit = await vetVisitRepository.getVetVisitById(id);
+      /*onst updatedVisit = await vetVisitRepository.getVetVisitById(id);
       if (updatedVisit && (updates.date || updatedVisit.date > Date.now())) {
         const notificationId = await vetVisitRepository.scheduleVetVisitNotification(updatedVisit);
         await vetVisitRepository.storeVetVisitNotificationIdentifier(id, notificationId);
-      }
+      }*/
     } catch (err) {
       console.error('Error updating vet visit:', err);
       throw err;

@@ -3,11 +3,9 @@ import * as Notifications from "expo-notifications";
 import { Stack } from "expo-router";
 import { SQLiteProvider } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useState } from "react";
-import { ActivityIndicator, Platform, SafeAreaView, View } from "react-native";
+import { ActivityIndicator, SafeAreaView, View } from "react-native";
 import "react-native-reanimated";
 import { migrateDatabase } from "./database/database";
-import { registerForPushNotificationsAsync } from "./notifications";
 import { SelectedPetProvider } from "./providers/SelectedPetProvider";
 import { ThemeProvider, useTheme } from "./providers/ThemeProvider";
 
@@ -22,15 +20,16 @@ Notifications.setNotificationHandler({
 });
 
 export default function RootLayout() {
-  const [isReady, setIsReady] = useState(false);
+  /*const [isReady, setIsReady] = useState(false);
   const [expoPushToken, setExpoPushToken] = useState('');
   const [channels, setChannels] = useState<Notifications.NotificationChannel[]>([]);
   const [notification, setNotification] = useState<Notifications.Notification | undefined>(undefined);
-  
+  */
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
 
+  /*
   useEffect(() => {
     async function prepare() {
       try {
@@ -68,8 +67,8 @@ export default function RootLayout() {
 
     prepare();
   }, []);
-
-  if (!loaded || !isReady) {
+*/
+  if (!loaded) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#0D9488" />

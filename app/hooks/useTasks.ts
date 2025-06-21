@@ -40,10 +40,10 @@ export function useTasks() {
     async (task: Omit<Task, "id">) => {
       try {
         const newTask = await taskRepository.createTask(task);
-        if (newTask) {
+        /*if (newTask) {
           const notificationIdentifier = await scheduleTaskNotification(newTask);
           await taskRepository.storeTaskNotificationIdentifier(newTask.id, notificationIdentifier);
-        }
+        }*/
         return newTask;
       } catch (err) {
         console.error("Error adding task:", err);
