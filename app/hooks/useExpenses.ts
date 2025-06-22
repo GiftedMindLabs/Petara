@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+  import { useState } from "react";
 import { Expense } from "../database/types";
-import { useDataReady } from "./useDataReady";
 import { useRepositories } from "./useRepositories";
 
 export function useExpenses() {
@@ -8,19 +7,13 @@ export function useExpenses() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { expenseRepository } = useRepositories();
-  const isDataReady = useDataReady();
 
-  const loadExpenses = useCallback(async () => {
+  const loadExpenses = async () => {
     console.log("useExpenses loadExpenses called");
-    if (!expenseRepository || !isDataReady) {
-      console.log("useExpenses loadExpenses - repository or data not ready");
-      return;
-    }
-
     try {
       setIsLoading(true);
       setError(null);
-      const loadedExpenses = await expenseRepository.getAllExpenses();
+      const loadedExpenses = await getAllExpenses();
       console.log("useExpenses loadExpenses loaded expenses:", loadedExpenses?.length || 0);
       setExpenses(loadedExpenses || []);
     } catch (err) {
@@ -29,47 +22,36 @@ export function useExpenses() {
     } finally {
       setIsLoading(false);
     }
-  }, [expenseRepository, isDataReady]);
+  };
 
-  // Manual refresh function
-  const refresh = useCallback(async () => {
-    console.log("useExpenses refresh called");
+  const getAllExpenses = async () => {
+
     try {
-      if (expenseRepository) {
-        const loadedExpenses = await expenseRepository.getAllExpenses();
-        console.log("useExpenses refresh loaded expenses:", loadedExpenses?.length || 0);
-        setExpenses(loadedExpenses || []);
-        setError(null);
+      if (!expenseRepository) {
+        throw new Error("Expense repository not available");
       }
+      return await expenseRepository.getAllExpenses();
     } catch (err) {
-      console.error("useExpenses refresh error:", err);
-      setError(err instanceof Error ? err.message : 'Failed to refresh expenses');
+      console.error("Error getting all expenses:", err);
+      throw err;
     }
-  }, [expenseRepository]);
+  };
 
-  useEffect(() => {
-    console.log("useExpenses useEffect triggered, isDataReady:", isDataReady, "expenseRepository:", !!expenseRepository);
-    if (isDataReady && expenseRepository) {
-      loadExpenses();
-    }
-  }, [isDataReady, expenseRepository, loadExpenses]);
 
-  const addExpense = useCallback(async (expense: Omit<Expense, 'id'>) => {
+  const addExpense = async (expense: Omit<Expense, 'id'>) => {
     try {
       if (!expenseRepository) {
         throw new Error('Expense repository not available');
       }
       const newExpense = await expenseRepository.createExpense(expense);
-      // Refresh expenses after adding
-      refresh();
       return newExpense;
     } catch (err) {
       console.error('Error adding expense:', err);
       throw err;
     }
-  }, [expenseRepository, refresh]);
+  };
 
-  const getExpenseById = useCallback(async (id: string): Promise<Expense | null> => {
+  const getExpenseById = async (id: string): Promise<Expense | null> => {
     try {
       if (!expenseRepository) {
         throw new Error('Expense repository not available');
@@ -79,39 +61,35 @@ export function useExpenses() {
       console.error('Error getting expense by id:', err);
       throw err;
     }
-  }, [expenseRepository]);
+  };
 
-  const updateExpense = useCallback(async (id: string, updates: Partial<Omit<Expense, 'id'>>) => {
+  const updateExpense = async (id: string, updates: Partial<Omit<Expense, 'id'>>) => {
     try {
       if (!expenseRepository) {
         throw new Error('Expense repository not available');
       }
       const success = await expenseRepository.updateExpense(id, updates);
-      // Refresh expenses after updating
-      refresh();
       return success;
     } catch (err) {
       console.error('Error updating expense:', err);
       throw err;
     }
-  }, [expenseRepository, refresh]);
+  };
 
-  const deleteExpense = useCallback(async (id: string) => {
+  const deleteExpense = async (id: string) => {
     try {
       if (!expenseRepository) {
         throw new Error('Expense repository not available');
       }
       const success = await expenseRepository.deleteExpense(id);
-      // Refresh expenses after deleting
-      refresh();
       return success;
     } catch (err) {
       console.error('Error deleting expense:', err);
       throw err;
     }
-  }, [expenseRepository, refresh]);
+  };
 
-  const getExpensesByPetId = useCallback(async (petId: string): Promise<Expense[]> => {
+  const getExpensesByPetId = async (petId: string): Promise<Expense[]> => {
     try {
       if (!expenseRepository) {
         throw new Error('Expense repository not available');
@@ -121,13 +99,12 @@ export function useExpenses() {
       console.error('Error getting expenses by pet id:', err);
       throw err;
     }
-  }, [expenseRepository]);
+  };
 
   return {
     expenses,
     isLoading,
     error,
-    refresh,
     addExpense,
     getExpenseById,
     updateExpense,

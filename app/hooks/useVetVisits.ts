@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { VetVisit } from "../database/types";
-import { useDataReady } from "./useDataReady";
 import { useRepositories } from "./useRepositories";
 
 export function useVetVisits() {
@@ -8,55 +7,37 @@ export function useVetVisits() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { vetVisitRepository } = useRepositories();
-  const isDataReady = useDataReady();
-  const hasLoaded = useRef(false); // <-- solución
   
-  const loadVetVisits = useCallback(async () => {
+  const loadVetVisits = async () => {
     console.log("useVetVisits loadVetVisits called");
-    if (!vetVisitRepository || !isDataReady || hasLoaded.current) {
-      console.log("useVetVisits loadVetVisits - repository or data not ready");
-      return;
-    }
 
     try {
       setIsLoading(true);
       setError(null);
-      const loadedVetVisits = await vetVisitRepository.getAllVetVisits();
+      const loadedVetVisits = await getAllVetVisits();
       console.log("useVetVisits loadVetVisits loaded vetVisits:", loadedVetVisits?.length || 0);
       setVetVisits(loadedVetVisits || []);
-      hasLoaded.current = true;
     } catch (err) {
       console.error("useVetVisits loadVetVisits error:", err);
       setError(err instanceof Error ? err.message : 'Failed to load vet visits');
     } finally {
       setIsLoading(false);
     }
-  }, [vetVisitRepository, isDataReady]);
+  };
 
-  // Manual refresh function
-  const refresh = useCallback(async () => {
-    console.log("useVetVisits refresh called");
+  const getAllVetVisits = async () => {
     try {
-      if (vetVisitRepository) {
-        const loadedVetVisits = await vetVisitRepository.getAllVetVisits();
-        console.log("useVetVisits refresh loaded vetVisits:", loadedVetVisits?.length || 0);
-        setVetVisits(loadedVetVisits || []);
-        setError(null);
+      if (!vetVisitRepository) {
+        throw new Error("Vet visit repository not available");
       }
+      return await vetVisitRepository.getAllVetVisits();
     } catch (err) {
-      console.error("useVetVisits refresh error:", err);
-      setError(err instanceof Error ? err.message : 'Failed to refresh vet visits');
+      console.error("Error getting all vet visits:", err);
+      throw err;
     }
-  }, [vetVisitRepository]);
+  };
 
-  useEffect(() => {
-    console.log("useVetVisits useEffect triggered, isDataReady:", isDataReady, "vetVisitRepository:", !!vetVisitRepository);
-    if (isDataReady && vetVisitRepository) {
-      loadVetVisits();
-    }
-  }, [isDataReady, vetVisitRepository, loadVetVisits]);
-
-  const addVetVisit = useCallback(async (vetVisit: Omit<VetVisit, 'id'>): Promise<VetVisit> => {
+  const addVetVisit = async (vetVisit: Omit<VetVisit, 'id'>): Promise<VetVisit> => {
     try {
       if (!vetVisitRepository) {
         throw new Error("Vet visit repository not available");
@@ -67,16 +48,14 @@ export function useVetVisits() {
       const notificationId = await vetVisitRepository.scheduleVetVisitNotification(newVetVisit);
       await vetVisitRepository.storeVetVisitNotificationIdentifier(newVetVisit.id, notificationId);
       
-      // Refresh vet visits after adding
-      refresh();
       return newVetVisit;
     } catch (err) {
       console.error('Error adding vet visit:', err);
       throw err;
     }
-  }, [vetVisitRepository, refresh]);
+  };
 
-  const getVetVisitById = useCallback(async (id: string): Promise<VetVisit | null> => {
+  const getVetVisitById = async (id: string): Promise<VetVisit | null> => {
     try {
       if (!vetVisitRepository) {
         throw new Error("Vet visit repository not available");
@@ -86,9 +65,9 @@ export function useVetVisits() {
       console.error('Error getting vet visit by id:', err);
       throw err;
     }
-  }, [vetVisitRepository]);
+  };
 
-  const updateVetVisit = useCallback(async (id: string, updates: Partial<Omit<VetVisit, 'id'>>): Promise<boolean> => {
+  const updateVetVisit = async (id: string, updates: Partial<Omit<VetVisit, 'id'>>): Promise<boolean> => {
     try {
       if (!vetVisitRepository) {
         throw new Error("Vet visit repository not available");
@@ -115,16 +94,14 @@ export function useVetVisits() {
         await vetVisitRepository.storeVetVisitNotificationIdentifier(id, notificationId);
       }*/
       
-      // Refresh vet visits after updating
-      refresh();
       return success;
     } catch (err) {
       console.error('Error updating vet visit:', err);
       throw err;
     }
-  }, [vetVisitRepository, refresh]);
+  };
 
-  const deleteVetVisit = useCallback(async (vetVisitId: string): Promise<boolean> => {
+  const deleteVetVisit = async (vetVisitId: string): Promise<boolean> => {
     try {
       if (!vetVisitRepository) {
         throw new Error("Vet visit repository not available");
@@ -144,17 +121,14 @@ export function useVetVisits() {
         throw new Error('Failed to delete vet visit');
       }
       
-      // Refresh vet visits after deleting
-      refresh();
       return success;
     } catch (err) {
       console.error('Error deleting vet visit:', err);
       throw err;
     }
-  }, [vetVisitRepository, refresh]);
+  };
 
-  const getVetVisitsByPetId = useCallback(
-    async (petId: string): Promise<VetVisit[]> => {
+  const getVetVisitsByPetId = async (petId: string): Promise<VetVisit[]> => {
       try {
         if (!vetVisitRepository) {
           throw new Error("Vet visit repository not available");
@@ -164,15 +138,12 @@ export function useVetVisits() {
         console.error("Error getting vet visits by pet id:", err);
         throw err;
       }
-    },
-    [vetVisitRepository]
-  );
+  };
 
   return {
     vetVisits,
     isLoading,
     error,
-    refresh,
     addVetVisit,
     getVetVisitById,
     updateVetVisit,

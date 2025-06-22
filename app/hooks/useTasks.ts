@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Task } from "../database/types";
-import { useDataReady } from "./useDataReady";
 import { useRepositories } from "./useRepositories";
 
 export function useTasks() {
@@ -8,48 +7,36 @@ export function useTasks() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { taskRepository } = useRepositories();
-  const isDataReady = useDataReady();
-  const hasLoaded = useRef(false); // <-- solución
 
-  const loadTasks = useCallback(async () => {
+  const loadTasks = async () => {
     console.log("useTasks loadTasks called");
-    if (!taskRepository || !isDataReady || hasLoaded.current) {
-      console.log("useTasks loadTasks - repository or data not ready");
-      return;
-    }
-
     try {
       setIsLoading(true);
       setError(null);
-      const loadedTasks = await taskRepository.getAllTasks();
+      const loadedTasks = await getAllTasks();
       console.log("useTasks loadTasks loaded tasks:", loadedTasks?.length || 0);
       setTasks(loadedTasks || []);
-      hasLoaded.current = true;
     } catch (err) {
       console.error("useTasks loadTasks error:", err);
       setError(err instanceof Error ? err.message : 'Failed to load tasks');
     } finally {
       setIsLoading(false);
     }
-  }, [taskRepository, isDataReady]);
+  };
 
-  // Manual refresh function
-  const refreshTasks = useCallback(() => {
-    console.log("refreshTasks called");
-    if (isDataReady && taskRepository) {
-      loadTasks();
+  const getAllTasks = async () => {
+    try {
+      if (!taskRepository) {
+        throw new Error("Task repository not available");
+      }
+      return await taskRepository.getAllTasks();
+    } catch (err) {
+      console.error("Error getting all tasks:", err);
+      throw err;
     }
-  }, [isDataReady, taskRepository, loadTasks]);
+  };
 
-  useEffect(() => {
-    console.log("useTasks useEffect triggered, isDataReady:", isDataReady, "taskRepository:", !!taskRepository);
-    if (isDataReady && taskRepository) {
-      loadTasks();
-    }
-  }, [isDataReady, taskRepository, loadTasks]);
-
-  const addTask = useCallback(
-    async (task: Omit<Task, "id">) => {
+  const addTask = async (task: Omit<Task, "id">) => {
       try {
         console.log("addTask called with:", task.title);
         if (!taskRepository) {
@@ -57,19 +44,14 @@ export function useTasks() {
         }
         const newTask = await taskRepository.createTask(task);
         console.log("Task created, calling refreshTasks");
-        // Refresh tasks after adding
-        refreshTasks();
         return newTask;
       } catch (err) {
         console.error("Error adding task:", err);
         throw err;
       }
-    },
-    [taskRepository, refreshTasks]
-  );
+  };
 
-  const scheduleTaskNotification = useCallback(
-    async (task: Task) => {
+  const scheduleTaskNotification = async (task: Task) => {
       try {
         if (!taskRepository) {
           throw new Error("Task repository not available");
@@ -81,12 +63,9 @@ export function useTasks() {
         console.error("Error scheduling task notification:", err);
         throw err;
       }
-    },
-    [taskRepository]
-  );
+  };
 
-  const getTaskById = useCallback(
-    async (id: string) => {
+  const getTaskById = async (id: string) => {
       try {
         if (!taskRepository) {
           throw new Error("Task repository not available");
@@ -97,87 +76,66 @@ export function useTasks() {
         console.error("Error getting task by id:", err);
         throw err;
       }
-    },
-    [taskRepository]
-  );
+  };
 
-  const updateTask = useCallback(
-    async (id: string, updates: Partial<Omit<Task, "id">>) => {
+  const updateTask = async (id: string, updates: Partial<Omit<Task, "id">>) => {
       try {
         if (!taskRepository) {
           throw new Error("Task repository not available");
         }
-        const success = await taskRepository.updateTask(id, updates);
-        // Refresh tasks after updating
-        refreshTasks();
+        const success = await taskRepository.updateTask(id, updates); 
         return success;
       } catch (err) {
         console.error("Error updating task:", err);
         throw err;
       }
-    },
-    [taskRepository, refreshTasks]
-  );
+  };
 
-  const deleteTask = useCallback(
-    async (taskId: string) => {
+  const deleteTask = async (taskId: string) => {
       try {
         if (!taskRepository) {
           throw new Error("Task repository not available");
         }
         const success = await taskRepository.deleteTask(taskId);
-        // Delete task scheduled notification
         const task = await taskRepository.getTaskById(taskId);
         if (task?.notificationIdentifier) {
           await taskRepository.cancelTaskNotification(task.notificationIdentifier);
         }
         console.log("Task deleted successfully");
-        // Refresh tasks after deleting
-        refreshTasks();
         return success;
       } catch (err) {
         console.error("Error deleting task:", err);
         throw err;
       }
-    },
-    [taskRepository, refreshTasks]
-  );
+  };
 
-  const completeTask = useCallback(
-    async (id: string) => {
+  const completeTask = async (id: string) => {
       try {
         if (!taskRepository) {
           throw new Error("Task repository not available");
         }
         const success = await taskRepository.completeTask(id);
-        // Refresh tasks after completing
-        refreshTasks();
         return success;
       } catch (err) {
         console.error("Error completing task:", err);
         throw err;
       }
-    },
-    [taskRepository, refreshTasks]
-  );
+  };
 
-  const clearAllTasks = useCallback(async () => {
+  const clearAllTasks = async () => {
     try {
       if (!taskRepository) {
         throw new Error("Task repository not available");
       }
       const success = await taskRepository.clearAllTasks();
-      // Refresh tasks after clearing
-      refreshTasks();
       return success;
     } catch (err) {
       console.error("Error clearing tasks:", err);
       throw err;
     }
-  }, [taskRepository, refreshTasks]);
+  };
 
-  const getTasksByTreatmentId = useCallback(
-    async (treatmentId: string): Promise<Task[]> => {
+  const getTasksByTreatmentId = async (treatmentId: string): Promise<Task[]> => {
       try {
         if (!taskRepository) {
           throw new Error("Task repository not available");
@@ -187,49 +145,25 @@ export function useTasks() {
         console.error("Error getting tasks by treatment id:", err);
         throw err;
       }
-    },
-    [taskRepository]
-  );
+  };
 
-  const undoTaskCompletion = useCallback(
-    async (id: string) => {
+  const undoTaskCompletion = async (id: string) => {
       try {
         if (!taskRepository) {
           throw new Error("Task repository not available");
         }
         const success = await taskRepository.undoTaskCompletion(id);
-        // Refresh tasks after undoing completion
-        refreshTasks();
         return success;
       } catch (err) {
         console.error("Error undoing task completion:", err);
         throw err;
       }
-    },
-    [taskRepository, refreshTasks]
-  );
-
-  const refresh = useCallback(async () => {
-    console.log("useTasks refresh called");
-    try {
-      if (taskRepository) {
-        const loadedTasks = await taskRepository.getAllTasks();
-        console.log("useTasks refresh loaded tasks:", loadedTasks?.length || 0);
-        setTasks(loadedTasks || []);
-        setError(null);
-        
-      }
-    } catch (err) {
-      console.error("useTasks refresh error:", err);
-      setError(err instanceof Error ? err.message : 'Failed to refresh tasks');
-    }
-  }, [taskRepository]);
+  };
 
   return {
     tasks,
     isLoading,
     error,
-    refreshTasks,
     addTask,
     getTaskById,
     updateTask,
@@ -238,6 +172,5 @@ export function useTasks() {
     clearAllTasks,
     getTasksByTreatmentId,
     undoTaskCompletion,
-    refresh,
   };
 }

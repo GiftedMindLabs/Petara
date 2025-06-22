@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Pet } from "../database/types";
-import { useDataReady } from "./useDataReady";
 import { useRepositories } from "./useRepositories";
 
 export function usePets() {
@@ -8,32 +7,37 @@ export function usePets() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { petRepository } = useRepositories();
-  const isDataReady = useDataReady();
-  const hasLoaded = useRef(false); // <-- solución
-  const loadPets = useCallback(async () => {
+  
+  const loadPets = async () => {
     console.log("usePets loadPets called");
-    if (!petRepository || !isDataReady || hasLoaded.current) {
-      console.log("usePets loadPets - repository or data not ready");
-      return;
-    }
 
     try {
       setIsLoading(true);
       setError(null);
-      const loadedPets = await petRepository.getAllPets();
+      const loadedPets = await getAllPets();
       console.log("usePets loadPets loaded pets:", loadedPets?.length || 0);
       setPets(loadedPets || []);
-      hasLoaded.current = true; 
     } catch (err) {
       console.error("usePets loadPets error:", err);
       setError(err instanceof Error ? err.message : 'Failed to load pets');
     } finally {
       setIsLoading(false);
     }
-  }, [petRepository, isDataReady]);
+  };
 
-  // Manual refresh function
-  const refresh = useCallback(async () => {
+  const getAllPets = async () => {
+    try {
+      if (!petRepository) {
+        throw new Error("Pet repository not available");
+      }
+      return await petRepository.getAllPets();
+    } catch (err) {
+      console.error("Error getting all pets:", err);
+      throw err;
+    }
+  };
+
+  const refresh = async () => {
     console.log("usePets refresh called");
     try {
       if (petRepository) {
@@ -47,35 +51,22 @@ export function usePets() {
       console.error("usePets refresh error:", err);
       setError(err instanceof Error ? err.message : 'Failed to refresh pets');
     }
-  }, [petRepository]);
+  };
 
-  useEffect(() => {
-    console.log("usePets useEffect triggered, isDataReady:", isDataReady, "petRepository:", !!petRepository);
-    if (isDataReady && petRepository) {
-      loadPets();
-    }
-  }, [isDataReady, petRepository, loadPets]);
-
-  const addPet = useCallback(
-    async (pet: Omit<Pet, "id">) => {
+  const addPet = async (pet: Omit<Pet, "id">) => {
       try {
         if (!petRepository) {
           throw new Error("Pet repository not available");
         }
         const newPet = await petRepository.createPet(pet);
-        // Refresh pets after adding
-        refresh();
         return newPet;
       } catch (err) {
         console.error("Error adding pet:", err);
         throw err;
       }
-    },
-    [petRepository, refresh]
-  );
+  };
 
-  const getPetById = useCallback(
-    async (id: string) => {
+  const getPetById = async (id: string) => {
       try {
         if (!petRepository) {
           throw new Error("Pet repository not available");
@@ -86,47 +77,35 @@ export function usePets() {
         console.error("Error getting pet by id:", err);
         throw err;
       }
-    },
-    [petRepository]
-  );
+  };
 
-  const updatePet = useCallback(
-    async (id: string, updates: Partial<Omit<Pet, "id">>) => {
+  const updatePet = async (id: string, updates: Partial<Omit<Pet, "id">>) => {
       try {
         if (!petRepository) {
           throw new Error("Pet repository not available");
         }
         const success = await petRepository.updatePet(id, updates);
-        // Refresh pets after updating
-        refresh();
         return success;
       } catch (err) {
         console.error("Error updating pet:", err);
         throw err;
       }
-    },
-    [petRepository, refresh]
-  );
+  };
 
-  const deletePet = useCallback(
-    async (petId: string) => {
+  const deletePet = async (petId: string) => {
       try {
         if (!petRepository) {
           throw new Error("Pet repository not available");
         }
         const success = await petRepository.deletePet(petId);
-        // Refresh pets after deleting
-        refresh();
         return success;
       } catch (err) {
         console.error("Error deleting pet:", err);
         throw err;
       }
-    },
-    [petRepository, refresh]
-  );
+  };
 
-  const getLivingPets = useCallback(async () => {
+  const getLivingPets = async () => {
     try {
       const livingPets = await petRepository!.getLivingPets();
       return livingPets;
@@ -134,7 +113,7 @@ export function usePets() {
       console.error("Error getting living pets:", err);
       throw err;
     }
-  }, []);
+  };
 
   return {
     pets,
