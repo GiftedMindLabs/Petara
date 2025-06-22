@@ -3,11 +3,8 @@ import * as SQLite from "expo-sqlite";
 // Migration function to set up the database schema
 export const migrateDatabase = async (db: SQLite.SQLiteDatabase): Promise<void> => {
   try {
-    console.log('Starting database migration...');
-    
     // Enable foreign keys
     await db.execAsync('PRAGMA foreign_keys = ON;');
-    console.log('Foreign keys enabled');
 
     // Create version table if it doesn't exist
     await db.execAsync(`
@@ -15,16 +12,13 @@ export const migrateDatabase = async (db: SQLite.SQLiteDatabase): Promise<void> 
         version INTEGER PRIMARY KEY
       );
     `);
-    console.log('Version table created/verified');
 
     // Get current version
     const versionResult = await db.getFirstAsync<{ version: number }>('SELECT version FROM db_version');
     const currentVersion = versionResult?.version || 0;
-    console.log('Current database version:', currentVersion);
 
     // Run migrations based on version
     if (currentVersion < 1) {
-      console.log('Running migration to version 1...');
       // Start transaction
       await db.execAsync('BEGIN TRANSACTION;');
       
@@ -141,26 +135,23 @@ export const migrateDatabase = async (db: SQLite.SQLiteDatabase): Promise<void> 
             notes TEXT
           );
         `);
-        console.log('All tables created successfully');
 
         // Update version
         await db.execAsync('INSERT OR REPLACE INTO db_version (version) VALUES (1)');
-        console.log('Database version updated to 1');
         
         // Commit transaction
         await db.execAsync('COMMIT;');
-        console.log('Migration transaction committed successfully');
       } catch (error) {
         // Rollback transaction on error
-        console.error('Migration error, rolling back transaction:', error);
         await db.execAsync('ROLLBACK;');
         throw error;
       }
-    } else {
-      console.log('Database is already at version 1, no migration needed');
     }
 
-    console.log('Database migration completed successfully');
+    // Add more version checks here for future migrations
+    // if (currentVersion < 2) {
+    //   // Version 2 migrations
+    // }
   } catch (error) {
     console.error('Database migration failed:', error);
     throw error;

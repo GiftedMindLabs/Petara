@@ -11,7 +11,7 @@ const categories = ['All Categories', 'veterinary', 'food', 'supplies', 'groomin
 
 const Expenses: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
-  const { expenses, isLoading, totalExpenses, totalReimbursed } = useExpenses();
+  const { expenses, isLoading } = useExpenses();
   const { pets } = usePets();
 
   const filteredExpenses = expenses.filter(expense => {
@@ -20,8 +20,6 @@ const Expenses: React.FC = () => {
     }
     return expense.category === selectedCategory;
   });
-
-  const netExpenses = totalExpenses - totalReimbursed;
 
   if (isLoading) {
     return (
@@ -55,15 +53,11 @@ const Expenses: React.FC = () => {
       <View style={styles.summaryContainer}>
         <View style={styles.summaryCard}>
           <Text style={styles.summaryLabel}>Total Expenses</Text>
-          <Text style={styles.summaryValue}>
-            ${totalExpenses.toFixed(2)}
-          </Text>
+          
         </View>
         <View style={styles.summaryCard}>
           <Text style={styles.summaryLabel}>Net Cost</Text>
-          <Text style={styles.summaryValue}>
-            ${netExpenses.toFixed(2)}
-          </Text>
+          
         </View>
       </View>
 

@@ -10,7 +10,7 @@ import { useSelectedPet } from '../providers/SelectedPetProvider';
 const Home: React.FC = () => {
   const { selectedPetId } = useSelectedPet();
   const { tasks, isLoading: tasksLoading } = useTasks();
-  const { visits: vetVisits, isLoading: visitsLoading } = useVetVisits();
+  const { vetVisits, isLoading: visitsLoading } = useVetVisits();
   const [todaysTasks, setTodaysTasks] = useState<Task[]>([]);
   const [upcomingVisits, setUpcomingVisits] = useState<VetVisit[]>([]);
 

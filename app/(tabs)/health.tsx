@@ -20,13 +20,13 @@ const VetHealth: React.FC = () => {
   const { pets } = usePets();
   const { vaccinations, isLoading: isLoadingVaccinations } = useVaccinations();
   const { treatments, isLoading: isLoadingTreatments } = useTreatments();
-  const { visits, isLoading: isLoadingVisits, error } = useVetVisits();
+  const { vetVisits, isLoading: isLoadingVisits, error } = useVetVisits();
 
   const filteredVisits = useMemo(() => {
     return selectedPetId === 'all' 
-      ? visits 
-      : visits.filter(visit => visit.petId === selectedPetId);
-  }, [visits, selectedPetId]);
+      ? vetVisits 
+      : vetVisits.filter(visit => visit.petId === selectedPetId);
+  }, [vetVisits, selectedPetId]);
 
   const filteredVaccinations = useMemo(() => {
     return selectedPetId === 'all'
