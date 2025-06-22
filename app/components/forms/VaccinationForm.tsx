@@ -25,7 +25,7 @@ const VaccinationForm: React.FC<VaccinationFormProps> = ({
   const { pets } = usePets();
   const { selectedPetId } = useSelectedPet();
   const { addVaccination, updateVaccination, getVaccinationById } = useVaccinations();
-  const { visits: vetVisits } = useVetVisits();
+  const { vetVisits } = useVetVisits();
   const [vaccination, setVaccination] = useState<Vaccination | null>(null);
 
   const [formData, setFormData] = useState({

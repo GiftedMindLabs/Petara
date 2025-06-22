@@ -24,7 +24,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
   const { pets } = usePets();
   const { selectedPetId } = useSelectedPet();
   const { addExpense, updateExpense, getExpenseById } = useExpenses();
-  const { visits } = useVetVisits();
+  const { vetVisits } = useVetVisits();
   const { vaccinations } = useVaccinations();
   const [expense, setExpense] = useState<Expense | null>(null);
 
@@ -175,7 +175,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
                 style={styles.picker}
               >
                 <Picker.Item label="None" value={undefined} />
-                {visits
+                {vetVisits
                   .filter(visit => visit.petId === formData.petId)
                   .map(visit => (
                     <Picker.Item 

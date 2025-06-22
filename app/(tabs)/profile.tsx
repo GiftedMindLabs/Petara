@@ -16,7 +16,7 @@ const Profile: React.FC = () => {
   const { pets, isLoading: isLoadingPets } = usePets();
   const { vaccinations, isLoading: isLoadingVaccinations } = useVaccinations();
   const { treatments, isLoading: isLoadingTreatments } = useTreatments();
-  const { visits, isLoading: isLoadingVisits } = useVetVisits();
+  const { vetVisits, isLoading: isLoadingVisits } = useVetVisits();
   const { expenses, isLoading: isLoadingExpenses } = useExpenses();
   const { theme } = useTheme();
 
@@ -237,8 +237,8 @@ const Profile: React.FC = () => {
             <View style={styles.infoRow}>
               <Text style={styles.label}>Recent Vet Visits</Text>
               <Text style={styles.value}>
-                {visits.length > 0 
-                  ? new Date(visits[0].date).toLocaleDateString()
+                {vetVisits.length > 0 
+                  ? new Date(vetVisits[0].date).toLocaleDateString()
                   : 'No recent visits'}
               </Text>
             </View>

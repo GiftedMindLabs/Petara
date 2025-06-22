@@ -10,6 +10,8 @@ export function useTasks() {
   const { taskRepository } = useRepositories();
   const isDataReady = useDataReady();
 
+  console.log("useTasks hook re-rendering, tasks count:", tasks?.length || 0);
+
   const loadTasks = useCallback(async () => {
     console.log("Loading tasks...");
     try {
@@ -27,6 +29,7 @@ export function useTasks() {
       const data = await taskRepository.getAllTasks();
       console.log("getAllTasks completed, setting tasks:", data.length);
       setTasks(data);
+      console.log("Tasks state updated with", data.length, "tasks");
     } catch (err) {
       console.error("Error loading tasks:", err);
       console.error("Error details:", {
@@ -42,6 +45,7 @@ export function useTasks() {
 
   // Manual refresh function
   const refreshTasks = useCallback(() => {
+    console.log("refreshTasks called");
     if (isDataReady && taskRepository) {
       loadTasks();
     }
@@ -57,10 +61,12 @@ export function useTasks() {
   const addTask = useCallback(
     async (task: Omit<Task, "id">) => {
       try {
+        console.log("addTask called with:", task.title);
         if (!taskRepository) {
           throw new Error("Task repository not available");
         }
         const newTask = await taskRepository.createTask(task);
+        console.log("Task created, calling refreshTasks");
         // Refresh tasks after adding
         refreshTasks();
         return newTask;
