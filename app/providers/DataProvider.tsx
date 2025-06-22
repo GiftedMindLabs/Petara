@@ -55,13 +55,16 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
 
   const [isReady, setIsReady] = useState(false);
   const initializedRef = useRef(false);
-
   useEffect(() => {
-    if (!db || initializedRef.current) return;
-
+    let mounted = true;
+  
     const init = async () => {
+      if (!db || initializedRef.current) return;
+  
       try {
         await db.execAsync('SELECT 1');
+        if (!mounted) return;
+  
         setRepositories({
           taskRepository: new TaskRepository(db),
           petRepository: new PetRepository(db),
@@ -78,8 +81,11 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         console.error('[DataProvider] DB initialization failed:', e);
       }
     };
-
+  
     init();
+    return () => {
+      mounted = false;
+    };
   }, [db]);
 
   const value = useMemo(() => ({

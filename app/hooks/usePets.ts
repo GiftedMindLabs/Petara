@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Pet } from "../database/types";
 import { useDataReady } from "./useDataReady";
 import { useRepositories } from "./useRepositories";
@@ -9,10 +9,10 @@ export function usePets() {
   const [error, setError] = useState<string | null>(null);
   const { petRepository } = useRepositories();
   const isDataReady = useDataReady();
-
+  const hasLoaded = useRef(false); // <-- solución
   const loadPets = useCallback(async () => {
     console.log("usePets loadPets called");
-    if (!petRepository || !isDataReady) {
+    if (!petRepository || !isDataReady || hasLoaded.current) {
       console.log("usePets loadPets - repository or data not ready");
       return;
     }
@@ -23,7 +23,7 @@ export function usePets() {
       const loadedPets = await petRepository.getAllPets();
       console.log("usePets loadPets loaded pets:", loadedPets?.length || 0);
       setPets(loadedPets || []);
-     
+      hasLoaded.current = true; 
     } catch (err) {
       console.error("usePets loadPets error:", err);
       setError(err instanceof Error ? err.message : 'Failed to load pets');

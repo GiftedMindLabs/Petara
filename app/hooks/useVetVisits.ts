@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { VetVisit } from "../database/types";
 import { useDataReady } from "./useDataReady";
 import { useRepositories } from "./useRepositories";
@@ -9,10 +9,11 @@ export function useVetVisits() {
   const [error, setError] = useState<string | null>(null);
   const { vetVisitRepository } = useRepositories();
   const isDataReady = useDataReady();
+  const hasLoaded = useRef(false); // <-- solución
   
   const loadVetVisits = useCallback(async () => {
     console.log("useVetVisits loadVetVisits called");
-    if (!vetVisitRepository || !isDataReady) {
+    if (!vetVisitRepository || !isDataReady || hasLoaded.current) {
       console.log("useVetVisits loadVetVisits - repository or data not ready");
       return;
     }
@@ -23,6 +24,7 @@ export function useVetVisits() {
       const loadedVetVisits = await vetVisitRepository.getAllVetVisits();
       console.log("useVetVisits loadVetVisits loaded vetVisits:", loadedVetVisits?.length || 0);
       setVetVisits(loadedVetVisits || []);
+      hasLoaded.current = true;
     } catch (err) {
       console.error("useVetVisits loadVetVisits error:", err);
       setError(err instanceof Error ? err.message : 'Failed to load vet visits');

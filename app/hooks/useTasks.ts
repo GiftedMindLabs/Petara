@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Task } from "../database/types";
 import { useDataReady } from "./useDataReady";
 import { useRepositories } from "./useRepositories";
@@ -9,10 +9,11 @@ export function useTasks() {
   const [error, setError] = useState<string | null>(null);
   const { taskRepository } = useRepositories();
   const isDataReady = useDataReady();
+  const hasLoaded = useRef(false); // <-- solución
 
   const loadTasks = useCallback(async () => {
     console.log("useTasks loadTasks called");
-    if (!taskRepository || !isDataReady) {
+    if (!taskRepository || !isDataReady || hasLoaded.current) {
       console.log("useTasks loadTasks - repository or data not ready");
       return;
     }
@@ -23,6 +24,7 @@ export function useTasks() {
       const loadedTasks = await taskRepository.getAllTasks();
       console.log("useTasks loadTasks loaded tasks:", loadedTasks?.length || 0);
       setTasks(loadedTasks || []);
+      hasLoaded.current = true;
     } catch (err) {
       console.error("useTasks loadTasks error:", err);
       setError(err instanceof Error ? err.message : 'Failed to load tasks');
