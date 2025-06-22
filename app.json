@@ -2,11 +2,7 @@
   "expo": {
     "name": "Petara",
     "slug": "Petara",
-<<<<<<< Updated upstream
-    "version": "1.2.0",
-=======
     "version": "1.2.1",
->>>>>>> Stashed changes
     "orientation": "portrait",
     "icon": "./assets/images/logo01.png",
     "scheme": "petara",
