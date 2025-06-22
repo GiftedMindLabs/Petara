@@ -1,7 +1,7 @@
 import { addDatabaseChangeListener } from 'expo-sqlite';
 import { useCallback, useEffect, useState } from 'react';
 import { Vaccination } from '../database/types';
-import { useSelectedPet } from '../providers/SelectedPetProvider';
+import { useDataReady } from './useDataReady';
 import { useRepositories } from './useRepositories';
 
 export function useVaccinations() {
@@ -9,49 +9,38 @@ export function useVaccinations() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { vaccinationRepository } = useRepositories();
-  const { selectedPetId } = useSelectedPet()
+  const isDataReady = useDataReady();
 
   const loadVaccinations = useCallback(async () => {
     try {
-      // Check if repository is available
       if (!vaccinationRepository) {
-        console.log("Vaccination repository not available yet");
         return;
       }
-      
-      console.log("Loading vaccinations for pet:", selectedPetId);
       setIsLoading(true);
-      if (selectedPetId === "all") {
-        const data = await vaccinationRepository.getAllVaccinations();
-        setVaccinations(data);
-      } else {
-        const data = await vaccinationRepository.getVaccinationsForPet(selectedPetId);
-        setVaccinations(data);
-      }
       setError(null);
+      const data = await vaccinationRepository.getAllVaccinations();
+      setVaccinations(data);
     } catch (err) {
-      console.error('Error loading vaccinations:', err);
-      setError('Failed to load vaccinations');
+      console.error("Error loading vaccinations:", err);
+      setError("Failed to load vaccinations");
     } finally {
       setIsLoading(false);
     }
-  }, [vaccinationRepository, selectedPetId]);
+  }, [vaccinationRepository]);
 
   useEffect(() => {
-    // Only load vaccinations if repository is available
-    if (vaccinationRepository) {
+    // Only load vaccinations if data is ready and repository is available
+    if (isDataReady && vaccinationRepository) {
       loadVaccinations();
     }
-    
-    // Local listener
+
     const listener = addDatabaseChangeListener((event) => {
       if (event.tableName === "vaccinations" && vaccinationRepository) {
-        console.log("Vaccinations in local database have changed");
         loadVaccinations();
       }
     });
     return () => listener.remove();
-  }, [loadVaccinations, vaccinationRepository]);
+  }, [loadVaccinations, vaccinationRepository, isDataReady]);
 
   const addVaccination = useCallback(async (vaccination: Omit<Vaccination, 'id'>) => {
     try {
@@ -92,18 +81,6 @@ export function useVaccinations() {
     }
   }, [vaccinationRepository]);
 
-  const getAllVaccinations = useCallback(async (): Promise<Vaccination[]> => {
-    try {
-      if (!vaccinationRepository) {
-        throw new Error("Vaccination repository not available");
-      }
-      return await vaccinationRepository.getAllVaccinations();
-    } catch (err) {
-      console.error('Error getting all vaccinations:', err);
-      throw err;
-    }
-  }, [vaccinationRepository]);
-
   const getVaccinationById = useCallback(async (id: string): Promise<Vaccination | null> => {
     try {
       if (!vaccinationRepository) {
@@ -116,6 +93,18 @@ export function useVaccinations() {
     }
   }, [vaccinationRepository]);
 
+  const getVaccinationsByPetId = useCallback(async (petId: string): Promise<Vaccination[]> => {
+    try {
+      if (!vaccinationRepository) {
+        throw new Error("Vaccination repository not available");
+      }
+      return await vaccinationRepository.getVaccinationsForPet(petId);
+    } catch (err) {
+      console.error("Error getting vaccinations by pet id:", err);
+      throw err;
+    }
+  }, [vaccinationRepository]);
+
   return {
     vaccinations,
     isLoading,
@@ -124,6 +113,6 @@ export function useVaccinations() {
     updateVaccination,
     deleteVaccination,
     getVaccinationById,
-    getAllVaccinations
+    getVaccinationsByPetId
   };
 } 

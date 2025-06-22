@@ -1,6 +1,7 @@
 import { addDatabaseChangeListener } from "expo-sqlite";
 import { useCallback, useEffect, useState } from "react";
 import { Pet } from "../database/types";
+import { useDataReady } from "./useDataReady";
 import { useRepositories } from "./useRepositories";
 
 export function usePets() {
@@ -8,15 +9,13 @@ export function usePets() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { petRepository } = useRepositories();
+  const isDataReady = useDataReady();
 
   const loadPets = useCallback(async () => {
     try {
-      // Check if repository is available
       if (!petRepository) {
-        console.log("Pet repository not available yet");
         return;
       }
-      
       setIsLoading(true);
       setError(null);
       const data = await petRepository.getAllPets();
@@ -30,20 +29,18 @@ export function usePets() {
   }, [petRepository]);
 
   useEffect(() => {
-    // Only load pets if repository is available
-    if (petRepository) {
+    // Only load pets if data is ready and repository is available
+    if (isDataReady && petRepository) {
       loadPets();
     }
 
-    // Local listener
     const listener = addDatabaseChangeListener((event) => {
       if (event.tableName === "pets" && petRepository) {
-        console.log("Pets in local database have changed");
         loadPets();
       }
     });
     return () => listener.remove();
-  }, [loadPets, petRepository]);
+  }, [loadPets, petRepository, isDataReady]);
 
   const addPet = useCallback(
     async (pet: Omit<Pet, "id">) => {
@@ -55,22 +52,6 @@ export function usePets() {
         return newPet;
       } catch (err) {
         console.error("Error adding pet:", err);
-        throw err;
-      }
-    },
-    [petRepository]
-  );
-
-  const updatePet = useCallback(
-    async (id: string, updates: Partial<Omit<Pet, "id">>) => {
-      try {
-        if (!petRepository) {
-          throw new Error("Pet repository not available");
-        }
-        const success = await petRepository.updatePet(id, updates);
-        return success;
-      } catch (err) {
-        console.error("Error updating pet:", err);
         throw err;
       }
     },
@@ -93,13 +74,29 @@ export function usePets() {
     [petRepository]
   );
 
-  const deletePet = useCallback(
-    async (id: string) => {
+  const updatePet = useCallback(
+    async (id: string, updates: Partial<Omit<Pet, "id">>) => {
       try {
         if (!petRepository) {
           throw new Error("Pet repository not available");
         }
-        const success = await petRepository.deletePet(id);
+        const success = await petRepository.updatePet(id, updates);
+        return success;
+      } catch (err) {
+        console.error("Error updating pet:", err);
+        throw err;
+      }
+    },
+    [petRepository]
+  );
+
+  const deletePet = useCallback(
+    async (petId: string) => {
+      try {
+        if (!petRepository) {
+          throw new Error("Pet repository not available");
+        }
+        const success = await petRepository.deletePet(petId);
         return success;
       } catch (err) {
         console.error("Error deleting pet:", err);
@@ -111,7 +108,7 @@ export function usePets() {
 
   const getLivingPets = useCallback(async () => {
     try {
-      const livingPets = await petRepository.getLivingPets();
+      const livingPets = await petRepository!.getLivingPets();
       return livingPets;
     } catch (err) {
       console.error("Error getting living pets:", err);

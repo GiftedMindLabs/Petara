@@ -1,6 +1,7 @@
 import { addDatabaseChangeListener } from "expo-sqlite";
 import { useCallback, useEffect, useState } from "react";
 import { Task } from "../database/types";
+import { useDataReady } from "./useDataReady";
 import { useRepositories } from "./useRepositories";
 
 export function useTasks() {
@@ -8,6 +9,7 @@ export function useTasks() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { taskRepository } = useRepositories();
+  const isDataReady = useDataReady();
 
   const loadTasks = useCallback(async () => {
     console.log("Loading tasks...");
@@ -18,12 +20,21 @@ export function useTasks() {
         return;
       }
       
+      console.log("Task repository available, proceeding with load...");
       setIsLoading(true);
       setError(null);
+      
+      console.log("Calling getAllTasks...");
       const data = await taskRepository.getAllTasks();
+      console.log("getAllTasks completed, setting tasks:", data.length);
       setTasks(data);
     } catch (err) {
       console.error("Error loading tasks:", err);
+      console.error("Error details:", {
+        message: err instanceof Error ? err.message : 'Unknown error',
+        stack: err instanceof Error ? err.stack : undefined,
+        repository: taskRepository ? 'available' : 'null'
+      });
       setError("Failed to load tasks");
     } finally {
       setIsLoading(false);
@@ -31,8 +42,8 @@ export function useTasks() {
   }, [taskRepository]);
 
   useEffect(() => {
-    // Only load tasks if repository is available
-    if (taskRepository) {
+    // Only load tasks if data is ready and repository is available
+    if (isDataReady && taskRepository) {
       loadTasks();
     }
 
@@ -43,7 +54,7 @@ export function useTasks() {
       }
     });
     return () => listener.remove();
-  }, [loadTasks, taskRepository]);
+  }, [loadTasks, taskRepository, isDataReady]);
 
   const addTask = useCallback(
     async (task: Omit<Task, "id">) => {

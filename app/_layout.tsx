@@ -5,6 +5,7 @@ import { StatusBar } from "expo-status-bar";
 import { ActivityIndicator, SafeAreaView, View } from "react-native";
 import "react-native-reanimated";
 import { migrateDatabase } from "./database/database";
+import { DataProvider } from "./providers/DataProvider";
 import { SelectedPetProvider } from "./providers/SelectedPetProvider";
 import { ThemeProvider, useTheme } from "./providers/ThemeProvider";
 
@@ -40,23 +41,25 @@ function RootLayoutNav() {
           enableChangeListener: true
         }}
       >
-        <SelectedPetProvider>
-          <Stack 
-            screenOptions={{
-              contentStyle: { backgroundColor: theme.background },
-              headerStyle: { backgroundColor: theme.surface },
-              headerTintColor: theme.text,
-            }}
-          >
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="+not-found" />
-            <Stack.Screen
-              name="FormModal"
-              options={{ headerShown: false, presentation: "modal" }}
-            />
-          </Stack>
-          <StatusBar style={isDark ? "light" : "dark"} />
-        </SelectedPetProvider>
+        <DataProvider>
+          <SelectedPetProvider>
+            <Stack 
+              screenOptions={{
+                contentStyle: { backgroundColor: theme.background },
+                headerStyle: { backgroundColor: theme.surface },
+                headerTintColor: theme.text,
+              }}
+            >
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="+not-found" />
+              <Stack.Screen
+                name="FormModal"
+                options={{ headerShown: false, presentation: "modal" }}
+              />
+            </Stack>
+            <StatusBar style={isDark ? "light" : "dark"} />
+          </SelectedPetProvider>
+        </DataProvider>
       </SQLiteProvider>
     </SafeAreaView>
   );

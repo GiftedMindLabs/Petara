@@ -1,6 +1,7 @@
 import { addDatabaseChangeListener } from 'expo-sqlite';
 import { useCallback, useEffect, useState } from 'react';
 import { Contact } from '../database/types';
+import { useDataReady } from './useDataReady';
 import { useRepositories } from './useRepositories';
 
 export function useContacts() {
@@ -8,15 +9,13 @@ export function useContacts() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { contactRepository } = useRepositories();
+  const isDataReady = useDataReady();
 
   const loadContacts = useCallback(async () => {
     try {
-      // Check if repository is available
       if (!contactRepository) {
-        console.log("Contact repository not available yet");
         return;
       }
-      
       setIsLoading(true);
       setError(null);
       const data = await contactRepository.getAllContacts();
@@ -47,8 +46,8 @@ export function useContacts() {
   }, [contactRepository]);
 
   useEffect(() => {
-    // Only load contacts if repository is available
-    if (contactRepository) {
+    // Only load contacts if data is ready and repository is available
+    if (isDataReady && contactRepository) {
       loadContacts();
     }
     
@@ -60,7 +59,7 @@ export function useContacts() {
       }
     });
     return () => listener.remove();
-  }, [loadContacts, contactRepository]);
+  }, [loadContacts, contactRepository, isDataReady]);
 
   const addContact = useCallback(async (contact: Omit<Contact, 'id'>) => {
     try {
