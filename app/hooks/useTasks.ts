@@ -1,4 +1,3 @@
-import { addDatabaseChangeListener } from "expo-sqlite";
 import { useCallback, useEffect, useState } from "react";
 import { Task } from "../database/types";
 import { useDataReady } from "./useDataReady";
@@ -41,21 +40,17 @@ export function useTasks() {
     }
   }, [taskRepository]);
 
+  // Manual refresh function
+  const refreshTasks = useCallback(() => {
+    if (isDataReady && taskRepository) {
+      loadTasks();
+    }
+  }, [isDataReady, taskRepository, loadTasks]);
+
   useEffect(() => {
     // Only load tasks if data is ready and repository is available
     if (isDataReady && taskRepository) {
       loadTasks();
-    }
-
-    // Database change listener - only add if repository is available
-    if (taskRepository) {
-      const listener = addDatabaseChangeListener((event: { tableName: string }) => {
-        if (event.tableName === "tasks") {
-          console.log("Tasks in local database have changed");
-          loadTasks();
-        }
-      });
-      return () => listener.remove();
     }
   }, [isDataReady, taskRepository, loadTasks]);
 
@@ -66,17 +61,15 @@ export function useTasks() {
           throw new Error("Task repository not available");
         }
         const newTask = await taskRepository.createTask(task);
-        /*if (newTask) {
-          const notificationIdentifier = await scheduleTaskNotification(newTask);
-          await taskRepository.storeTaskNotificationIdentifier(newTask.id, notificationIdentifier);
-        }*/
+        // Refresh tasks after adding
+        refreshTasks();
         return newTask;
       } catch (err) {
         console.error("Error adding task:", err);
         throw err;
       }
     },
-    [taskRepository]
+    [taskRepository, refreshTasks]
   );
 
   const scheduleTaskNotification = useCallback(
@@ -119,13 +112,15 @@ export function useTasks() {
           throw new Error("Task repository not available");
         }
         const success = await taskRepository.updateTask(id, updates);
+        // Refresh tasks after updating
+        refreshTasks();
         return success;
       } catch (err) {
         console.error("Error updating task:", err);
         throw err;
       }
     },
-    [taskRepository]
+    [taskRepository, refreshTasks]
   );
 
   const deleteTask = useCallback(
@@ -141,13 +136,15 @@ export function useTasks() {
           await taskRepository.cancelTaskNotification(task.notificationIdentifier);
         }
         console.log("Task deleted successfully");
+        // Refresh tasks after deleting
+        refreshTasks();
         return success;
       } catch (err) {
         console.error("Error deleting task:", err);
         throw err;
       }
     },
-    [taskRepository]
+    [taskRepository, refreshTasks]
   );
 
   const completeTask = useCallback(
@@ -157,13 +154,15 @@ export function useTasks() {
           throw new Error("Task repository not available");
         }
         const success = await taskRepository.completeTask(id);
+        // Refresh tasks after completing
+        refreshTasks();
         return success;
       } catch (err) {
         console.error("Error completing task:", err);
         throw err;
       }
     },
-    [taskRepository]
+    [taskRepository, refreshTasks]
   );
 
   const clearAllTasks = useCallback(async () => {
@@ -172,12 +171,14 @@ export function useTasks() {
         throw new Error("Task repository not available");
       }
       const success = await taskRepository.clearAllTasks();
+      // Refresh tasks after clearing
+      refreshTasks();
       return success;
     } catch (err) {
       console.error("Error clearing tasks:", err);
       throw err;
     }
-  }, [taskRepository]);
+  }, [taskRepository, refreshTasks]);
 
   const getTasksByTreatmentId = useCallback(
     async (treatmentId: string): Promise<Task[]> => {
@@ -201,19 +202,22 @@ export function useTasks() {
           throw new Error("Task repository not available");
         }
         const success = await taskRepository.undoTaskCompletion(id);
+        // Refresh tasks after undoing completion
+        refreshTasks();
         return success;
       } catch (err) {
         console.error("Error undoing task completion:", err);
         throw err;
       }
     },
-    [taskRepository]
+    [taskRepository, refreshTasks]
   );
 
   return {
     tasks,
     isLoading,
     error,
+    refreshTasks,
     addTask,
     getTaskById,
     updateTask,

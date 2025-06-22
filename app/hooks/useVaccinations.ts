@@ -1,8 +1,7 @@
-import { addDatabaseChangeListener } from 'expo-sqlite';
-import { useCallback, useEffect, useState } from 'react';
-import { Vaccination } from '../database/types';
-import { useDataReady } from './useDataReady';
-import { useRepositories } from './useRepositories';
+import { useCallback, useEffect, useState } from "react";
+import { Vaccination } from "../database/types";
+import { useDataReady } from "./useDataReady";
+import { useRepositories } from "./useRepositories";
 
 export function useVaccinations() {
   const [vaccinations, setVaccinations] = useState<Vaccination[]>([]);
@@ -28,20 +27,17 @@ export function useVaccinations() {
     }
   }, [vaccinationRepository]);
 
+  // Manual refresh function
+  const refreshVaccinations = useCallback(() => {
+    if (isDataReady && vaccinationRepository) {
+      loadVaccinations();
+    }
+  }, [isDataReady, vaccinationRepository, loadVaccinations]);
+
   useEffect(() => {
     // Only load vaccinations if data is ready and repository is available
     if (isDataReady && vaccinationRepository) {
       loadVaccinations();
-    }
-
-    // Database change listener - only add if repository is available
-    if (vaccinationRepository) {
-      const listener = addDatabaseChangeListener((event: { tableName: string }) => {
-        if (event.tableName === "vaccinations") {
-          loadVaccinations();
-        }
-      });
-      return () => listener.remove();
     }
   }, [loadVaccinations, vaccinationRepository, isDataReady]);
 
@@ -51,12 +47,14 @@ export function useVaccinations() {
         throw new Error("Vaccination repository not available");
       }
       const newVaccination = await vaccinationRepository.createVaccination(vaccination);
+      // Refresh vaccinations after adding
+      refreshVaccinations();
       return newVaccination;
     } catch (err) {
       console.error('Error adding vaccination:', err);
       throw err;
     }
-  }, [vaccinationRepository]);
+  }, [vaccinationRepository, refreshVaccinations]);
 
   const updateVaccination = useCallback(async (id: string, updates: Partial<Omit<Vaccination, 'id'>>) => {
     try {
@@ -64,12 +62,14 @@ export function useVaccinations() {
         throw new Error("Vaccination repository not available");
       }
       const success = await vaccinationRepository.updateVaccination(id, updates);
+      // Refresh vaccinations after updating
+      refreshVaccinations();
       return success;
     } catch (err) {
       console.error('Error updating vaccination:', err);
       throw err;
     }
-  }, [vaccinationRepository]);
+  }, [vaccinationRepository, refreshVaccinations]);
 
   const deleteVaccination = useCallback(async (id: string) => {
     try {
@@ -77,12 +77,14 @@ export function useVaccinations() {
         throw new Error("Vaccination repository not available");
       }
       const success = await vaccinationRepository.deleteVaccination(id);
+      // Refresh vaccinations after deleting
+      refreshVaccinations();
       return success;
     } catch (err) {
       console.error('Error deleting vaccination:', err);
       throw err;
     }
-  }, [vaccinationRepository]);
+  }, [vaccinationRepository, refreshVaccinations]);
 
   const getVaccinationById = useCallback(async (id: string): Promise<Vaccination | null> => {
     try {
@@ -112,6 +114,7 @@ export function useVaccinations() {
     vaccinations,
     isLoading,
     error,
+    refreshVaccinations,
     addVaccination,
     updateVaccination,
     deleteVaccination,

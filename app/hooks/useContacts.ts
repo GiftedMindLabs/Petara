@@ -1,8 +1,7 @@
-import { addDatabaseChangeListener } from 'expo-sqlite';
-import { useCallback, useEffect, useState } from 'react';
-import { Contact } from '../database/types';
-import { useDataReady } from './useDataReady';
-import { useRepositories } from './useRepositories';
+import { useCallback, useEffect, useState } from "react";
+import { Contact } from "../database/types";
+import { useDataReady } from "./useDataReady";
+import { useRepositories } from "./useRepositories";
 
 export function useContacts() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -21,12 +20,19 @@ export function useContacts() {
       const data = await contactRepository.getAllContacts();
       setContacts(data);
     } catch (err) {
-      console.error('Error loading contacts:', err);
-      setError('Failed to load contacts');
+      console.error("Error loading contacts:", err);
+      setError("Failed to load contacts");
     } finally {
       setIsLoading(false);
     }
   }, [contactRepository]);
+
+  // Manual refresh function
+  const refreshContacts = useCallback(() => {
+    if (isDataReady && contactRepository) {
+      loadContacts();
+    }
+  }, [isDataReady, contactRepository, loadContacts]);
 
   const loadContactsByType = useCallback(async (type: string) => {
     try {
@@ -50,16 +56,6 @@ export function useContacts() {
     if (isDataReady && contactRepository) {
       loadContacts();
     }
-
-    // Database change listener - only add if repository is available
-    if (contactRepository) {
-      const listener = addDatabaseChangeListener((event: { tableName: string }) => {
-        if (event.tableName === "contacts") {
-          loadContacts();
-        }
-      });
-      return () => listener.remove();
-    }
   }, [loadContacts, contactRepository, isDataReady]);
 
   const addContact = useCallback(async (contact: Omit<Contact, 'id'>) => {
@@ -68,12 +64,14 @@ export function useContacts() {
         throw new Error("Contact repository not available");
       }
       const newContact = await contactRepository.createContact(contact);
+      // Refresh contacts after adding
+      refreshContacts();
       return newContact;
     } catch (err) {
       console.error('Error adding contact:', err);
       throw err;
     }
-  }, [contactRepository]);
+  }, [contactRepository, refreshContacts]);
 
   const updateContact = useCallback(async (id: string, updates: Partial<Omit<Contact, 'id'>>) => {
     try {
@@ -81,12 +79,14 @@ export function useContacts() {
         throw new Error("Contact repository not available");
       }
       const success = await contactRepository.updateContact(id, updates);
+      // Refresh contacts after updating
+      refreshContacts();
       return success;
     } catch (err) {
       console.error('Error updating contact:', err);
       throw err;
     }
-  }, [contactRepository]);
+  }, [contactRepository, refreshContacts]);
 
   const deleteContact = useCallback(async (id: string) => {
     try {
@@ -94,12 +94,14 @@ export function useContacts() {
         throw new Error("Contact repository not available");
       }
       const success = await contactRepository.deleteContact(id);
+      // Refresh contacts after deleting
+      refreshContacts();
       return success;
     } catch (err) {
       console.error('Error deleting contact:', err);
       throw err;
     }
-  }, [contactRepository]);
+  }, [contactRepository, refreshContacts]);
 
   const getContactById = useCallback(async (id: string): Promise<Contact | null> => {
     try {
@@ -117,6 +119,7 @@ export function useContacts() {
     contacts,
     isLoading,
     error,
+    refreshContacts,
     addContact,
     updateContact,
     deleteContact,

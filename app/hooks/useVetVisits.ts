@@ -1,8 +1,7 @@
-import { addDatabaseChangeListener } from 'expo-sqlite';
-import { useCallback, useEffect, useState } from 'react';
-import { VetVisit } from '../database/types';
-import { useDataReady } from './useDataReady';
-import { useRepositories } from './useRepositories';
+import { useCallback, useEffect, useState } from "react";
+import { VetVisit } from "../database/types";
+import { useDataReady } from "./useDataReady";
+import { useRepositories } from "./useRepositories";
 
 export function useVetVisits() {
   const [vetVisits, setVetVisits] = useState<VetVisit[]>([]);
@@ -21,27 +20,24 @@ export function useVetVisits() {
       const data = await vetVisitRepository.getAllVetVisits();
       setVetVisits(data);
     } catch (err) {
-      console.error('Error loading vet visits:', err);
-      setError('Failed to load vet visits');
+      console.error("Error loading vet visits:", err);
+      setError("Failed to load vet visits");
     } finally {
       setIsLoading(false);
     }
   }, [vetVisitRepository]);
 
+  // Manual refresh function
+  const refreshVetVisits = useCallback(() => {
+    if (isDataReady && vetVisitRepository) {
+      loadVetVisits();
+    }
+  }, [isDataReady, vetVisitRepository, loadVetVisits]);
+
   useEffect(() => {
     // Only load vet visits if data is ready and repository is available
     if (isDataReady && vetVisitRepository) {
       loadVetVisits();
-    }
-    
-    // Database change listener - only add if repository is available
-    if (vetVisitRepository) {
-      const listener = addDatabaseChangeListener((event: { tableName: string }) => {
-        if (event.tableName === "vet_visits") {
-          loadVetVisits();
-        }
-      });
-      return () => listener.remove();
     }
   }, [loadVetVisits, vetVisitRepository, isDataReady]);
 
@@ -55,12 +51,15 @@ export function useVetVisits() {
       // Schedule notification for the new visit
       const notificationId = await vetVisitRepository.scheduleVetVisitNotification(newVetVisit);
       await vetVisitRepository.storeVetVisitNotificationIdentifier(newVetVisit.id, notificationId);
+      
+      // Refresh vet visits after adding
+      refreshVetVisits();
       return newVetVisit;
     } catch (err) {
       console.error('Error adding vet visit:', err);
       throw err;
     }
-  }, [vetVisitRepository]);
+  }, [vetVisitRepository, refreshVetVisits]);
 
   const getVetVisitById = useCallback(async (id: string): Promise<VetVisit | null> => {
     try {
@@ -100,12 +99,15 @@ export function useVetVisits() {
         const notificationId = await vetVisitRepository.scheduleVetVisitNotification(updatedVisit);
         await vetVisitRepository.storeVetVisitNotificationIdentifier(id, notificationId);
       }*/
+      
+      // Refresh vet visits after updating
+      refreshVetVisits();
       return success;
     } catch (err) {
       console.error('Error updating vet visit:', err);
       throw err;
     }
-  }, [vetVisitRepository]);
+  }, [vetVisitRepository, refreshVetVisits]);
 
   const deleteVetVisit = useCallback(async (vetVisitId: string): Promise<boolean> => {
     try {
@@ -126,12 +128,15 @@ export function useVetVisits() {
       if (!success) {
         throw new Error('Failed to delete vet visit');
       }
+      
+      // Refresh vet visits after deleting
+      refreshVetVisits();
       return success;
     } catch (err) {
       console.error('Error deleting vet visit:', err);
       throw err;
     }
-  }, [vetVisitRepository]);
+  }, [vetVisitRepository, refreshVetVisits]);
 
   const getVetVisitsByPetId = useCallback(
     async (petId: string): Promise<VetVisit[]> => {
@@ -152,6 +157,7 @@ export function useVetVisits() {
     vetVisits,
     isLoading,
     error,
+    refreshVetVisits,
     addVetVisit,
     getVetVisitById,
     updateVetVisit,

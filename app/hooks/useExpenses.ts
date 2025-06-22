@@ -1,8 +1,7 @@
-import { addDatabaseChangeListener } from 'expo-sqlite';
-import { useCallback, useEffect, useState } from 'react';
-import { Expense } from '../database/types';
-import { useDataReady } from './useDataReady';
-import { useRepositories } from './useRepositories';
+import { useCallback, useEffect, useState } from "react";
+import { Expense } from "../database/types";
+import { useDataReady } from "./useDataReady";
+import { useRepositories } from "./useRepositories";
 
 export function useExpenses() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -21,27 +20,24 @@ export function useExpenses() {
       const data = await expenseRepository.getAllExpenses();
       setExpenses(data);
     } catch (err) {
-      console.error('Error loading expenses:', err);
-      setError('Failed to load expenses');
+      console.error("Error loading expenses:", err);
+      setError("Failed to load expenses");
     } finally {
       setIsLoading(false);
     }
   }, [expenseRepository]);
 
+  // Manual refresh function
+  const refreshExpenses = useCallback(() => {
+    if (isDataReady && expenseRepository) {
+      loadExpenses();
+    }
+  }, [isDataReady, expenseRepository, loadExpenses]);
+
   useEffect(() => {
     // Only load expenses if data is ready and repository is available
     if (isDataReady && expenseRepository) {
       loadExpenses();
-    }
-
-    // Database change listener - only add if repository is available
-    if (expenseRepository) {
-      const listener = addDatabaseChangeListener((event: { tableName: string }) => {
-        if (event.tableName === 'expenses') {
-          loadExpenses();
-        }
-      });
-      return () => listener.remove();
     }
   }, [loadExpenses, expenseRepository, isDataReady]);
 
@@ -51,12 +47,14 @@ export function useExpenses() {
         throw new Error('Expense repository not available');
       }
       const newExpense = await expenseRepository.createExpense(expense);
+      // Refresh expenses after adding
+      refreshExpenses();
       return newExpense;
     } catch (err) {
       console.error('Error adding expense:', err);
       throw err;
     }
-  }, [expenseRepository]);
+  }, [expenseRepository, refreshExpenses]);
 
   const getExpenseById = useCallback(async (id: string): Promise<Expense | null> => {
     try {
@@ -76,12 +74,14 @@ export function useExpenses() {
         throw new Error('Expense repository not available');
       }
       const success = await expenseRepository.updateExpense(id, updates);
+      // Refresh expenses after updating
+      refreshExpenses();
       return success;
     } catch (err) {
       console.error('Error updating expense:', err);
       throw err;
     }
-  }, [expenseRepository]);
+  }, [expenseRepository, refreshExpenses]);
 
   const deleteExpense = useCallback(async (id: string) => {
     try {
@@ -89,12 +89,14 @@ export function useExpenses() {
         throw new Error('Expense repository not available');
       }
       const success = await expenseRepository.deleteExpense(id);
+      // Refresh expenses after deleting
+      refreshExpenses();
       return success;
     } catch (err) {
       console.error('Error deleting expense:', err);
       throw err;
     }
-  }, [expenseRepository]);
+  }, [expenseRepository, refreshExpenses]);
 
   const getExpensesByPetId = useCallback(async (petId: string): Promise<Expense[]> => {
     try {
@@ -112,6 +114,7 @@ export function useExpenses() {
     expenses,
     isLoading,
     error,
+    refreshExpenses,
     addExpense,
     getExpenseById,
     updateExpense,

@@ -1,8 +1,7 @@
-import { addDatabaseChangeListener } from 'expo-sqlite';
-import { useCallback, useEffect, useState } from 'react';
-import { Treatment } from '../database/types';
-import { useDataReady } from './useDataReady';
-import { useRepositories } from './useRepositories';
+import { useCallback, useEffect, useState } from "react";
+import { Treatment } from "../database/types";
+import { useDataReady } from "./useDataReady";
+import { useRepositories } from "./useRepositories";
 
 export function useTreatments() {
   const [treatments, setTreatments] = useState<Treatment[]>([]);
@@ -28,20 +27,17 @@ export function useTreatments() {
     }
   }, [treatmentRepository]);
 
+  // Manual refresh function
+  const refreshTreatments = useCallback(() => {
+    if (isDataReady && treatmentRepository) {
+      loadTreatments();
+    }
+  }, [isDataReady, treatmentRepository, loadTreatments]);
+
   useEffect(() => {
     // Only load treatments if data is ready and repository is available
     if (isDataReady && treatmentRepository) {
       loadTreatments();
-    }
-
-    // Database change listener - only add if repository is available
-    if (treatmentRepository) {
-      const listener = addDatabaseChangeListener((event: { tableName: string }) => {
-        if (event.tableName === "treatments") {
-          loadTreatments();
-        }
-      });
-      return () => listener.remove();
     }
   }, [loadTreatments, treatmentRepository, isDataReady]);
 
@@ -52,13 +48,15 @@ export function useTreatments() {
           throw new Error("Treatment repository not available");
         }
         const newTreatment = await treatmentRepository.addTreatment(treatment);
+        // Refresh treatments after adding
+        refreshTreatments();
         return newTreatment;
       } catch (err) {
         console.error("Error adding treatment:", err);
         throw err;
       }
     },
-    [treatmentRepository]
+    [treatmentRepository, refreshTreatments]
   );
 
   const getTreatmentById = useCallback(
@@ -84,13 +82,15 @@ export function useTreatments() {
           throw new Error("Treatment repository not available");
         }
         const success = await treatmentRepository.updateTreatment(id, updates);
+        // Refresh treatments after updating
+        refreshTreatments();
         return success;
       } catch (err) {
         console.error("Error updating treatment:", err);
         throw err;
       }
     },
-    [treatmentRepository]
+    [treatmentRepository, refreshTreatments]
   );
 
   const deleteTreatment = useCallback(
@@ -100,13 +100,15 @@ export function useTreatments() {
           throw new Error("Treatment repository not available");
         }
         const success = await treatmentRepository.deleteTreatment(treatmentId);
+        // Refresh treatments after deleting
+        refreshTreatments();
         return success;
       } catch (err) {
         console.error("Error deleting treatment:", err);
         throw err;
       }
     },
-    [treatmentRepository]
+    [treatmentRepository, refreshTreatments]
   );
 
   const getTreatmentsByPetId = useCallback(
@@ -128,6 +130,7 @@ export function useTreatments() {
     treatments,
     isLoading,
     error,
+    refreshTreatments,
     addTreatment,
     getTreatmentById,
     updateTreatment,
