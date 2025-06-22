@@ -53,49 +53,51 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   });
   const [isReady, setIsReady] = useState(false);
   const initializedRef = useRef(false);
+  const dbInstanceRef = useRef<any>(null);
 
   useEffect(() => {
-    // Prevent re-initialization if already done
-    if (initializedRef.current) {
+    // Only initialize once, and only if we have a database instance
+    if (initializedRef.current || !db) {
       return;
     }
-    
-    if (db) {
-      console.log('Database available, initializing repositories...');
-      
-      // Test database connection
-      const initializeRepositories = async () => {
-        try {
-          // Test a simple query to ensure database is ready
-          await db.execAsync('SELECT 1');
-          console.log('Database connection test successful');
-          
-          // Create repositories
-          const newRepositories = {
-            taskRepository: new TaskRepository(db),
-            petRepository: new PetRepository(db),
-            vetVisitRepository: new VetVisitRepository(db),
-            vaccinationRepository: new VaccinationRepository(db),
-            treatmentRepository: new TreatmentRepository(db),
-            expenseRepository: new ExpenseRepository(db),
-            contactRepository: new ContactRepository(db),
-          };
-          
-          setRepositories(newRepositories);
-          setIsReady(true);
-          initializedRef.current = true;
-          console.log('Repositories initialized successfully');
-        } catch (error) {
-          console.error('Failed to initialize repositories:', error);
-          setIsReady(false);
-        }
-      };
 
-      initializeRepositories();
-    } else {
-      console.log('Database not available yet');
-      setIsReady(false);
+    // Check if this is the same database instance
+    if (dbInstanceRef.current === db) {
+      return;
     }
+
+    console.log('Database available, initializing repositories...');
+    dbInstanceRef.current = db;
+    
+    // Test database connection
+    const initializeRepositories = async () => {
+      try {
+        // Test a simple query to ensure database is ready
+        await db.execAsync('SELECT 1');
+        console.log('Database connection test successful');
+        
+        // Create repositories
+        const newRepositories = {
+          taskRepository: new TaskRepository(db),
+          petRepository: new PetRepository(db),
+          vetVisitRepository: new VetVisitRepository(db),
+          vaccinationRepository: new VaccinationRepository(db),
+          treatmentRepository: new TreatmentRepository(db),
+          expenseRepository: new ExpenseRepository(db),
+          contactRepository: new ContactRepository(db),
+        };
+        
+        setRepositories(newRepositories);
+        setIsReady(true);
+        initializedRef.current = true;
+        console.log('Repositories initialized successfully');
+      } catch (error) {
+        console.error('Failed to initialize repositories:', error);
+        setIsReady(false);
+      }
+    };
+
+    initializeRepositories();
   }, [db]);
 
   // Memoize the context value to prevent unnecessary re-renders

@@ -38,7 +38,7 @@ function RootLayoutNav() {
         databaseName="petara.db" 
         onInit={migrateDatabase}
         options={{
-          enableChangeListener: true,
+          enableChangeListener: true
         }}
       >
         <DataProvider>
