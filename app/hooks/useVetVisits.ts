@@ -57,7 +57,7 @@ export function useVetVisits() {
     if (isDataReady && vetVisitRepository) {
       loadVetVisits();
     }
-  }, [isDataReady, vetVisitRepository, loadVetVisits, refreshTimestamp]);
+  }, [isDataReady, vetVisitRepository, loadVetVisits]);
 
   const addVetVisit = useCallback(async (vetVisit: Omit<VetVisit, 'id'>): Promise<VetVisit> => {
     try {

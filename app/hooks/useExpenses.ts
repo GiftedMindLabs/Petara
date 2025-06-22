@@ -57,7 +57,7 @@ export function useExpenses() {
     if (isDataReady && expenseRepository) {
       loadExpenses();
     }
-  }, [isDataReady, expenseRepository, loadExpenses, refreshTimestamp]);
+  }, [isDataReady, expenseRepository, loadExpenses]);
 
   const addExpense = useCallback(async (expense: Omit<Expense, 'id'>) => {
     try {

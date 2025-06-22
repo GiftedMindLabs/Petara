@@ -57,7 +57,7 @@ export function useVaccinations() {
     if (isDataReady && vaccinationRepository) {
       loadVaccinations();
     }
-  }, [isDataReady, vaccinationRepository, loadVaccinations, refreshTimestamp]);
+  }, [isDataReady, vaccinationRepository, loadVaccinations]);
 
   const addVaccination = useCallback(async (vaccination: Omit<Vaccination, 'id'>) => {
     try {

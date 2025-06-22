@@ -74,7 +74,7 @@ export function useContacts() {
     if (isDataReady && contactRepository) {
       loadContacts();
     }
-  }, [isDataReady, contactRepository, loadContacts, refreshTimestamp]);
+  }, [isDataReady, contactRepository, loadContacts]);
 
   const addContact = useCallback(async (contact: Omit<Contact, 'id'>) => {
     try {

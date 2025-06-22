@@ -48,7 +48,7 @@ export function useTasks() {
     if (isDataReady && taskRepository) {
       loadTasks();
     }
-  }, [isDataReady, taskRepository, loadTasks, refreshTimestamp]);
+  }, [isDataReady, taskRepository, loadTasks]);
 
   const addTask = useCallback(
     async (task: Omit<Task, "id">) => {

@@ -57,7 +57,7 @@ export function usePets() {
     if (isDataReady && petRepository) {
       loadPets();
     }
-  }, [isDataReady, petRepository, loadPets, refreshTimestamp]);
+  }, [isDataReady, petRepository, loadPets]);
 
   const addPet = useCallback(
     async (pet: Omit<Pet, "id">) => {

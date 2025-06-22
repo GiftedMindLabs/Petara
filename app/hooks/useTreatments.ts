@@ -57,7 +57,7 @@ export function useTreatments() {
     if (isDataReady && treatmentRepository) {
       loadTreatments();
     }
-  }, [isDataReady, treatmentRepository, loadTreatments, refreshTimestamp]);
+  }, [isDataReady, treatmentRepository, loadTreatments]);
 
   const addTreatment = useCallback(
     async (treatment: Omit<Treatment, "id">) => {
