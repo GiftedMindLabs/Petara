@@ -42,6 +42,7 @@ interface DataProviderProps {
 
 export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const db = useSQLiteContext();
+
   const [repositories, setRepositories] = useState<DataContextType['repositories']>({
     taskRepository: null,
     petRepository: null,
@@ -51,16 +52,16 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     expenseRepository: null,
     contactRepository: null,
   });
+
   const [isReady, setIsReady] = useState(false);
   const initializedRef = useRef(false);
 
   useEffect(() => {
     if (!db || initializedRef.current) return;
-  
-    const initializeRepositories = async () => {
+
+    const init = async () => {
       try {
         await db.execAsync('SELECT 1');
-  
         setRepositories({
           taskRepository: new TaskRepository(db),
           petRepository: new PetRepository(db),
@@ -70,21 +71,18 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
           expenseRepository: new ExpenseRepository(db),
           contactRepository: new ContactRepository(db),
         });
-  
         setIsReady(true);
         initializedRef.current = true;
-      } catch (err) {
-        console.error('Initialization error:', err);
+        console.log('[DataProvider] Repositories initialized.');
+      } catch (e) {
+        console.error('[DataProvider] DB initialization failed:', e);
       }
     };
-  
-    initializeRepositories();
-    console.log('DB identity:', db);
-  }, [db]);
-  
 
-  // Memoize the context value to prevent unnecessary re-renders
-  const value = useMemo<DataContextType>(() => ({
+    init();
+  }, [db]);
+
+  const value = useMemo(() => ({
     repositories,
     isReady,
   }), [repositories, isReady]);
@@ -94,4 +92,4 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       {children}
     </DataContext.Provider>
   );
-}; 
+};
