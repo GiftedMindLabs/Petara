@@ -34,12 +34,15 @@ export function useTreatments() {
       loadTreatments();
     }
 
-    const listener = addDatabaseChangeListener((event) => {
-      if (event.tableName === "treatments" && treatmentRepository) {
-        loadTreatments();
-      }
-    });
-    return () => listener.remove();
+    // Database change listener - only add if repository is available
+    if (treatmentRepository) {
+      const listener = addDatabaseChangeListener((event: { tableName: string }) => {
+        if (event.tableName === "treatments") {
+          loadTreatments();
+        }
+      });
+      return () => listener.remove();
+    }
   }, [loadTreatments, treatmentRepository, isDataReady]);
 
   const addTreatment = useCallback(

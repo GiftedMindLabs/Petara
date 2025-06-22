@@ -34,12 +34,15 @@ export function usePets() {
       loadPets();
     }
 
-    const listener = addDatabaseChangeListener((event) => {
-      if (event.tableName === "pets" && petRepository) {
-        loadPets();
-      }
-    });
-    return () => listener.remove();
+    // Database change listener - only add if repository is available
+    if (petRepository) {
+      const listener = addDatabaseChangeListener((event: { tableName: string }) => {
+        if (event.tableName === "pets") {
+          loadPets();
+        }
+      });
+      return () => listener.remove();
+    }
   }, [loadPets, petRepository, isDataReady]);
 
   const addPet = useCallback(

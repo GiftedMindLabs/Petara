@@ -34,12 +34,15 @@ export function useVaccinations() {
       loadVaccinations();
     }
 
-    const listener = addDatabaseChangeListener((event) => {
-      if (event.tableName === "vaccinations" && vaccinationRepository) {
-        loadVaccinations();
-      }
-    });
-    return () => listener.remove();
+    // Database change listener - only add if repository is available
+    if (vaccinationRepository) {
+      const listener = addDatabaseChangeListener((event: { tableName: string }) => {
+        if (event.tableName === "vaccinations") {
+          loadVaccinations();
+        }
+      });
+      return () => listener.remove();
+    }
   }, [loadVaccinations, vaccinationRepository, isDataReady]);
 
   const addVaccination = useCallback(async (vaccination: Omit<Vaccination, 'id'>) => {

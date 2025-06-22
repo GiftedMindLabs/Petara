@@ -1,3 +1,4 @@
+import { addDatabaseChangeListener } from "expo-sqlite";
 import { useCallback, useEffect, useState } from "react";
 import { Task } from "../database/types";
 import { useDataReady } from "./useDataReady";
@@ -44,6 +45,17 @@ export function useTasks() {
     // Only load tasks if data is ready and repository is available
     if (isDataReady && taskRepository) {
       loadTasks();
+    }
+
+    // Database change listener - only add if repository is available
+    if (taskRepository) {
+      const listener = addDatabaseChangeListener((event: { tableName: string }) => {
+        if (event.tableName === "tasks") {
+          console.log("Tasks in local database have changed");
+          loadTasks();
+        }
+      });
+      return () => listener.remove();
     }
   }, [isDataReady, taskRepository, loadTasks]);
 

@@ -50,15 +50,16 @@ export function useContacts() {
     if (isDataReady && contactRepository) {
       loadContacts();
     }
-    
-    // Local listener
-    const listener = addDatabaseChangeListener((event) => {
-      if (event.tableName === "contacts" && contactRepository) {
-        console.log("Contacts in local database have changed");
-        loadContacts();
-      }
-    });
-    return () => listener.remove();
+
+    // Database change listener - only add if repository is available
+    if (contactRepository) {
+      const listener = addDatabaseChangeListener((event: { tableName: string }) => {
+        if (event.tableName === "contacts") {
+          loadContacts();
+        }
+      });
+      return () => listener.remove();
+    }
   }, [loadContacts, contactRepository, isDataReady]);
 
   const addContact = useCallback(async (contact: Omit<Contact, 'id'>) => {

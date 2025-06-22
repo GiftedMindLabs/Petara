@@ -34,14 +34,15 @@ export function useVetVisits() {
       loadVetVisits();
     }
     
-    // Local listener
-    const listener = addDatabaseChangeListener((event) => {
-      if (event.tableName === "vet_visits" && vetVisitRepository) {
-        console.log("Vet visits in local database have changed");
-        loadVetVisits();
-      }
-    });
-    return () => listener.remove();
+    // Database change listener - only add if repository is available
+    if (vetVisitRepository) {
+      const listener = addDatabaseChangeListener((event: { tableName: string }) => {
+        if (event.tableName === "vet_visits") {
+          loadVetVisits();
+        }
+      });
+      return () => listener.remove();
+    }
   }, [loadVetVisits, vetVisitRepository, isDataReady]);
 
   const addVetVisit = useCallback(async (vetVisit: Omit<VetVisit, 'id'>): Promise<VetVisit> => {

@@ -34,13 +34,15 @@ export function useExpenses() {
       loadExpenses();
     }
 
-    const listener = addDatabaseChangeListener((event) => {
-      if (event.tableName === 'expenses' && expenseRepository) {
-        console.log('Expenses in local database have changed');
-        loadExpenses();
-      }
-    });
-    return () => listener.remove();
+    // Database change listener - only add if repository is available
+    if (expenseRepository) {
+      const listener = addDatabaseChangeListener((event: { tableName: string }) => {
+        if (event.tableName === 'expenses') {
+          loadExpenses();
+        }
+      });
+      return () => listener.remove();
+    }
   }, [loadExpenses, expenseRepository, isDataReady]);
 
   const addExpense = useCallback(async (expense: Omit<Expense, 'id'>) => {
