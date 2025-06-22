@@ -47,8 +47,9 @@ const VetVisitForm: React.FC<VetVisitFormProps> = ({
   });
 
   useEffect(() => {
-    if (visitId) {
-      getVetVisitById(visitId).then(loadedVisit => {
+    const loadVisit = async () => {
+      if (visitId) {
+        const loadedVisit = await getVetVisitById(visitId);
         if (loadedVisit) {
           setVisit(loadedVisit);
           setFormData({
@@ -60,9 +61,11 @@ const VetVisitForm: React.FC<VetVisitFormProps> = ({
             contactId: loadedVisit.contactId || ""
           });
         }
-      });
-    }
-  }, [visitId, getVetVisitById]);
+      }
+    };
+    
+    loadVisit();
+  }, [visitId]);
 
   const handleContactSelect = (contactId: string) => {
     const selectedContact = contacts.find(c => c.id === contactId);

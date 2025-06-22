@@ -39,8 +39,9 @@ const VaccinationForm: React.FC<VaccinationFormProps> = ({
   });
 
   useEffect(() => {
-    if (vaccinationId) {
-      getVaccinationById(vaccinationId).then(loadedVaccination => {
+    const loadVaccination = async () => {
+      if (vaccinationId) {
+        const loadedVaccination = await getVaccinationById(vaccinationId);
         if (loadedVaccination) {
           setVaccination(loadedVaccination);
           setFormData({
@@ -53,9 +54,11 @@ const VaccinationForm: React.FC<VaccinationFormProps> = ({
             vetVisitId: loadedVaccination.vetVisitId || ''
           });
         }
-      });
-    }
-  }, [vaccinationId, getVaccinationById]);
+      }
+    };
+    
+    loadVaccination();
+  }, [vaccinationId]);
 
   const handleVetVisitSelect = (vetVisitId: string) => {
     const selectedVisit = vetVisits.find((v: VetVisit) => v.id === vetVisitId);

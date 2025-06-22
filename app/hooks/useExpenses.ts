@@ -13,7 +13,7 @@ export function useExpenses() {
   const [error, setError] = useState<string | null>(null);
   const { expenseRepository } = useRepositories();
 
-  const loadExpenses = async () => {
+  const loadExpenses = useCallback(async () => {
     try {
       console.log("Loading expenses for pet:", selectedPetId);
       setIsLoading(true);
@@ -35,7 +35,7 @@ export function useExpenses() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [expenseRepository, selectedPetId]);
 
   const loadExpensesByCategory = useCallback(async (category: string) => {
     try {
@@ -70,7 +70,9 @@ export function useExpenses() {
   }, [expenseRepository]);
 
   useEffect(() => {
+    // Initial load
     loadExpenses();
+    
     // Local listener
     const listener = addDatabaseChangeListener((event) => {
       if (event.tableName === "expenses") {
@@ -79,7 +81,7 @@ export function useExpenses() {
       }
     });
     return () => listener.remove();
-  }, []);
+  }, [loadExpenses]); // Only depend on loadExpenses callback
 
   const addExpense = useCallback(async (expense: Omit<Expense, 'id'>) => {
     try {
@@ -89,7 +91,7 @@ export function useExpenses() {
       console.error('Error adding expense:', err);
       throw err;
     }
-  }, [expenseRepository]);
+  }, []);
 
   const updateExpense = useCallback(async (id: string, updates: Partial<Omit<Expense, 'id'>>) => {
     try {
@@ -99,7 +101,7 @@ export function useExpenses() {
       console.error('Error updating expense:', err);
       throw err;
     }
-  }, [expenseRepository]);
+  }, []);
 
   const deleteExpense = useCallback(async (id: string) => {
     try {
@@ -109,7 +111,7 @@ export function useExpenses() {
       console.error('Error deleting expense:', err);
       throw err;
     }
-  }, [expenseRepository]);
+  }, []);
 
   const getExpenseById = useCallback(async (id: string): Promise<Expense | null> => {
     try {
@@ -118,7 +120,7 @@ export function useExpenses() {
       console.error('Error getting expense by id:', err);
       throw err;
     }
-  }, [expenseRepository]);
+    }, []);
 
   return {
     expenses,

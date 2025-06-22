@@ -41,8 +41,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
   });
 
   useEffect(() => {
-    if (expenseId) {
-      getExpenseById(expenseId).then(loadedExpense => {
+    const loadExpense = async () => {
+      if (expenseId) {
+        const loadedExpense = await getExpenseById(expenseId);
         if (loadedExpense) {
           setExpense(loadedExpense);
           setFormData({
@@ -57,9 +58,11 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
             linkedVaccinationId: loadedExpense.linkedVaccinationId
           });
         }
-      });
-    }
-  }, [expenseId, getExpenseById]);
+      }
+    };
+
+    loadExpense();
+  }, [expenseId]);
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
     setShowDatePicker(false);

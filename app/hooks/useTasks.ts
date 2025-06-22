@@ -9,7 +9,7 @@ export function useTasks() {
   const [error, setError] = useState<string | null>(null);
   const { taskRepository } = useRepositories();
 
-  const loadTasks = async () => {
+  const loadTasks = useCallback(async () => {
     console.log("Loading tasks...");
     try {
       setIsLoading(true);
@@ -22,7 +22,7 @@ export function useTasks() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [taskRepository]);
 
   useEffect(() => {
     // Initial fetch of the data
@@ -35,7 +35,7 @@ export function useTasks() {
       }
     });
     return () => listener.remove();
-  }, []);
+  }, [loadTasks]);
 
   const addTask = useCallback(
     async (task: Omit<Task, "id">) => {
@@ -51,7 +51,7 @@ export function useTasks() {
         throw err;
       }
     },
-    [taskRepository]
+    []
   );
 
   const scheduleTaskNotification = useCallback(
@@ -65,7 +65,7 @@ export function useTasks() {
         throw err;
       }
     },
-    [taskRepository]
+    []
   );
 
   const getTaskById = useCallback(
@@ -78,7 +78,7 @@ export function useTasks() {
         throw err;
       }
     },
-    [taskRepository]
+    []
   );
 
   const updateTask = useCallback(
@@ -91,7 +91,7 @@ export function useTasks() {
         throw err;
       }
     },
-    [taskRepository]
+    []
   );
 
   const deleteTask = useCallback(
@@ -110,7 +110,7 @@ export function useTasks() {
         throw err;
       }
     },
-    [taskRepository]
+    []
   );
 
   const completeTask = useCallback(
@@ -123,7 +123,7 @@ export function useTasks() {
         throw err;
       }
     },
-    [taskRepository]
+    []
   );
 
   const clearAllTasks = useCallback(async () => {
@@ -134,7 +134,7 @@ export function useTasks() {
       console.error("Error clearing tasks:", err);
       throw err;
     }
-  }, [taskRepository]);
+  }, []);
 
   const getTasksByTreatmentId = useCallback(
     async (treatmentId: string): Promise<Task[]> => {
@@ -145,7 +145,7 @@ export function useTasks() {
         throw err;
       }
     },
-    [taskRepository]
+    []
   );
 
   const undoTaskCompletion = useCallback(
@@ -158,7 +158,7 @@ export function useTasks() {
         throw err;
       }
     },
-    [taskRepository]
+    []
   );
 
   return {

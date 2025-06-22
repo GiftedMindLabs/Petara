@@ -48,12 +48,15 @@ const TaskForm: React.FC<TaskFormProps> = ({ taskId, onSubmit, onCancel }) => {
   const [task, setTask] = useState<Task | null>(null);
 
   useEffect(() => {
-    if (taskId) {
-      getTaskById(taskId).then(loadedTask => {
+    const loadTask = async () => {
+      if (taskId) {
+        const loadedTask = await getTaskById(taskId);
         if (loadedTask) setTask(loadedTask);
-      });
-    }
-  }, [taskId, getTaskById]);
+      }
+    };
+    
+    loadTask();
+  }, [taskId]);
 
   const [formData, setFormData] = useState({
     petId: selectedPetId !== 'all' ? selectedPetId : "",

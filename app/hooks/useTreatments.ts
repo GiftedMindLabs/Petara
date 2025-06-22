@@ -11,7 +11,7 @@ export function useTreatments() {
   const [error, setError] = useState<string | null>(null);
   const { treatmentRepository } = useRepositories();
 
-  const loadTreatments = async () => {
+  const loadTreatments = useCallback(async () => {
     try {
       console.log("Loading treatments for pet:", selectedPetId);
       setIsLoading(true);
@@ -29,7 +29,7 @@ export function useTreatments() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [treatmentRepository, selectedPetId]);
 
   const loadOngoingTreatments = useCallback(async () => {
     try {
@@ -44,19 +44,21 @@ export function useTreatments() {
     } finally {
       setIsLoading(false);
     }
-  }, [treatmentRepository, selectedPetId]);
+  }, [treatmentRepository]);
 
   useEffect(() => {
-    loadTreatments()
+    // Initial load
+    loadTreatments();
+    
     // Local listener
     const listener = addDatabaseChangeListener((event) => {
       if (event.tableName === "treatments") {
         console.log("Treatments in local database have changed");
-        loadTreatments()
+        loadTreatments();
       }
     });
     return () => listener.remove();
-  }, [selectedPetId]);
+  }, [loadTreatments]); // Only depend on loadTreatments callback
 
   const addTreatment = useCallback(async (treatment: Omit<Treatment, 'id'>) => {
     try {
@@ -66,7 +68,7 @@ export function useTreatments() {
       console.error('Error adding treatment:', err);
       throw err;
     }
-  }, [treatmentRepository]);
+  }, []);
 
   const updateTreatment = useCallback(async (id: string, updates: Partial<Omit<Treatment, 'id'>>) => {
     try {
@@ -76,7 +78,7 @@ export function useTreatments() {
       console.error('Error updating treatment:', err);
       throw err;
     }
-  }, [treatmentRepository]);
+  }, []);
 
   const deleteTreatment = useCallback(async (id: string) => {
     try {
@@ -86,7 +88,7 @@ export function useTreatments() {
       console.error('Error deleting treatment:', err);
       throw err;
     }
-  }, [treatmentRepository]);
+  }, []);
 
   const getTreatmentById = useCallback(async (id: string): Promise<Treatment | null> => {
     try {
@@ -95,7 +97,7 @@ export function useTreatments() {
       console.error('Error getting treatment by id:', err);
       throw err;
     }
-  }, [treatmentRepository]);
+  }, []);
 
   return {
     treatments,

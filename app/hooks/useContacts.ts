@@ -9,7 +9,7 @@ export function useContacts() {
   const [error, setError] = useState<string | null>(null);
   const { contactRepository } = useRepositories();
 
-  const loadContacts = async () => {
+  const loadContacts = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -21,7 +21,7 @@ export function useContacts() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [contactRepository]);
 
   const loadContactsByType = useCallback(async (type: string) => {
     try {
@@ -38,7 +38,9 @@ export function useContacts() {
   }, [contactRepository]);
 
   useEffect(() => {
+    // Initial load
     loadContacts();
+    
     // Local listener
     const listener = addDatabaseChangeListener((event) => {
       if (event.tableName === "contacts") {
@@ -47,7 +49,7 @@ export function useContacts() {
       }
     });
     return () => listener.remove();
-  }, []);
+  }, [loadContacts]); // Only depend on loadContacts callback
 
   const addContact = useCallback(async (contact: Omit<Contact, 'id'>) => {
     try {
@@ -57,7 +59,7 @@ export function useContacts() {
       console.error('Error adding contact:', err);
       throw err;
     }
-  }, [contactRepository]);
+  }, []);
 
   const updateContact = useCallback(async (id: string, updates: Partial<Omit<Contact, 'id'>>) => {
     try {
@@ -77,7 +79,7 @@ export function useContacts() {
       console.error('Error deleting contact:', err);
       throw err;
     }
-  }, [contactRepository]);
+  }, []);
 
   const getContactById = useCallback(async (id: string): Promise<Contact | null> => {
     try {
@@ -86,7 +88,7 @@ export function useContacts() {
       console.error('Error getting contact by id:', err);
       throw err;
     }
-  }, [contactRepository]);
+  }, []);
 
   return {
     contacts,

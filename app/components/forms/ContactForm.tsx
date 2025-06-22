@@ -54,7 +54,7 @@ const ContactForm: React.FC<ContactFormProps> = ({
     };
 
     loadContact();
-  }, [contactId, getContactById]);
+  }, [contactId]);
 
   const handleSubmit = async () => {
     try {

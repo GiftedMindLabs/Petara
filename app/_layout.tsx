@@ -8,65 +8,11 @@ import { migrateDatabase } from "./database/database";
 import { SelectedPetProvider } from "./providers/SelectedPetProvider";
 import { ThemeProvider, useTheme } from "./providers/ThemeProvider";
 
-// Configure notifications
-/*Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});*/
-
 export default function RootLayout() {
-  /*const [isReady, setIsReady] = useState(false);
-  const [expoPushToken, setExpoPushToken] = useState('');
-  const [channels, setChannels] = useState<Notifications.NotificationChannel[]>([]);
-  const [notification, setNotification] = useState<Notifications.Notification | undefined>(undefined);
-  */
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
 
-  /*
-  useEffect(() => {
-    async function prepare() {
-      try {
-        // Register for push notifications
-        const token = await registerForPushNotificationsAsync();
-        if (token) {
-          setExpoPushToken(token);
-        }
-
-        if (Platform.OS === 'android') {
-          const value = await Notifications.getNotificationChannelsAsync();
-          setChannels(value ?? []);
-        }
-
-        const notificationListener = Notifications.addNotificationReceivedListener(notification => {
-          setNotification(notification);
-        });
-
-        const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
-          console.log(response);
-        });
-
-        setIsReady(true);
-
-        return () => {
-          notificationListener.remove();
-          responseListener.remove();
-        };
-      } catch (error) {
-        console.error('Error during app initialization:', error);
-        // Still set ready to true to prevent infinite loading
-        setIsReady(true);
-      }
-    }
-
-    prepare();
-  }, []);
-*/
   if (!loaded) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>

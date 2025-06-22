@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useColorScheme as useRNColorScheme } from 'react-native';
 
 /**
@@ -7,9 +7,13 @@ import { useColorScheme as useRNColorScheme } from 'react-native';
 export function useColorScheme() {
   const [hasHydrated, setHasHydrated] = useState(false);
 
-  useEffect(() => {
+  const handleHydration = useCallback(() => {
     setHasHydrated(true);
   }, []);
+
+  useEffect(() => {
+    handleHydration();
+  }, [handleHydration]);
 
   const colorScheme = useRNColorScheme();
 

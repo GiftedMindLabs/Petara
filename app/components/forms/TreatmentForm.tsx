@@ -70,8 +70,9 @@ const TreatmentForm: React.FC<TreatmentFormProps> = ({
   });
 
   useEffect(() => {
-    if (treatmentId) {
-      getTreatmentById(treatmentId).then(loadedTreatment => {
+    const loadTreatment = async () => {
+      if (treatmentId) {
+        const loadedTreatment = await getTreatmentById(treatmentId);
         if (loadedTreatment) {
           setTreatment(loadedTreatment);
           setFormData({
@@ -91,9 +92,11 @@ const TreatmentForm: React.FC<TreatmentFormProps> = ({
             recurrenceMonthDay: 1,
           });
         }
-      });
-    }
-  }, [treatmentId, getTreatmentById]);
+      }
+    };
+    
+    loadTreatment();
+  }, [treatmentId]);
 
   const handleVetVisitSelect = (vetVisitId: string) => {
     const selectedVisit = vetVisits.find((v: VetVisit) => v.id === vetVisitId);

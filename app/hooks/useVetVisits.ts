@@ -11,7 +11,7 @@ export function useVetVisits() {
   const { vetVisitRepository } = useRepositories();
   const { selectedPetId } = useSelectedPet();
 
-  const loadVisits = async () => {
+  const loadVisits = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -28,22 +28,21 @@ export function useVetVisits() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [vetVisitRepository, selectedPetId]);
 
   useEffect(() => {
-    console.log("vetVisitRepository changed", vetVisitRepository);
-
-    loadVisits()
+    // Initial load
+    loadVisits();
+    
     // Local listener
     const listener = addDatabaseChangeListener((event) => {
       if (event.tableName === "vet_visits") {
         console.log("Vet visits in local database have changed");
-        loadVisits()
+        loadVisits();
       }
     });
     return () => listener.remove();
-  }, [vetVisitRepository, selectedPetId]);
-
+  }, [loadVisits]); // Only depend on loadVisits callback
 
   const addVetVisit = async (visit: Omit<VetVisit, 'id'>): Promise<void> => {
     try {
@@ -116,7 +115,7 @@ export function useVetVisits() {
       console.error('Error getting vet visit by id:', err);
       throw err;
     }
-  }, [vetVisitRepository]);
+  }, []);
 
   return {
     visits,

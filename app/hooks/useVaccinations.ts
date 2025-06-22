@@ -11,7 +11,7 @@ export function useVaccinations() {
   const { vaccinationRepository } = useRepositories();
   const { selectedPetId } = useSelectedPet()
 
-  const loadVaccinations = async () => {
+  const loadVaccinations = useCallback(async () => {
     try {
       console.log("Loading vaccinations for pet:", selectedPetId);
       setIsLoading(true);
@@ -29,19 +29,21 @@ export function useVaccinations() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [vaccinationRepository, selectedPetId]);
 
   useEffect(() => {
-    loadVaccinations()
+    // Initial load
+    loadVaccinations();
+    
     // Local listener
     const listener = addDatabaseChangeListener((event) => {
       if (event.tableName === "vaccinations") {
         console.log("Vaccinations in local database have changed");
-        loadVaccinations()
+        loadVaccinations();
       }
     });
     return () => listener.remove();
-  }, [selectedPetId]);
+  }, [loadVaccinations]); // Only depend on loadVaccinations callback
 
   const addVaccination = useCallback(async (vaccination: Omit<Vaccination, 'id'>) => {
     try {
@@ -51,7 +53,7 @@ export function useVaccinations() {
       console.error('Error adding vaccination:', err);
       throw err;
     }
-  }, [vaccinationRepository]);
+  }, []);
 
   const updateVaccination = useCallback(async (id: string, updates: Partial<Omit<Vaccination, 'id'>>) => {
     try {
@@ -61,7 +63,7 @@ export function useVaccinations() {
       console.error('Error updating vaccination:', err);
       throw err;
     }
-  }, [vaccinationRepository]);
+  }, []);
 
   const deleteVaccination = useCallback(async (id: string) => {
     try {
@@ -71,7 +73,7 @@ export function useVaccinations() {
       console.error('Error deleting vaccination:', err);
       throw err;
     }
-  }, [vaccinationRepository]);
+  }, []);
 
   const getAllVaccinations = useCallback(async (): Promise<Vaccination[]> => {
     try {
@@ -80,7 +82,7 @@ export function useVaccinations() {
       console.error('Error getting all vaccinations:', err);
       throw err;
     }
-  }, [vaccinationRepository]);
+  }, []);
 
   const getVaccinationById = useCallback(async (id: string): Promise<Vaccination | null> => {
     try {
@@ -89,7 +91,7 @@ export function useVaccinations() {
       console.error('Error getting vaccination by id:', err);
       throw err;
     }
-  }, [vaccinationRepository]);
+  }, []);
 
   return {
     vaccinations,

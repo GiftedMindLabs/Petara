@@ -9,7 +9,7 @@ export function usePets() {
   const [error, setError] = useState<string | null>(null);
   const { petRepository } = useRepositories();
 
-  const loadPets = async () => {
+  const loadPets = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -21,7 +21,7 @@ export function usePets() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [petRepository]);
 
   useEffect(() => {
     // Initial fetch of the data
@@ -35,7 +35,7 @@ export function usePets() {
       }
     });
     return () => listener.remove();
-  }, []);
+  }, [loadPets]);
 
   const addPet = useCallback(
     async (pet: Omit<Pet, "id">) => {
@@ -47,7 +47,7 @@ export function usePets() {
         throw err;
       }
     },
-    [petRepository]
+    []
   );
 
   const updatePet = useCallback(
@@ -60,7 +60,7 @@ export function usePets() {
         throw err;
       }
     },
-    [petRepository]
+    []
   );
 
   const deletePet = useCallback(
@@ -73,7 +73,7 @@ export function usePets() {
         throw err;
       }
     },
-    [petRepository]
+    []
   );
 
   const getPetById = useCallback(
@@ -86,7 +86,7 @@ export function usePets() {
         throw err;
       }
     },
-    [petRepository]
+    []
   );
 
   const getLivingPets = useCallback(async () => {
@@ -97,7 +97,7 @@ export function usePets() {
       console.error("Error getting living pets:", err);
       throw err;
     }
-  }, [petRepository]);
+  }, []);
 
   return {
     pets,

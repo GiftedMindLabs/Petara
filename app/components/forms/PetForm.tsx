@@ -61,8 +61,9 @@ const PetForm: React.FC<PetFormProps> = ({
   });
 
   useEffect(() => {
-    if (petId) {
-      getPetById(petId).then(Pet => {
+    const loadPet = async () => {
+      if (petId) {
+        const Pet = await getPetById(petId);
         if (Pet) {
           setFormData({
             id: Pet.id,
@@ -79,8 +80,10 @@ const PetForm: React.FC<PetFormProps> = ({
             imageUrl: Pet.imageUrl
           })
         }
-      })
-    }
+      }
+    };
+    
+    loadPet();
   }, [petId])
 
   const pickImage = async () => {
