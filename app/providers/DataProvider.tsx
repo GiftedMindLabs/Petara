@@ -53,31 +53,15 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   });
   const [isReady, setIsReady] = useState(false);
   const initializedRef = useRef(false);
-  const dbInstanceRef = useRef<any>(null);
 
   useEffect(() => {
-    // Only initialize once, and only if we have a database instance
-    if (initializedRef.current || !db) {
-      return;
-    }
-
-    // Check if this is the same database instance
-    if (dbInstanceRef.current === db) {
-      return;
-    }
-
-    console.log('Database available, initializing repositories...');
-    dbInstanceRef.current = db;
-    
-    // Test database connection
+    if (!db || initializedRef.current) return;
+  
     const initializeRepositories = async () => {
       try {
-        // Test a simple query to ensure database is ready
         await db.execAsync('SELECT 1');
-        console.log('Database connection test successful');
-        
-        // Create repositories
-        const newRepositories = {
+  
+        setRepositories({
           taskRepository: new TaskRepository(db),
           petRepository: new PetRepository(db),
           vetVisitRepository: new VetVisitRepository(db),
@@ -85,20 +69,19 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
           treatmentRepository: new TreatmentRepository(db),
           expenseRepository: new ExpenseRepository(db),
           contactRepository: new ContactRepository(db),
-        };
-        
-        setRepositories(newRepositories);
+        });
+  
         setIsReady(true);
         initializedRef.current = true;
-        console.log('Repositories initialized successfully');
-      } catch (error) {
-        console.error('Failed to initialize repositories:', error);
-        setIsReady(false);
+      } catch (err) {
+        console.error('Initialization error:', err);
       }
     };
-
+  
     initializeRepositories();
+    console.log('DB identity:', db);
   }, [db]);
+  
 
   // Memoize the context value to prevent unnecessary re-renders
   const value = useMemo<DataContextType>(() => ({
