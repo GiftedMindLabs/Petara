@@ -11,6 +11,12 @@ export function useContacts() {
 
   const loadContacts = useCallback(async () => {
     try {
+      // Check if repository is available
+      if (!contactRepository) {
+        console.log("Contact repository not available yet");
+        return;
+      }
+      
       setIsLoading(true);
       setError(null);
       const data = await contactRepository.getAllContacts();
@@ -25,6 +31,9 @@ export function useContacts() {
 
   const loadContactsByType = useCallback(async (type: string) => {
     try {
+      if (!contactRepository) {
+        throw new Error("Contact repository not available");
+      }
       setIsLoading(true);
       setError(null);
       const data = await contactRepository.getContactsByType(type);
@@ -38,31 +47,39 @@ export function useContacts() {
   }, [contactRepository]);
 
   useEffect(() => {
-    // Initial load
-    loadContacts();
+    // Only load contacts if repository is available
+    if (contactRepository) {
+      loadContacts();
+    }
     
     // Local listener
     const listener = addDatabaseChangeListener((event) => {
-      if (event.tableName === "contacts") {
+      if (event.tableName === "contacts" && contactRepository) {
         console.log("Contacts in local database have changed");
         loadContacts();
       }
     });
     return () => listener.remove();
-  }, [loadContacts]); // Only depend on loadContacts callback
+  }, [loadContacts, contactRepository]);
 
   const addContact = useCallback(async (contact: Omit<Contact, 'id'>) => {
     try {
+      if (!contactRepository) {
+        throw new Error("Contact repository not available");
+      }
       const newContact = await contactRepository.createContact(contact);
       return newContact;
     } catch (err) {
       console.error('Error adding contact:', err);
       throw err;
     }
-  }, []);
+  }, [contactRepository]);
 
   const updateContact = useCallback(async (id: string, updates: Partial<Omit<Contact, 'id'>>) => {
     try {
+      if (!contactRepository) {
+        throw new Error("Contact repository not available");
+      }
       const success = await contactRepository.updateContact(id, updates);
       return success;
     } catch (err) {
@@ -73,22 +90,28 @@ export function useContacts() {
 
   const deleteContact = useCallback(async (id: string) => {
     try {
+      if (!contactRepository) {
+        throw new Error("Contact repository not available");
+      }
       const success = await contactRepository.deleteContact(id);
       return success;
     } catch (err) {
       console.error('Error deleting contact:', err);
       throw err;
     }
-  }, []);
+  }, [contactRepository]);
 
   const getContactById = useCallback(async (id: string): Promise<Contact | null> => {
     try {
+      if (!contactRepository) {
+        throw new Error("Contact repository not available");
+      }
       return await contactRepository.getContactById(id);
     } catch (err) {
       console.error('Error getting contact by id:', err);
       throw err;
     }
-  }, []);
+  }, [contactRepository]);
 
   return {
     contacts,
@@ -97,6 +120,7 @@ export function useContacts() {
     addContact,
     updateContact,
     deleteContact,
-    getContactById
+    getContactById,
+    loadContactsByType
   };
 } 

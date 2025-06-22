@@ -12,6 +12,12 @@ export function useTasks() {
   const loadTasks = useCallback(async () => {
     console.log("Loading tasks...");
     try {
+      // Check if repository is available
+      if (!taskRepository) {
+        console.log("Task repository not available yet");
+        return;
+      }
+      
       setIsLoading(true);
       setError(null);
       const data = await taskRepository.getAllTasks();
@@ -25,21 +31,26 @@ export function useTasks() {
   }, [taskRepository]);
 
   useEffect(() => {
-    // Initial fetch of the data
-    loadTasks();
+    // Only load tasks if repository is available
+    if (taskRepository) {
+      loadTasks();
+    }
 
     //Local listener
     const listener = addDatabaseChangeListener((event) => {
-      if (event.tableName === "tasks") {
+      if (event.tableName === "tasks" && taskRepository) {
         loadTasks();
       }
     });
     return () => listener.remove();
-  }, [loadTasks]);
+  }, [loadTasks, taskRepository]);
 
   const addTask = useCallback(
     async (task: Omit<Task, "id">) => {
       try {
+        if (!taskRepository) {
+          throw new Error("Task repository not available");
+        }
         const newTask = await taskRepository.createTask(task);
         /*if (newTask) {
           const notificationIdentifier = await scheduleTaskNotification(newTask);
@@ -51,12 +62,15 @@ export function useTasks() {
         throw err;
       }
     },
-    []
+    [taskRepository]
   );
 
   const scheduleTaskNotification = useCallback(
     async (task: Task) => {
       try {
+        if (!taskRepository) {
+          throw new Error("Task repository not available");
+        }
         console.log("Scheduling task notification:", task.title);
         const success = await taskRepository.scheduleTaskNotification(task);
         return success;
@@ -65,12 +79,15 @@ export function useTasks() {
         throw err;
       }
     },
-    []
+    [taskRepository]
   );
 
   const getTaskById = useCallback(
     async (id: string) => {
       try {
+        if (!taskRepository) {
+          throw new Error("Task repository not available");
+        }
         const task = await taskRepository.getTaskById(id);
         return task;
       } catch (err) {
@@ -78,12 +95,15 @@ export function useTasks() {
         throw err;
       }
     },
-    []
+    [taskRepository]
   );
 
   const updateTask = useCallback(
     async (id: string, updates: Partial<Omit<Task, "id">>) => {
       try {
+        if (!taskRepository) {
+          throw new Error("Task repository not available");
+        }
         const success = await taskRepository.updateTask(id, updates);
         return success;
       } catch (err) {
@@ -91,12 +111,15 @@ export function useTasks() {
         throw err;
       }
     },
-    []
+    [taskRepository]
   );
 
   const deleteTask = useCallback(
     async (taskId: string) => {
       try {
+        if (!taskRepository) {
+          throw new Error("Task repository not available");
+        }
         const success = await taskRepository.deleteTask(taskId);
         // Delete task scheduled notification
         const task = await taskRepository.getTaskById(taskId);
@@ -110,12 +133,15 @@ export function useTasks() {
         throw err;
       }
     },
-    []
+    [taskRepository]
   );
 
   const completeTask = useCallback(
     async (id: string) => {
       try {
+        if (!taskRepository) {
+          throw new Error("Task repository not available");
+        }
         const success = await taskRepository.completeTask(id);
         return success;
       } catch (err) {
@@ -123,34 +149,43 @@ export function useTasks() {
         throw err;
       }
     },
-    []
+    [taskRepository]
   );
 
   const clearAllTasks = useCallback(async () => {
     try {
+      if (!taskRepository) {
+        throw new Error("Task repository not available");
+      }
       const success = await taskRepository.clearAllTasks();
       return success;
     } catch (err) {
       console.error("Error clearing tasks:", err);
       throw err;
     }
-  }, []);
+  }, [taskRepository]);
 
   const getTasksByTreatmentId = useCallback(
     async (treatmentId: string): Promise<Task[]> => {
       try {
+        if (!taskRepository) {
+          throw new Error("Task repository not available");
+        }
         return await taskRepository.getTasksByTreatmentId(treatmentId);
       } catch (err) {
         console.error("Error getting tasks by treatment id:", err);
         throw err;
       }
     },
-    []
+    [taskRepository]
   );
 
   const undoTaskCompletion = useCallback(
     async (id: string) => {
       try {
+        if (!taskRepository) {
+          throw new Error("Task repository not available");
+        }
         const success = await taskRepository.undoTaskCompletion(id);
         return success;
       } catch (err) {
@@ -158,7 +193,7 @@ export function useTasks() {
         throw err;
       }
     },
-    []
+    [taskRepository]
   );
 
   return {

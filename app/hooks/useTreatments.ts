@@ -13,6 +13,12 @@ export function useTreatments() {
 
   const loadTreatments = useCallback(async () => {
     try {
+      // Check if repository is available
+      if (!treatmentRepository) {
+        console.log("Treatment repository not available yet");
+        return;
+      }
+      
       console.log("Loading treatments for pet:", selectedPetId);
       setIsLoading(true);
       setError(null);
@@ -33,6 +39,9 @@ export function useTreatments() {
 
   const loadOngoingTreatments = useCallback(async () => {
     try {
+      if (!treatmentRepository) {
+        throw new Error("Treatment repository not available");
+      }
       console.log("Loading ongoing treatments");
       setIsLoading(true);
       setError(null);
@@ -47,57 +56,71 @@ export function useTreatments() {
   }, [treatmentRepository]);
 
   useEffect(() => {
-    // Initial load
-    loadTreatments();
+    // Only load treatments if repository is available
+    if (treatmentRepository) {
+      loadTreatments();
+    }
     
     // Local listener
     const listener = addDatabaseChangeListener((event) => {
-      if (event.tableName === "treatments") {
+      if (event.tableName === "treatments" && treatmentRepository) {
         console.log("Treatments in local database have changed");
         loadTreatments();
       }
     });
     return () => listener.remove();
-  }, [loadTreatments]); // Only depend on loadTreatments callback
+  }, [loadTreatments, treatmentRepository]);
 
   const addTreatment = useCallback(async (treatment: Omit<Treatment, 'id'>) => {
     try {
+      if (!treatmentRepository) {
+        throw new Error("Treatment repository not available");
+      }
       const newTreatment = await treatmentRepository.addTreatment(treatment);
       return newTreatment;
     } catch (err) {
       console.error('Error adding treatment:', err);
       throw err;
     }
-  }, []);
+  }, [treatmentRepository]);
 
   const updateTreatment = useCallback(async (id: string, updates: Partial<Omit<Treatment, 'id'>>) => {
     try {
+      if (!treatmentRepository) {
+        throw new Error("Treatment repository not available");
+      }
       const success = await treatmentRepository.updateTreatment(id, updates);
       return success;
     } catch (err) {
       console.error('Error updating treatment:', err);
       throw err;
     }
-  }, []);
+  }, [treatmentRepository]);
 
   const deleteTreatment = useCallback(async (id: string) => {
     try {
+      if (!treatmentRepository) {
+        throw new Error("Treatment repository not available");
+      }
       const success = await treatmentRepository.deleteTreatment(id);
       return success;
     } catch (err) {
       console.error('Error deleting treatment:', err);
       throw err;
     }
-  }, []);
+  }, [treatmentRepository]);
 
   const getTreatmentById = useCallback(async (id: string): Promise<Treatment | null> => {
     try {
+      if (!treatmentRepository) {
+        throw new Error("Treatment repository not available");
+      }
       return await treatmentRepository.getTreatmentById(id);
     } catch (err) {
       console.error('Error getting treatment by id:', err);
       throw err;
     }
-  }, []);
+  }, [treatmentRepository]);
 
   return {
     treatments,

@@ -15,6 +15,12 @@ export function useExpenses() {
 
   const loadExpenses = useCallback(async () => {
     try {
+      // Check if repository is available
+      if (!expenseRepository) {
+        console.log("Expense repository not available yet");
+        return;
+      }
+      
       console.log("Loading expenses for pet:", selectedPetId);
       setIsLoading(true);
       setError(null);
@@ -39,6 +45,9 @@ export function useExpenses() {
 
   const loadExpensesByCategory = useCallback(async (category: string) => {
     try {
+      if (!expenseRepository) {
+        throw new Error("Expense repository not available");
+      }
       setIsLoading(true);
       setError(null);
       const data = await expenseRepository.getExpensesByCategory(category);
@@ -53,6 +62,9 @@ export function useExpenses() {
 
   const getTotalExpenses = useCallback(async () => {
     try {
+      if (!expenseRepository) {
+        throw new Error("Expense repository not available");
+      }
       return await expenseRepository.getTotalExpenses();
     } catch (err) {
       console.error('Error getting total expenses:', err);
@@ -62,6 +74,9 @@ export function useExpenses() {
 
   const getTotalReimbursed = useCallback(async () => {
     try {
+      if (!expenseRepository) {
+        throw new Error("Expense repository not available");
+      }
       return await expenseRepository.getTotalReimbursed();
     } catch (err) {
       console.error('Error getting total reimbursed:', err);
@@ -70,57 +85,71 @@ export function useExpenses() {
   }, [expenseRepository]);
 
   useEffect(() => {
-    // Initial load
-    loadExpenses();
+    // Only load expenses if repository is available
+    if (expenseRepository) {
+      loadExpenses();
+    }
     
     // Local listener
     const listener = addDatabaseChangeListener((event) => {
-      if (event.tableName === "expenses") {
+      if (event.tableName === "expenses" && expenseRepository) {
         console.log("Expenses in local database have changed");
         loadExpenses();
       }
     });
     return () => listener.remove();
-  }, [loadExpenses]); // Only depend on loadExpenses callback
+  }, [loadExpenses, expenseRepository]);
 
   const addExpense = useCallback(async (expense: Omit<Expense, 'id'>) => {
     try {
+      if (!expenseRepository) {
+        throw new Error("Expense repository not available");
+      }
       const newExpense = await expenseRepository.createExpense(expense);
       return newExpense;
     } catch (err) {
       console.error('Error adding expense:', err);
       throw err;
     }
-  }, []);
+  }, [expenseRepository]);
 
   const updateExpense = useCallback(async (id: string, updates: Partial<Omit<Expense, 'id'>>) => {
     try {
+      if (!expenseRepository) {
+        throw new Error("Expense repository not available");
+      }
       const success = await expenseRepository.updateExpense(id, updates);
       return success;
     } catch (err) {
       console.error('Error updating expense:', err);
       throw err;
     }
-  }, []);
+  }, [expenseRepository]);
 
   const deleteExpense = useCallback(async (id: string) => {
     try {
+      if (!expenseRepository) {
+        throw new Error("Expense repository not available");
+      }
       const success = await expenseRepository.deleteExpense(id);
       return success;
     } catch (err) {
       console.error('Error deleting expense:', err);
       throw err;
     }
-  }, []);
+  }, [expenseRepository]);
 
   const getExpenseById = useCallback(async (id: string): Promise<Expense | null> => {
     try {
+      if (!expenseRepository) {
+        throw new Error("Expense repository not available");
+      }
       return await expenseRepository.getExpenseById(id);
     } catch (err) {
       console.error('Error getting expense by id:', err);
       throw err;
     }
-    }, []);
+  }, [expenseRepository]);
 
   return {
     expenses,

@@ -13,6 +13,12 @@ export function useVetVisits() {
 
   const loadVisits = useCallback(async () => {
     try {
+      // Check if repository is available
+      if (!vetVisitRepository) {
+        console.log("Vet visit repository not available yet");
+        return;
+      }
+      
       setIsLoading(true);
       setError(null);
       let visitsData: VetVisit[];
@@ -31,21 +37,26 @@ export function useVetVisits() {
   }, [vetVisitRepository, selectedPetId]);
 
   useEffect(() => {
-    // Initial load
-    loadVisits();
+    // Only load visits if repository is available
+    if (vetVisitRepository) {
+      loadVisits();
+    }
     
     // Local listener
     const listener = addDatabaseChangeListener((event) => {
-      if (event.tableName === "vet_visits") {
+      if (event.tableName === "vet_visits" && vetVisitRepository) {
         console.log("Vet visits in local database have changed");
         loadVisits();
       }
     });
     return () => listener.remove();
-  }, [loadVisits]); // Only depend on loadVisits callback
+  }, [loadVisits, vetVisitRepository]);
 
   const addVetVisit = async (visit: Omit<VetVisit, 'id'>): Promise<void> => {
     try {
+      if (!vetVisitRepository) {
+        throw new Error("Vet visit repository not available");
+      }
       const newVisit = await vetVisitRepository.createVetVisit(visit);
 
       // Schedule notification for the new visit
@@ -59,6 +70,9 @@ export function useVetVisits() {
 
   const updateVetVisit = async (id: string, updates: Partial<Omit<VetVisit, 'id'>>): Promise<void> => {
     try {
+      if (!vetVisitRepository) {
+        throw new Error("Vet visit repository not available");
+      }
       const currentVisit = await vetVisitRepository.getVetVisitById(id);
       if (!currentVisit) {
         throw new Error('Vet visit not found');
@@ -88,6 +102,9 @@ export function useVetVisits() {
 
   const deleteVetVisit = async (id: string): Promise<void> => {
     try {
+      if (!vetVisitRepository) {
+        throw new Error("Vet visit repository not available");
+      }
       const visit = await vetVisitRepository.getVetVisitById(id);
       if (!visit) {
         throw new Error('Vet visit not found');
@@ -110,12 +127,15 @@ export function useVetVisits() {
 
   const getVetVisitById = useCallback(async (id: string): Promise<VetVisit | null> => {
     try {
+      if (!vetVisitRepository) {
+        throw new Error("Vet visit repository not available");
+      }
       return await vetVisitRepository.getVetVisitById(id);
     } catch (err) {
       console.error('Error getting vet visit by id:', err);
       throw err;
     }
-  }, []);
+  }, [vetVisitRepository]);
 
   return {
     visits,
