@@ -1,5 +1,5 @@
 import { useSQLiteContext } from 'expo-sqlite';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { ContactRepository } from '../database/repositories/contactRepository';
 import { ExpenseRepository } from '../database/repositories/expenseRepository';
 import { PetRepository } from '../database/repositories/petRepository';
@@ -52,8 +52,14 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     contactRepository: null,
   });
   const [isReady, setIsReady] = useState(false);
+  const initializedRef = useRef(false);
 
   useEffect(() => {
+    // Prevent re-initialization if already done
+    if (initializedRef.current) {
+      return;
+    }
+    
     if (db) {
       console.log('Database available, initializing repositories...');
       
@@ -77,6 +83,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
           
           setRepositories(newRepositories);
           setIsReady(true);
+          initializedRef.current = true;
           console.log('Repositories initialized successfully');
         } catch (error) {
           console.error('Failed to initialize repositories:', error);
@@ -91,10 +98,11 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     }
   }, [db]);
 
-  const value: DataContextType = {
+  // Memoize the context value to prevent unnecessary re-renders
+  const value = useMemo<DataContextType>(() => ({
     repositories,
     isReady,
-  };
+  }), [repositories, isReady]);
 
   return (
     <DataContext.Provider value={value}>
