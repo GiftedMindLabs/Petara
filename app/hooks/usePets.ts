@@ -7,11 +7,8 @@ export function usePets() {
   const [pets, setPets] = useState<Pet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now()); // Force re-render
   const { petRepository } = useRepositories();
   const isDataReady = useDataReady();
-
-  console.log("usePets hook re-rendering, pets count:", pets?.length || 0, "timestamp:", refreshTimestamp);
 
   const loadPets = useCallback(async () => {
     console.log("usePets loadPets called");
@@ -26,7 +23,7 @@ export function usePets() {
       const loadedPets = await petRepository.getAllPets();
       console.log("usePets loadPets loaded pets:", loadedPets?.length || 0);
       setPets(loadedPets || []);
-      setRefreshTimestamp(Date.now()); // Force re-render
+     
     } catch (err) {
       console.error("usePets loadPets error:", err);
       setError(err instanceof Error ? err.message : 'Failed to load pets');
@@ -44,7 +41,7 @@ export function usePets() {
         console.log("usePets refresh loaded pets:", loadedPets?.length || 0);
         setPets(loadedPets || []);
         setError(null);
-        setRefreshTimestamp(Date.now()); // Force re-render
+        
       }
     } catch (err) {
       console.error("usePets refresh error:", err);

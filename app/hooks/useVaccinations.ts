@@ -7,11 +7,8 @@ export function useVaccinations() {
   const [vaccinations, setVaccinations] = useState<Vaccination[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now()); // Force re-render
   const { vaccinationRepository } = useRepositories();
   const isDataReady = useDataReady();
-
-  console.log("useVaccinations hook re-rendering, vaccinations count:", vaccinations?.length || 0, "timestamp:", refreshTimestamp);
 
   const loadVaccinations = useCallback(async () => {
     console.log("useVaccinations loadVaccinations called");
@@ -26,7 +23,6 @@ export function useVaccinations() {
       const loadedVaccinations = await vaccinationRepository.getAllVaccinations();
       console.log("useVaccinations loadVaccinations loaded vaccinations:", loadedVaccinations?.length || 0);
       setVaccinations(loadedVaccinations || []);
-      setRefreshTimestamp(Date.now()); // Force re-render
     } catch (err) {
       console.error("useVaccinations loadVaccinations error:", err);
       setError(err instanceof Error ? err.message : 'Failed to load vaccinations');
@@ -44,7 +40,6 @@ export function useVaccinations() {
         console.log("useVaccinations refresh loaded vaccinations:", loadedVaccinations?.length || 0);
         setVaccinations(loadedVaccinations || []);
         setError(null);
-        setRefreshTimestamp(Date.now()); // Force re-render
       }
     } catch (err) {
       console.error("useVaccinations refresh error:", err);

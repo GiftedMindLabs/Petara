@@ -7,11 +7,8 @@ export function useExpenses() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now()); // Force re-render
   const { expenseRepository } = useRepositories();
   const isDataReady = useDataReady();
-
-  console.log("useExpenses hook re-rendering, expenses count:", expenses?.length || 0, "timestamp:", refreshTimestamp);
 
   const loadExpenses = useCallback(async () => {
     console.log("useExpenses loadExpenses called");
@@ -26,7 +23,6 @@ export function useExpenses() {
       const loadedExpenses = await expenseRepository.getAllExpenses();
       console.log("useExpenses loadExpenses loaded expenses:", loadedExpenses?.length || 0);
       setExpenses(loadedExpenses || []);
-      setRefreshTimestamp(Date.now()); // Force re-render
     } catch (err) {
       console.error("useExpenses loadExpenses error:", err);
       setError(err instanceof Error ? err.message : 'Failed to load expenses');
@@ -44,7 +40,6 @@ export function useExpenses() {
         console.log("useExpenses refresh loaded expenses:", loadedExpenses?.length || 0);
         setExpenses(loadedExpenses || []);
         setError(null);
-        setRefreshTimestamp(Date.now()); // Force re-render
       }
     } catch (err) {
       console.error("useExpenses refresh error:", err);

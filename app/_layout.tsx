@@ -37,6 +37,7 @@ function RootLayoutNav() {
       <SQLiteProvider 
         databaseName="petara.db" 
         onInit={migrateDatabase}
+        options={{enableChangeListener: true}}
       >
         <DataProvider>
           <SelectedPetProvider>

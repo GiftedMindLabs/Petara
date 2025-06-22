@@ -7,12 +7,9 @@ export function useVetVisits() {
   const [vetVisits, setVetVisits] = useState<VetVisit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now()); // Force re-render
   const { vetVisitRepository } = useRepositories();
   const isDataReady = useDataReady();
-
-  console.log("useVetVisits hook re-rendering, vetVisits count:", vetVisits?.length || 0, "timestamp:", refreshTimestamp);
-
+  
   const loadVetVisits = useCallback(async () => {
     console.log("useVetVisits loadVetVisits called");
     if (!vetVisitRepository || !isDataReady) {
@@ -26,7 +23,6 @@ export function useVetVisits() {
       const loadedVetVisits = await vetVisitRepository.getAllVetVisits();
       console.log("useVetVisits loadVetVisits loaded vetVisits:", loadedVetVisits?.length || 0);
       setVetVisits(loadedVetVisits || []);
-      setRefreshTimestamp(Date.now()); // Force re-render
     } catch (err) {
       console.error("useVetVisits loadVetVisits error:", err);
       setError(err instanceof Error ? err.message : 'Failed to load vet visits');
@@ -44,7 +40,6 @@ export function useVetVisits() {
         console.log("useVetVisits refresh loaded vetVisits:", loadedVetVisits?.length || 0);
         setVetVisits(loadedVetVisits || []);
         setError(null);
-        setRefreshTimestamp(Date.now()); // Force re-render
       }
     } catch (err) {
       console.error("useVetVisits refresh error:", err);

@@ -7,11 +7,8 @@ export function useContacts() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now()); // Force re-render
   const { contactRepository } = useRepositories();
   const isDataReady = useDataReady();
-
-  console.log("useContacts hook re-rendering, contacts count:", contacts?.length || 0, "timestamp:", refreshTimestamp);
 
   const loadContacts = useCallback(async () => {
     console.log("useContacts loadContacts called");
@@ -26,7 +23,7 @@ export function useContacts() {
       const loadedContacts = await contactRepository.getAllContacts();
       console.log("useContacts loadContacts loaded contacts:", loadedContacts?.length || 0);
       setContacts(loadedContacts || []);
-      setRefreshTimestamp(Date.now()); // Force re-render
+    
     } catch (err) {
       console.error("useContacts loadContacts error:", err);
       setError(err instanceof Error ? err.message : 'Failed to load contacts');
@@ -44,7 +41,6 @@ export function useContacts() {
         console.log("useContacts refresh loaded contacts:", loadedContacts?.length || 0);
         setContacts(loadedContacts || []);
         setError(null);
-        setRefreshTimestamp(Date.now()); // Force re-render
       }
     } catch (err) {
       console.error("useContacts refresh error:", err);

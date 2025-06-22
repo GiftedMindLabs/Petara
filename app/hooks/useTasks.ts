@@ -7,11 +7,8 @@ export function useTasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now()); // Force re-render
   const { taskRepository } = useRepositories();
   const isDataReady = useDataReady();
-
-  console.log("useTasks hook re-rendering, tasks count:", tasks?.length || 0, "timestamp:", refreshTimestamp);
 
   const loadTasks = useCallback(async () => {
     console.log("useTasks loadTasks called");
@@ -26,7 +23,6 @@ export function useTasks() {
       const loadedTasks = await taskRepository.getAllTasks();
       console.log("useTasks loadTasks loaded tasks:", loadedTasks?.length || 0);
       setTasks(loadedTasks || []);
-      setRefreshTimestamp(Date.now()); // Force re-render
     } catch (err) {
       console.error("useTasks loadTasks error:", err);
       setError(err instanceof Error ? err.message : 'Failed to load tasks');
@@ -219,7 +215,7 @@ export function useTasks() {
         console.log("useTasks refresh loaded tasks:", loadedTasks?.length || 0);
         setTasks(loadedTasks || []);
         setError(null);
-        setRefreshTimestamp(Date.now()); // Force re-render
+        
       }
     } catch (err) {
       console.error("useTasks refresh error:", err);

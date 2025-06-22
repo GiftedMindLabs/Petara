@@ -7,11 +7,8 @@ export function useTreatments() {
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now()); // Force re-render
   const { treatmentRepository } = useRepositories();
   const isDataReady = useDataReady();
-
-  console.log("useTreatments hook re-rendering, treatments count:", treatments?.length || 0, "timestamp:", refreshTimestamp);
 
   const loadTreatments = useCallback(async () => {
     console.log("useTreatments loadTreatments called");
@@ -26,7 +23,6 @@ export function useTreatments() {
       const loadedTreatments = await treatmentRepository.getAllTreatments();
       console.log("useTreatments loadTreatments loaded treatments:", loadedTreatments?.length || 0);
       setTreatments(loadedTreatments || []);
-      setRefreshTimestamp(Date.now()); // Force re-render
     } catch (err) {
       console.error("useTreatments loadTreatments error:", err);
       setError(err instanceof Error ? err.message : 'Failed to load treatments');
@@ -44,7 +40,6 @@ export function useTreatments() {
         console.log("useTreatments refresh loaded treatments:", loadedTreatments?.length || 0);
         setTreatments(loadedTreatments || []);
         setError(null);
-        setRefreshTimestamp(Date.now()); // Force re-render
       }
     } catch (err) {
       console.error("useTreatments refresh error:", err);
