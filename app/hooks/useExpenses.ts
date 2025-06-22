@@ -7,39 +7,57 @@ export function useExpenses() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now()); // Force re-render
   const { expenseRepository } = useRepositories();
   const isDataReady = useDataReady();
 
+  console.log("useExpenses hook re-rendering, expenses count:", expenses?.length || 0, "timestamp:", refreshTimestamp);
+
   const loadExpenses = useCallback(async () => {
+    console.log("useExpenses loadExpenses called");
+    if (!expenseRepository || !isDataReady) {
+      console.log("useExpenses loadExpenses - repository or data not ready");
+      return;
+    }
+
     try {
-      if (!expenseRepository) {
-        return;
-      }
       setIsLoading(true);
       setError(null);
-      const data = await expenseRepository.getAllExpenses();
-      setExpenses(data);
+      const loadedExpenses = await expenseRepository.getAllExpenses();
+      console.log("useExpenses loadExpenses loaded expenses:", loadedExpenses?.length || 0);
+      setExpenses(loadedExpenses || []);
+      setRefreshTimestamp(Date.now()); // Force re-render
     } catch (err) {
-      console.error("Error loading expenses:", err);
-      setError("Failed to load expenses");
+      console.error("useExpenses loadExpenses error:", err);
+      setError(err instanceof Error ? err.message : 'Failed to load expenses');
     } finally {
       setIsLoading(false);
     }
-  }, [expenseRepository]);
+  }, [expenseRepository, isDataReady]);
 
   // Manual refresh function
-  const refreshExpenses = useCallback(() => {
-    if (isDataReady && expenseRepository) {
-      loadExpenses();
+  const refresh = useCallback(async () => {
+    console.log("useExpenses refresh called");
+    try {
+      if (expenseRepository) {
+        const loadedExpenses = await expenseRepository.getAllExpenses();
+        console.log("useExpenses refresh loaded expenses:", loadedExpenses?.length || 0);
+        setExpenses(loadedExpenses || []);
+        setError(null);
+        setRefreshTimestamp(Date.now()); // Force re-render
+      }
+    } catch (err) {
+      console.error("useExpenses refresh error:", err);
+      setError(err instanceof Error ? err.message : 'Failed to refresh expenses');
     }
-  }, [isDataReady, expenseRepository, loadExpenses]);
+  }, [expenseRepository]);
 
   useEffect(() => {
-    // Only load expenses if data is ready and repository is available
+    console.log("useExpenses useEffect triggered, isDataReady:", isDataReady, "expenseRepository:", !!expenseRepository);
     if (isDataReady && expenseRepository) {
       loadExpenses();
     }
-  }, [loadExpenses, expenseRepository, isDataReady]);
+  }, [isDataReady, expenseRepository, loadExpenses, refreshTimestamp]);
 
   const addExpense = useCallback(async (expense: Omit<Expense, 'id'>) => {
     try {
@@ -48,13 +66,13 @@ export function useExpenses() {
       }
       const newExpense = await expenseRepository.createExpense(expense);
       // Refresh expenses after adding
-      refreshExpenses();
+      refresh();
       return newExpense;
     } catch (err) {
       console.error('Error adding expense:', err);
       throw err;
     }
-  }, [expenseRepository, refreshExpenses]);
+  }, [expenseRepository, refresh]);
 
   const getExpenseById = useCallback(async (id: string): Promise<Expense | null> => {
     try {
@@ -75,13 +93,13 @@ export function useExpenses() {
       }
       const success = await expenseRepository.updateExpense(id, updates);
       // Refresh expenses after updating
-      refreshExpenses();
+      refresh();
       return success;
     } catch (err) {
       console.error('Error updating expense:', err);
       throw err;
     }
-  }, [expenseRepository, refreshExpenses]);
+  }, [expenseRepository, refresh]);
 
   const deleteExpense = useCallback(async (id: string) => {
     try {
@@ -90,13 +108,13 @@ export function useExpenses() {
       }
       const success = await expenseRepository.deleteExpense(id);
       // Refresh expenses after deleting
-      refreshExpenses();
+      refresh();
       return success;
     } catch (err) {
       console.error('Error deleting expense:', err);
       throw err;
     }
-  }, [expenseRepository, refreshExpenses]);
+  }, [expenseRepository, refresh]);
 
   const getExpensesByPetId = useCallback(async (petId: string): Promise<Expense[]> => {
     try {
@@ -114,7 +132,7 @@ export function useExpenses() {
     expenses,
     isLoading,
     error,
-    refreshExpenses,
+    refresh,
     addExpense,
     getExpenseById,
     updateExpense,

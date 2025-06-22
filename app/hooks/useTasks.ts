@@ -7,41 +7,33 @@ export function useTasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now()); // Force re-render
   const { taskRepository } = useRepositories();
   const isDataReady = useDataReady();
 
-  console.log("useTasks hook re-rendering, tasks count:", tasks?.length || 0);
+  console.log("useTasks hook re-rendering, tasks count:", tasks?.length || 0, "timestamp:", refreshTimestamp);
 
   const loadTasks = useCallback(async () => {
-    console.log("Loading tasks...");
+    console.log("useTasks loadTasks called");
+    if (!taskRepository || !isDataReady) {
+      console.log("useTasks loadTasks - repository or data not ready");
+      return;
+    }
+
     try {
-      // Check if repository is available
-      if (!taskRepository) {
-        console.log("Task repository not available yet");
-        return;
-      }
-      
-      console.log("Task repository available, proceeding with load...");
       setIsLoading(true);
       setError(null);
-      
-      console.log("Calling getAllTasks...");
-      const data = await taskRepository.getAllTasks();
-      console.log("getAllTasks completed, setting tasks:", data.length);
-      setTasks(data);
-      console.log("Tasks state updated with", data.length, "tasks");
+      const loadedTasks = await taskRepository.getAllTasks();
+      console.log("useTasks loadTasks loaded tasks:", loadedTasks?.length || 0);
+      setTasks(loadedTasks || []);
+      setRefreshTimestamp(Date.now()); // Force re-render
     } catch (err) {
-      console.error("Error loading tasks:", err);
-      console.error("Error details:", {
-        message: err instanceof Error ? err.message : 'Unknown error',
-        stack: err instanceof Error ? err.stack : undefined,
-        repository: taskRepository ? 'available' : 'null'
-      });
-      setError("Failed to load tasks");
+      console.error("useTasks loadTasks error:", err);
+      setError(err instanceof Error ? err.message : 'Failed to load tasks');
     } finally {
       setIsLoading(false);
     }
-  }, [taskRepository]);
+  }, [taskRepository, isDataReady]);
 
   // Manual refresh function
   const refreshTasks = useCallback(() => {
@@ -52,11 +44,11 @@ export function useTasks() {
   }, [isDataReady, taskRepository, loadTasks]);
 
   useEffect(() => {
-    // Only load tasks if data is ready and repository is available
+    console.log("useTasks useEffect triggered, isDataReady:", isDataReady, "taskRepository:", !!taskRepository);
     if (isDataReady && taskRepository) {
       loadTasks();
     }
-  }, [isDataReady, taskRepository, loadTasks]);
+  }, [isDataReady, taskRepository, loadTasks, refreshTimestamp]);
 
   const addTask = useCallback(
     async (task: Omit<Task, "id">) => {
@@ -219,6 +211,22 @@ export function useTasks() {
     [taskRepository, refreshTasks]
   );
 
+  const refresh = useCallback(async () => {
+    console.log("useTasks refresh called");
+    try {
+      if (taskRepository) {
+        const loadedTasks = await taskRepository.getAllTasks();
+        console.log("useTasks refresh loaded tasks:", loadedTasks?.length || 0);
+        setTasks(loadedTasks || []);
+        setError(null);
+        setRefreshTimestamp(Date.now()); // Force re-render
+      }
+    } catch (err) {
+      console.error("useTasks refresh error:", err);
+      setError(err instanceof Error ? err.message : 'Failed to refresh tasks');
+    }
+  }, [taskRepository]);
+
   return {
     tasks,
     isLoading,
@@ -232,5 +240,6 @@ export function useTasks() {
     clearAllTasks,
     getTasksByTreatmentId,
     undoTaskCompletion,
+    refresh,
   };
 }

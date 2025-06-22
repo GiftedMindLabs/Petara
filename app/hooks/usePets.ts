@@ -7,39 +7,57 @@ export function usePets() {
   const [pets, setPets] = useState<Pet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now()); // Force re-render
   const { petRepository } = useRepositories();
   const isDataReady = useDataReady();
 
+  console.log("usePets hook re-rendering, pets count:", pets?.length || 0, "timestamp:", refreshTimestamp);
+
   const loadPets = useCallback(async () => {
+    console.log("usePets loadPets called");
+    if (!petRepository || !isDataReady) {
+      console.log("usePets loadPets - repository or data not ready");
+      return;
+    }
+
     try {
-      if (!petRepository) {
-        return;
-      }
       setIsLoading(true);
       setError(null);
-      const data = await petRepository.getAllPets();
-      setPets(data);
+      const loadedPets = await petRepository.getAllPets();
+      console.log("usePets loadPets loaded pets:", loadedPets?.length || 0);
+      setPets(loadedPets || []);
+      setRefreshTimestamp(Date.now()); // Force re-render
     } catch (err) {
-      console.error("Error loading pets:", err);
-      setError("Failed to load pets");
+      console.error("usePets loadPets error:", err);
+      setError(err instanceof Error ? err.message : 'Failed to load pets');
     } finally {
       setIsLoading(false);
     }
-  }, [petRepository]);
+  }, [petRepository, isDataReady]);
 
   // Manual refresh function
-  const refreshPets = useCallback(() => {
-    if (isDataReady && petRepository) {
-      loadPets();
+  const refresh = useCallback(async () => {
+    console.log("usePets refresh called");
+    try {
+      if (petRepository) {
+        const loadedPets = await petRepository.getAllPets();
+        console.log("usePets refresh loaded pets:", loadedPets?.length || 0);
+        setPets(loadedPets || []);
+        setError(null);
+        setRefreshTimestamp(Date.now()); // Force re-render
+      }
+    } catch (err) {
+      console.error("usePets refresh error:", err);
+      setError(err instanceof Error ? err.message : 'Failed to refresh pets');
     }
-  }, [isDataReady, petRepository, loadPets]);
+  }, [petRepository]);
 
   useEffect(() => {
-    // Only load pets if data is ready and repository is available
+    console.log("usePets useEffect triggered, isDataReady:", isDataReady, "petRepository:", !!petRepository);
     if (isDataReady && petRepository) {
       loadPets();
     }
-  }, [loadPets, petRepository, isDataReady]);
+  }, [isDataReady, petRepository, loadPets, refreshTimestamp]);
 
   const addPet = useCallback(
     async (pet: Omit<Pet, "id">) => {
@@ -49,14 +67,14 @@ export function usePets() {
         }
         const newPet = await petRepository.createPet(pet);
         // Refresh pets after adding
-        refreshPets();
+        refresh();
         return newPet;
       } catch (err) {
         console.error("Error adding pet:", err);
         throw err;
       }
     },
-    [petRepository, refreshPets]
+    [petRepository, refresh]
   );
 
   const getPetById = useCallback(
@@ -83,14 +101,14 @@ export function usePets() {
         }
         const success = await petRepository.updatePet(id, updates);
         // Refresh pets after updating
-        refreshPets();
+        refresh();
         return success;
       } catch (err) {
         console.error("Error updating pet:", err);
         throw err;
       }
     },
-    [petRepository, refreshPets]
+    [petRepository, refresh]
   );
 
   const deletePet = useCallback(
@@ -101,14 +119,14 @@ export function usePets() {
         }
         const success = await petRepository.deletePet(petId);
         // Refresh pets after deleting
-        refreshPets();
+        refresh();
         return success;
       } catch (err) {
         console.error("Error deleting pet:", err);
         throw err;
       }
     },
-    [petRepository, refreshPets]
+    [petRepository, refresh]
   );
 
   const getLivingPets = useCallback(async () => {
@@ -125,7 +143,7 @@ export function usePets() {
     pets,
     isLoading,
     error,
-    refreshPets,
+    refresh,
     getPetById,
     addPet,
     updatePet,

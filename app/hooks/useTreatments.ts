@@ -7,39 +7,57 @@ export function useTreatments() {
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now()); // Force re-render
   const { treatmentRepository } = useRepositories();
   const isDataReady = useDataReady();
 
+  console.log("useTreatments hook re-rendering, treatments count:", treatments?.length || 0, "timestamp:", refreshTimestamp);
+
   const loadTreatments = useCallback(async () => {
+    console.log("useTreatments loadTreatments called");
+    if (!treatmentRepository || !isDataReady) {
+      console.log("useTreatments loadTreatments - repository or data not ready");
+      return;
+    }
+
     try {
-      if (!treatmentRepository) {
-        return;
-      }
       setIsLoading(true);
       setError(null);
-      const data = await treatmentRepository.getAllTreatments();
-      setTreatments(data);
+      const loadedTreatments = await treatmentRepository.getAllTreatments();
+      console.log("useTreatments loadTreatments loaded treatments:", loadedTreatments?.length || 0);
+      setTreatments(loadedTreatments || []);
+      setRefreshTimestamp(Date.now()); // Force re-render
     } catch (err) {
-      console.error("Error loading treatments:", err);
-      setError("Failed to load treatments");
+      console.error("useTreatments loadTreatments error:", err);
+      setError(err instanceof Error ? err.message : 'Failed to load treatments');
     } finally {
       setIsLoading(false);
     }
-  }, [treatmentRepository]);
+  }, [treatmentRepository, isDataReady]);
 
   // Manual refresh function
-  const refreshTreatments = useCallback(() => {
-    if (isDataReady && treatmentRepository) {
-      loadTreatments();
+  const refresh = useCallback(async () => {
+    console.log("useTreatments refresh called");
+    try {
+      if (treatmentRepository) {
+        const loadedTreatments = await treatmentRepository.getAllTreatments();
+        console.log("useTreatments refresh loaded treatments:", loadedTreatments?.length || 0);
+        setTreatments(loadedTreatments || []);
+        setError(null);
+        setRefreshTimestamp(Date.now()); // Force re-render
+      }
+    } catch (err) {
+      console.error("useTreatments refresh error:", err);
+      setError(err instanceof Error ? err.message : 'Failed to refresh treatments');
     }
-  }, [isDataReady, treatmentRepository, loadTreatments]);
+  }, [treatmentRepository]);
 
   useEffect(() => {
-    // Only load treatments if data is ready and repository is available
+    console.log("useTreatments useEffect triggered, isDataReady:", isDataReady, "treatmentRepository:", !!treatmentRepository);
     if (isDataReady && treatmentRepository) {
       loadTreatments();
     }
-  }, [loadTreatments, treatmentRepository, isDataReady]);
+  }, [isDataReady, treatmentRepository, loadTreatments, refreshTimestamp]);
 
   const addTreatment = useCallback(
     async (treatment: Omit<Treatment, "id">) => {
@@ -49,14 +67,14 @@ export function useTreatments() {
         }
         const newTreatment = await treatmentRepository.addTreatment(treatment);
         // Refresh treatments after adding
-        refreshTreatments();
+        refresh();
         return newTreatment;
       } catch (err) {
         console.error("Error adding treatment:", err);
         throw err;
       }
     },
-    [treatmentRepository, refreshTreatments]
+    [treatmentRepository, refresh]
   );
 
   const getTreatmentById = useCallback(
@@ -83,14 +101,14 @@ export function useTreatments() {
         }
         const success = await treatmentRepository.updateTreatment(id, updates);
         // Refresh treatments after updating
-        refreshTreatments();
+        refresh();
         return success;
       } catch (err) {
         console.error("Error updating treatment:", err);
         throw err;
       }
     },
-    [treatmentRepository, refreshTreatments]
+    [treatmentRepository, refresh]
   );
 
   const deleteTreatment = useCallback(
@@ -101,14 +119,14 @@ export function useTreatments() {
         }
         const success = await treatmentRepository.deleteTreatment(treatmentId);
         // Refresh treatments after deleting
-        refreshTreatments();
+        refresh();
         return success;
       } catch (err) {
         console.error("Error deleting treatment:", err);
         throw err;
       }
     },
-    [treatmentRepository, refreshTreatments]
+    [treatmentRepository, refresh]
   );
 
   const getTreatmentsByPetId = useCallback(
@@ -130,7 +148,7 @@ export function useTreatments() {
     treatments,
     isLoading,
     error,
-    refreshTreatments,
+    refresh,
     addTreatment,
     getTreatmentById,
     updateTreatment,

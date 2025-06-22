@@ -7,39 +7,57 @@ export function useVaccinations() {
   const [vaccinations, setVaccinations] = useState<Vaccination[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshTimestamp, setRefreshTimestamp] = useState(Date.now()); // Force re-render
   const { vaccinationRepository } = useRepositories();
   const isDataReady = useDataReady();
 
+  console.log("useVaccinations hook re-rendering, vaccinations count:", vaccinations?.length || 0, "timestamp:", refreshTimestamp);
+
   const loadVaccinations = useCallback(async () => {
+    console.log("useVaccinations loadVaccinations called");
+    if (!vaccinationRepository || !isDataReady) {
+      console.log("useVaccinations loadVaccinations - repository or data not ready");
+      return;
+    }
+
     try {
-      if (!vaccinationRepository) {
-        return;
-      }
       setIsLoading(true);
       setError(null);
-      const data = await vaccinationRepository.getAllVaccinations();
-      setVaccinations(data);
+      const loadedVaccinations = await vaccinationRepository.getAllVaccinations();
+      console.log("useVaccinations loadVaccinations loaded vaccinations:", loadedVaccinations?.length || 0);
+      setVaccinations(loadedVaccinations || []);
+      setRefreshTimestamp(Date.now()); // Force re-render
     } catch (err) {
-      console.error("Error loading vaccinations:", err);
-      setError("Failed to load vaccinations");
+      console.error("useVaccinations loadVaccinations error:", err);
+      setError(err instanceof Error ? err.message : 'Failed to load vaccinations');
     } finally {
       setIsLoading(false);
     }
-  }, [vaccinationRepository]);
+  }, [vaccinationRepository, isDataReady]);
 
   // Manual refresh function
-  const refreshVaccinations = useCallback(() => {
-    if (isDataReady && vaccinationRepository) {
-      loadVaccinations();
+  const refresh = useCallback(async () => {
+    console.log("useVaccinations refresh called");
+    try {
+      if (vaccinationRepository) {
+        const loadedVaccinations = await vaccinationRepository.getAllVaccinations();
+        console.log("useVaccinations refresh loaded vaccinations:", loadedVaccinations?.length || 0);
+        setVaccinations(loadedVaccinations || []);
+        setError(null);
+        setRefreshTimestamp(Date.now()); // Force re-render
+      }
+    } catch (err) {
+      console.error("useVaccinations refresh error:", err);
+      setError(err instanceof Error ? err.message : 'Failed to refresh vaccinations');
     }
-  }, [isDataReady, vaccinationRepository, loadVaccinations]);
+  }, [vaccinationRepository]);
 
   useEffect(() => {
-    // Only load vaccinations if data is ready and repository is available
+    console.log("useVaccinations useEffect triggered, isDataReady:", isDataReady, "vaccinationRepository:", !!vaccinationRepository);
     if (isDataReady && vaccinationRepository) {
       loadVaccinations();
     }
-  }, [loadVaccinations, vaccinationRepository, isDataReady]);
+  }, [isDataReady, vaccinationRepository, loadVaccinations, refreshTimestamp]);
 
   const addVaccination = useCallback(async (vaccination: Omit<Vaccination, 'id'>) => {
     try {
@@ -48,13 +66,13 @@ export function useVaccinations() {
       }
       const newVaccination = await vaccinationRepository.createVaccination(vaccination);
       // Refresh vaccinations after adding
-      refreshVaccinations();
+      refresh();
       return newVaccination;
     } catch (err) {
       console.error('Error adding vaccination:', err);
       throw err;
     }
-  }, [vaccinationRepository, refreshVaccinations]);
+  }, [vaccinationRepository, refresh]);
 
   const updateVaccination = useCallback(async (id: string, updates: Partial<Omit<Vaccination, 'id'>>) => {
     try {
@@ -63,13 +81,13 @@ export function useVaccinations() {
       }
       const success = await vaccinationRepository.updateVaccination(id, updates);
       // Refresh vaccinations after updating
-      refreshVaccinations();
+      refresh();
       return success;
     } catch (err) {
       console.error('Error updating vaccination:', err);
       throw err;
     }
-  }, [vaccinationRepository, refreshVaccinations]);
+  }, [vaccinationRepository, refresh]);
 
   const deleteVaccination = useCallback(async (id: string) => {
     try {
@@ -78,13 +96,13 @@ export function useVaccinations() {
       }
       const success = await vaccinationRepository.deleteVaccination(id);
       // Refresh vaccinations after deleting
-      refreshVaccinations();
+      refresh();
       return success;
     } catch (err) {
       console.error('Error deleting vaccination:', err);
       throw err;
     }
-  }, [vaccinationRepository, refreshVaccinations]);
+  }, [vaccinationRepository, refresh]);
 
   const getVaccinationById = useCallback(async (id: string): Promise<Vaccination | null> => {
     try {
@@ -114,7 +132,7 @@ export function useVaccinations() {
     vaccinations,
     isLoading,
     error,
-    refreshVaccinations,
+    refresh,
     addVaccination,
     updateVaccination,
     deleteVaccination,
