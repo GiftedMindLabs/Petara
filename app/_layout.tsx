@@ -1,24 +1,10 @@
-import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import { SQLiteProvider } from "expo-sqlite";
 import React, { useState } from "react";
-import { ActivityIndicator, View } from "react-native";
 import "react-native-reanimated";
 import { migrateDatabase } from "./database/database";
 
 export default function RootLayout() {
-  const [loaded] = useFonts({
-    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
-  });
-
-  if (!loaded) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#0D9488" />
-      </View>
-    );
-  }
-
   return (
     <RootLayoutNav />
   );
