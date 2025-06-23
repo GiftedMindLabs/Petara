@@ -1,11 +1,10 @@
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import { SQLiteProvider } from "expo-sqlite";
-import { Suspense, useState } from "react";
-import { ActivityIndicator, SafeAreaView, View } from "react-native";
+import React, { useState } from "react";
+import { ActivityIndicator, View } from "react-native";
 import "react-native-reanimated";
 import { migrateDatabase } from "./database/database";
-import { SelectedPetProvider } from "./providers/SelectedPetProvider";
 
 export default function RootLayout() {
   const [loaded] = useFonts({
@@ -28,22 +27,18 @@ export default function RootLayout() {
 function RootLayoutNav() {
   const [migrationComplete, setMigrationComplete] = useState(false);
   return (
-    <Suspense fallback={<ActivityIndicator size="large" color="#0D9488" />}>
-      <SafeAreaView style={{ flex: 1 }}>
-        <SQLiteProvider
-          databaseName="petara.db"
-          onInit={async (db) => {
-            await migrateDatabase(db);
-            setMigrationComplete(true); // only trigger re-render when done
-          }}
-          options={migrationComplete ? { enableChangeListener: true } : undefined}
-        >
-          <SelectedPetProvider>
-            <TestStack />
-          </SelectedPetProvider>
-        </SQLiteProvider>
-      </SafeAreaView>
-    </Suspense>
+    <>
+      <SQLiteProvider
+        databaseName="petara.db"
+        onInit={async (db) => {
+          await migrateDatabase(db);
+          setMigrationComplete(true); // only trigger re-render when done
+        }}
+        options={migrationComplete ? { enableChangeListener: true } : undefined}
+      >
+        <TestStack />
+      </SQLiteProvider>
+    </>
   );
 }
 
@@ -57,7 +52,6 @@ const TestStack = () => {
 
 const MainStack = () => {
   return (
-
     <Stack
       screenOptions={{
         contentStyle: { backgroundColor: "#0D9488" },
