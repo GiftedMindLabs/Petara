@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { addDatabaseChangeListener } from "expo-sqlite";
+import { useEffect, useState } from "react";
 import { Task } from "../database/types";
 import { useRepositories } from "./useRepositories";
 
@@ -23,6 +24,21 @@ export function useTasks() {
       setIsLoading(false);
     }
   };
+
+
+  useEffect(() => {
+    // Initial fetch of the data
+    loadTasks();
+
+    //Local listener
+    const listener = addDatabaseChangeListener((event) => {
+      if (event.tableName === "tasks") {
+        loadTasks();
+      }
+    });
+    return () => listener.remove();
+  }, []);
+
 
   const getAllTasks = async () => {
     try {

@@ -55,6 +55,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
 
   const [isReady, setIsReady] = useState(false);
   const initializedRef = useRef(false);
+  
   useEffect(() => {
     let mounted = true;
   
