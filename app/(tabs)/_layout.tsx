@@ -1,7 +1,6 @@
-import { IconSymbol } from "@/app/components/ui/IconSymbol";
 import { Tabs } from "expo-router";
 import React from "react";
-import { View } from "react-native";
+import { Text, View } from "react-native";
 
 export default function TabLayout() {
   
@@ -18,9 +17,7 @@ export default function TabLayout() {
           key="index"
           options={{
             title: "Home",
-            tabBarIcon: ({ color }) => (
-              <IconSymbol size={28} name="house.fill" color={color} />
-            ),
+            tabBarIcon: ({ color }) => <Text>Home</Text>,
           }}
         />
 
