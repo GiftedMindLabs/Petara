@@ -23,7 +23,8 @@ export default function TabLayout() {
             ),
           }}
         />
-        <Tabs.Screen
+
+        {/*<Tabs.Screen
           name="tasks"
           key="tasks"
           options={{
@@ -76,7 +77,7 @@ export default function TabLayout() {
               <IconSymbol size={28} name="person.fill" color={color} />
             ),
           }}
-        />
+        />*/}
       </Tabs>
     </View>
   );

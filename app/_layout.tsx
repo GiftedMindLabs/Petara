@@ -39,7 +39,7 @@ function RootLayoutNav() {
           options={migrationComplete ? { enableChangeListener: true } : undefined}
         >
           <SelectedPetProvider>
-            <TestStack />
+            <MainStack />
           </SelectedPetProvider>
       </SQLiteProvider>
       </SafeAreaView>
