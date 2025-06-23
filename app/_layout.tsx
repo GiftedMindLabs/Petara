@@ -2,7 +2,7 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import { SQLiteProvider } from "expo-sqlite";
 import { Suspense, useState } from "react";
-import { ActivityIndicator, SafeAreaView, Text, View } from "react-native";
+import { ActivityIndicator, SafeAreaView, View } from "react-native";
 import "react-native-reanimated";
 import { migrateDatabase } from "./database/database";
 import { SelectedPetProvider } from "./providers/SelectedPetProvider";
@@ -49,9 +49,9 @@ function RootLayoutNav() {
 
 const TestStack = () => {
   return (
-    <View style={{ flex: 1, backgroundColor: "#0D9488" }}>
-      <Text>Test</Text>
-    </View>
+    <Stack> 
+      <Stack.Screen name="(tabs)/index" options={{ headerShown: false }} />
+    </Stack>
   );
 };
 
