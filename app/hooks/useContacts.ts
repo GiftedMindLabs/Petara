@@ -1,12 +1,14 @@
-  import { useState } from "react";
+import { useSQLiteContext } from "expo-sqlite";
+import { useState } from "react";
+import { ContactRepository } from "../database/repositories/contactRepository";
 import { Contact } from "../database/types";
-import { useRepositories } from "./useRepositories";
 
 export function useContacts() {
+  const db = useSQLiteContext();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { contactRepository } = useRepositories();
+  const contactRepository = new ContactRepository(db);
 
   const loadContacts = async () => {
     console.log("useContacts loadContacts called");

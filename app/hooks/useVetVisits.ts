@@ -1,12 +1,14 @@
+import { useSQLiteContext } from "expo-sqlite";
 import { useState } from "react";
+import { VetVisitRepository } from "../database/repositories/vetVisitRepository";
 import { VetVisit } from "../database/types";
-import { useRepositories } from "./useRepositories";
 
 export function useVetVisits() {
+  const db = useSQLiteContext();
   const [vetVisits, setVetVisits] = useState<VetVisit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { vetVisitRepository } = useRepositories();
+  const vetVisitRepository = new VetVisitRepository(db);
   
   const loadVetVisits = async () => {
     console.log("useVetVisits loadVetVisits called");
@@ -25,7 +27,7 @@ export function useVetVisits() {
     }
   };
 
-  const getAllVetVisits = async () => {
+  const getAllVetVisits = async () => { 
     try {
       if (!vetVisitRepository) {
         throw new Error("Vet visit repository not available");

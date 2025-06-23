@@ -1,12 +1,14 @@
+import { useSQLiteContext } from "expo-sqlite";
 import { useState } from "react";
+import { PetRepository } from "../database/repositories/petRepository";
 import { Pet } from "../database/types";
-import { useRepositories } from "./useRepositories";
 
 export function usePets() {
+  const db = useSQLiteContext();
   const [pets, setPets] = useState<Pet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { petRepository } = useRepositories();
+  const petRepository = new PetRepository(db);
   
   const loadPets = async () => {
     console.log("usePets loadPets called");

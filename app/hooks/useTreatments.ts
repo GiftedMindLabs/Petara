@@ -1,12 +1,14 @@
+import { useSQLiteContext } from "expo-sqlite";
 import { useState } from "react";
+import { TreatmentRepository } from "../database/repositories/treatmentRepository";
 import { Treatment } from "../database/types";
-import { useRepositories } from "./useRepositories";
 
 export function useTreatments() {
+  const db = useSQLiteContext();
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { treatmentRepository } = useRepositories();
+  const treatmentRepository = new TreatmentRepository(db);
 
   const loadTreatments = async () => {
     console.log("useTreatments loadTreatments called");

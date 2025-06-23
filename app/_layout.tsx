@@ -2,10 +2,10 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import { SQLiteProvider } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
+import { Suspense } from "react";
 import { ActivityIndicator, SafeAreaView, View } from "react-native";
 import "react-native-reanimated";
 import { migrateDatabase } from "./database/database";
-import { DataProvider } from "./providers/DataProvider";
 import { SelectedPetProvider } from "./providers/SelectedPetProvider";
 import { ThemeProvider, useTheme } from "./providers/ThemeProvider";
 
@@ -33,13 +33,13 @@ function RootLayoutNav() {
   const { isDark, theme } = useTheme();
   
   return (
+    <Suspense fallback={<ActivityIndicator size="large" color="#0D9488" />}>
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
       <SQLiteProvider 
         databaseName="petara.db" 
         onInit={migrateDatabase}
         options={{enableChangeListener: true}}
       >
-        <DataProvider>
           <SelectedPetProvider>
             <Stack 
               screenOptions={{
@@ -57,8 +57,8 @@ function RootLayoutNav() {
             </Stack>
             <StatusBar style={isDark ? "light" : "dark"} />
           </SelectedPetProvider>
-        </DataProvider>
       </SQLiteProvider>
-    </SafeAreaView>
+      </SafeAreaView>
+    </Suspense>
   );
 }
