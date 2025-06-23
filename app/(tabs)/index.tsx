@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-const Home: React.FC = () => {
+export default function HomeScreen () {
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
       <Text>Test Stack</Text>
@@ -85,5 +85,3 @@ const styles = StyleSheet.create({
     marginHorizontal: 8
   }
 });
-
-export default Home;
