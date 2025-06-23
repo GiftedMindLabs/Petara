@@ -6,7 +6,6 @@
     "orientation": "portrait",
     "icon": "./assets/images/logo01.png",
     "scheme": "petara",
-    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,

@@ -21,7 +21,7 @@ export default function RootLayout() {
   }
 
   return (
-      <RootLayoutNav />
+    <RootLayoutNav />
   );
 }
 
@@ -29,8 +29,8 @@ function RootLayoutNav() {
   const [migrationComplete, setMigrationComplete] = useState(false);
   return (
     <Suspense fallback={<ActivityIndicator size="large" color="#0D9488" />}>
-    <SafeAreaView style={{ flex: 1 }}>
-    <SQLiteProvider
+      <SafeAreaView style={{ flex: 1 }}>
+        <SQLiteProvider
           databaseName="petara.db"
           onInit={async (db) => {
             await migrateDatabase(db);
@@ -41,7 +41,7 @@ function RootLayoutNav() {
           <SelectedPetProvider>
             <MainStack />
           </SelectedPetProvider>
-      </SQLiteProvider>
+        </SQLiteProvider>
       </SafeAreaView>
     </Suspense>
   );
@@ -49,7 +49,7 @@ function RootLayoutNav() {
 
 const TestStack = () => {
   return (
-    <Stack> 
+    <Stack>
       <Stack.Screen name="(tabs)/index" options={{ headerShown: false }} />
     </Stack>
   );
@@ -57,20 +57,13 @@ const TestStack = () => {
 
 const MainStack = () => {
   return (
-    
-    <Stack 
-    screenOptions={{
-      contentStyle: { backgroundColor: "#0D9488" },
-      headerStyle: { backgroundColor: "#0D9488" },
-      headerTintColor: "#0D9488",
-    }}
-  >
-    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-    <Stack.Screen name="+not-found" />
-    <Stack.Screen
-      name="FormModal"
-      options={{ headerShown: false, presentation: "modal" }}
-    />
-  </Stack>
+    <Stack>
+      <Stack.Screen name="test" options={{ headerShown: false }} />
+      <Stack.Screen name="+not-found" />
+      <Stack.Screen
+        name="FormModal"
+        options={{ headerShown: false, presentation: "modal" }}
+      />
+    </Stack>
   );
 };
