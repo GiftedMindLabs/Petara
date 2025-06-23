@@ -1,30 +1,37 @@
 import { Stack } from "expo-router";
-import { SQLiteProvider } from "expo-sqlite";
-import React, { useState } from "react";
+import { openDatabaseAsync, SQLiteProvider } from "expo-sqlite";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, SafeAreaView } from "react-native";
 import "react-native-reanimated";
 import { migrateDatabase } from "./database/database";
 
-export default function RootLayout() {
-  return (
-    <RootLayoutNav />
-  );
-}
 
-function RootLayoutNav() {
-  const [migrationComplete, setMigrationComplete] = useState(false);
+export default function RootLayout() {
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const db = await openDatabaseAsync("petara.db");
+      await migrateDatabase(db);
+      setReady(true);
+    })();
+  }, []);
+
+  if (!ready) {
+    return (
+      <SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#0D9488" />
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <>
-      <SQLiteProvider
-        databaseName="petara.db"
-        onInit={async (db) => {
-          await migrateDatabase(db);
-          setMigrationComplete(true); // only trigger re-render when done
-        }}
-        options={migrationComplete ? { enableChangeListener: true } : undefined}
-      >
-        <TestStack />
-      </SQLiteProvider>
-    </>
+    <SQLiteProvider
+      databaseName="petara.db"
+      options={{ enableChangeListener: true }}
+    >
+      <TestStack />
+    </SQLiteProvider>
   );
 }
 
