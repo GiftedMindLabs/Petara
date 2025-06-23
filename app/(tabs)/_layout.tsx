@@ -1,6 +1,4 @@
-import HapticTab from "@/app/components/HapticTab";
 import { IconSymbol } from "@/app/components/ui/IconSymbol";
-import TabBarBackground from "@/app/components/ui/TabBarBackground";
 import { Tabs } from "expo-router";
 import React from "react";
 import { View } from "react-native";
@@ -13,8 +11,6 @@ export default function TabLayout() {
         initialRouteName="index"
         screenOptions={{
           //header: () => <CustomHeader />,
-          tabBarButton: HapticTab,
-          tabBarBackground: TabBarBackground,
         }}
       >
         <Tabs.Screen
