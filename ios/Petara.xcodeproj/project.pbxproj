@@ -8,25 +8,25 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		1F90A9BE415B7DFFC7BBEB3A /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DC79CD51A101A9EE424166D /* ExpoModulesProvider.swift */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		84695498CFA3CBF16B1D40B1 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D8BED54E0CE8A248C4F9B8E4 /* PrivacyInfo.xcprivacy */; };
-		8B18A372513BDE89B0E72C93 /* libPods-Petara.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 40E90BC933FED3A3FD0650F5 /* libPods-Petara.a */; };
+		76DC0B1BFD2134DECDF40E9A /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC42B15CF7D49F4EFA3E931A /* ExpoModulesProvider.swift */; };
+		B782819027ACB9D53C8637C8 /* libPods-Petara.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 00EFFEE382BB7B3B3EA9BE20 /* libPods-Petara.a */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
+		F236742B24CD2141F7AF86F0 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 955BC676FA95752630BB4018 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		00EFFEE382BB7B3B3EA9BE20 /* libPods-Petara.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Petara.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		0DE401EF9BCB304B509C7231 /* Pods-Petara.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Petara.debug.xcconfig"; path = "Target Support Files/Pods-Petara/Pods-Petara.debug.xcconfig"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* Petara.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Petara.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Petara/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Petara/Info.plist; sourceTree = "<group>"; };
-		40E90BC933FED3A3FD0650F5 /* libPods-Petara.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Petara.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		6B1AE9C7893E8499AA468752 /* Pods-Petara.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Petara.debug.xcconfig"; path = "Target Support Files/Pods-Petara/Pods-Petara.debug.xcconfig"; sourceTree = "<group>"; };
-		7DC79CD51A101A9EE424166D /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Petara/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		77799F8B0AE7EAF6864E7343 /* Pods-Petara.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Petara.release.xcconfig"; path = "Target Support Files/Pods-Petara/Pods-Petara.release.xcconfig"; sourceTree = "<group>"; };
+		955BC676FA95752630BB4018 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = Petara/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Petara/SplashScreen.storyboard; sourceTree = "<group>"; };
-		AC653C36BAE6C73BBD6D3D28 /* Pods-Petara.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Petara.release.xcconfig"; path = "Target Support Files/Pods-Petara/Pods-Petara.release.xcconfig"; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		D8BED54E0CE8A248C4F9B8E4 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = Petara/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		BC42B15CF7D49F4EFA3E931A /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Petara/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Petara/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* Petara-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "Petara-Bridging-Header.h"; path = "Petara/Petara-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -37,7 +37,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8B18A372513BDE89B0E72C93 /* libPods-Petara.a in Frameworks */,
+				B782819027ACB9D53C8637C8 /* libPods-Petara.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -53,35 +53,26 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				D8BED54E0CE8A248C4F9B8E4 /* PrivacyInfo.xcprivacy */,
+				955BC676FA95752630BB4018 /* PrivacyInfo.xcprivacy */,
 			);
 			name = Petara;
-			sourceTree = "<group>";
-		};
-		1AAEF62D73E9015A9618473A /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				6B1AE9C7893E8499AA468752 /* Pods-Petara.debug.xcconfig */,
-				AC653C36BAE6C73BBD6D3D28 /* Pods-Petara.release.xcconfig */,
-			);
-			path = Pods;
-			sourceTree = "<group>";
-		};
-		233000A8BE72CAB3B09A4ABF /* ExpoModulesProviders */ = {
-			isa = PBXGroup;
-			children = (
-				97C3DEA989722B089473E542 /* Petara */,
-			);
-			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				40E90BC933FED3A3FD0650F5 /* libPods-Petara.a */,
+				00EFFEE382BB7B3B3EA9BE20 /* libPods-Petara.a */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		4C96E815B451CF6D1F980F92 /* ExpoModulesProviders */ = {
+			isa = PBXGroup;
+			children = (
+				A99585C5147140E76638C180 /* Petara */,
+			);
+			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -98,8 +89,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				1AAEF62D73E9015A9618473A /* Pods */,
-				233000A8BE72CAB3B09A4ABF /* ExpoModulesProviders */,
+				C26101553C8C958D84957E02 /* Pods */,
+				4C96E815B451CF6D1F980F92 /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -114,10 +105,10 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		97C3DEA989722B089473E542 /* Petara */ = {
+		A99585C5147140E76638C180 /* Petara */ = {
 			isa = PBXGroup;
 			children = (
-				7DC79CD51A101A9EE424166D /* ExpoModulesProvider.swift */,
+				BC42B15CF7D49F4EFA3E931A /* ExpoModulesProvider.swift */,
 			);
 			name = Petara;
 			sourceTree = "<group>";
@@ -131,6 +122,15 @@
 			path = Petara/Supporting;
 			sourceTree = "<group>";
 		};
+		C26101553C8C958D84957E02 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				0DE401EF9BCB304B509C7231 /* Pods-Petara.debug.xcconfig */,
+				77799F8B0AE7EAF6864E7343 /* Pods-Petara.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -139,13 +139,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Petara" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				848186E619E0AC939CB25324 /* [Expo] Configure project */,
+				7332FE267EC6E85C62B82282 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				485BC852CDCD2205A3F93377 /* [CP] Embed Pods Frameworks */,
+				D693AF9C76F8F7E7DDF4D737 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -195,7 +195,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				84695498CFA3CBF16B1D40B1 /* PrivacyInfo.xcprivacy in Resources */,
+				F236742B24CD2141F7AF86F0 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -239,23 +239,24 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		485BC852CDCD2205A3F93377 /* [CP] Embed Pods Frameworks */ = {
+		7332FE267EC6E85C62B82282 /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Petara/Pods-Petara-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			inputFileListPaths = (
 			);
-			name = "[CP] Embed Pods Frameworks";
+			inputPaths = (
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
 			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Petara/Pods-Petara-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-Petara/expo-configure-project.sh\"\n";
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -299,24 +300,23 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Petara/Pods-Petara-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		848186E619E0AC939CB25324 /* [Expo] Configure project */ = {
+		D693AF9C76F8F7E7DDF4D737 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputFileListPaths = (
-			);
 			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Petara/Pods-Petara-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
 			);
-			name = "[Expo] Configure project";
-			outputFileListPaths = (
-			);
+			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-Petara/expo-configure-project.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Petara/Pods-Petara-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -326,7 +326,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				1F90A9BE415B7DFFC7BBEB3A /* ExpoModulesProvider.swift in Sources */,
+				76DC0B1BFD2134DECDF40E9A /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -335,7 +335,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 6B1AE9C7893E8499AA468752 /* Pods-Petara.debug.xcconfig */;
+			baseConfigurationReference = 0DE401EF9BCB304B509C7231 /* Pods-Petara.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -372,7 +372,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = AC653C36BAE6C73BBD6D3D28 /* Pods-Petara.release.xcconfig */;
+			baseConfigurationReference = 77799F8B0AE7EAF6864E7343 /* Pods-Petara.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -456,10 +456,7 @@
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -514,10 +511,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;

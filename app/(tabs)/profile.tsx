@@ -9,7 +9,6 @@ import { useTreatments } from '../hooks/useTreatments';
 import { useVaccinations } from '../hooks/useVaccinations';
 import { useVetVisits } from '../hooks/useVetVisits';
 import { useSelectedPet } from '../providers/SelectedPetProvider';
-import { useTheme } from '../providers/ThemeProvider';
 
 const Profile: React.FC = () => {
   const { selectedPetId } = useSelectedPet();
@@ -18,23 +17,22 @@ const Profile: React.FC = () => {
   const { treatments, isLoading: isLoadingTreatments } = useTreatments();
   const { vetVisits, isLoading: isLoadingVisits } = useVetVisits();
   const { expenses, isLoading: isLoadingExpenses } = useExpenses();
-  const { theme } = useTheme();
 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: theme.background
+      backgroundColor: "white"
     },
     loadingContainer: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: theme.background
+      backgroundColor: "white"
     },
     title: {
       fontSize: 20,
       fontWeight: 'bold',
-      color: theme.text,
+      color: "black",
       marginBottom: 16,
       padding: 16
     },
@@ -54,7 +52,6 @@ const Profile: React.FC = () => {
       position: 'absolute',
       top: 16,
       right: 16,
-      backgroundColor: theme.overlayLight,
       padding: 8,
       borderRadius: 20
     },
@@ -70,20 +67,15 @@ const Profile: React.FC = () => {
     petName: {
       fontSize: 24,
       fontWeight: 'bold',
-      color: theme.text
     },
     petSubtitle: {
       fontSize: 16,
-      color: theme.textSecondary
     },
     section: {
-      backgroundColor: theme.surface,
       borderRadius: 8,
       padding: 16,
       marginBottom: 16,
       borderWidth: 1,
-      borderColor: theme.border,
-      shadowColor: theme.cardShadow,
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.05,
       shadowRadius: 2,
@@ -92,7 +84,6 @@ const Profile: React.FC = () => {
     sectionTitle: {
       fontSize: 18,
       fontWeight: '600',
-      color: theme.text,
       marginBottom: 12
     },
     infoGrid: {
@@ -113,20 +104,18 @@ const Profile: React.FC = () => {
     },
     label: {
       fontSize: 14,
-      color: theme.textSecondary,
       marginBottom: 4
     },
     value: {
       fontSize: 16,
       fontWeight: '500',
-      color: theme.text
     }
   });
 
   if (isLoadingPets || isLoadingVaccinations || isLoadingTreatments || isLoadingVisits || isLoadingExpenses) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.primary} />
+        <ActivityIndicator size="large" />
       </View>
     );
   }
@@ -180,7 +169,7 @@ const Profile: React.FC = () => {
             },
           })}
         >
-          <IconSymbol name="pencil" size={20} color={theme.text} />
+          <IconSymbol name="pencil" size={20} color={"white"} />
         </TouchableOpacity>
       </View>
       <View style={styles.content}>

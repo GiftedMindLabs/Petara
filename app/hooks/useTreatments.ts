@@ -4,6 +4,7 @@ import { TreatmentRepository } from "../database/repositories/treatmentRepositor
 import { Treatment } from "../database/types";
 
 export function useTreatments() {
+  console.log("useTreatments hook initialized");
   const db = useSQLiteContext();
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [isLoading, setIsLoading] = useState(true);

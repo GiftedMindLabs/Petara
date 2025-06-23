@@ -5,6 +5,7 @@ import { Expense } from "../database/types";
 
 export function useExpenses() {
   const db = useSQLiteContext();
+  console.log("useExpenses hook initialized");
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

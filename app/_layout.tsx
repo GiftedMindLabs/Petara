@@ -1,13 +1,11 @@
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import { SQLiteProvider } from "expo-sqlite";
-import { StatusBar } from "expo-status-bar";
 import { Suspense } from "react";
-import { ActivityIndicator, SafeAreaView, View } from "react-native";
+import { ActivityIndicator, SafeAreaView, Text, View } from "react-native";
 import "react-native-reanimated";
 import { migrateDatabase } from "./database/database";
 import { SelectedPetProvider } from "./providers/SelectedPetProvider";
-import { ThemeProvider, useTheme } from "./providers/ThemeProvider";
 
 export default function RootLayout() {
   const [loaded] = useFonts({
@@ -23,42 +21,46 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider>
       <RootLayoutNav />
-    </ThemeProvider>
   );
 }
 
 function RootLayoutNav() {
-  const { isDark, theme } = useTheme();
-  
   return (
     <Suspense fallback={<ActivityIndicator size="large" color="#0D9488" />}>
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-      <SQLiteProvider 
-        databaseName="petara.db" 
-        onInit={migrateDatabase}
-        options={{enableChangeListener: true}}
-      >
+      <SafeAreaView style={{ flex: 1 }}>
+        <SQLiteProvider
+          databaseName="petara.db"
+          onInit={migrateDatabase}
+          options={{ enableChangeListener: true }}
+        >
           <SelectedPetProvider>
-            <Stack 
-              screenOptions={{
-                contentStyle: { backgroundColor: theme.background },
-                headerStyle: { backgroundColor: theme.surface },
-                headerTintColor: theme.text,
-              }}
-            >
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="+not-found" />
-              <Stack.Screen
-                name="FormModal"
-                options={{ headerShown: false, presentation: "modal" }}
-              />
-            </Stack>
-            <StatusBar style={isDark ? "light" : "dark"} />
+            <MainStack />
           </SelectedPetProvider>
-      </SQLiteProvider>
+        </SQLiteProvider>
       </SafeAreaView>
     </Suspense>
+  );
+}
+
+const TestStack = () => {
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>Test Stack</Text>
+    </View>
+  );
+}
+
+const MainStack = () => {
+
+  return (
+    <Stack >
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="+not-found" />
+      <Stack.Screen
+        name="FormModal"
+        options={{ headerShown: false, presentation: "modal" }}
+      />
+    </Stack>
   );
 }

@@ -4,6 +4,7 @@ import { VetVisitRepository } from "../database/repositories/vetVisitRepository"
 import { VetVisit } from "../database/types";
 
 export function useVetVisits() {
+  console.log("useVetVisits hook initialized");
   const db = useSQLiteContext();
   const [vetVisits, setVetVisits] = useState<VetVisit[]>([]);
   const [isLoading, setIsLoading] = useState(true);

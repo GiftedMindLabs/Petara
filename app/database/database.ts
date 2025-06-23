@@ -1,29 +1,43 @@
-import * as SQLite from "expo-sqlite";
-
+import { SQLiteDatabase } from "expo-sqlite";
 // Migration function to set up the database schema
-export const migrateDatabase = async (db: SQLite.SQLiteDatabase): Promise<void> => {
+export const migrateDatabase = async (db: SQLiteDatabase): Promise<void> => {
   try {
+    console.log("Migrate database function called")
     // Enable foreign keys
-    await db.execAsync('PRAGMA foreign_keys = ON;');
+    await db.execAsync("PRAGMA foreign_keys = ON;");
 
-    // Create version table if it doesn't exist
+    // Create version table with a fixed ID to ensure a single row
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS db_version (
-        version INTEGER PRIMARY KEY
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        version INTEGER NOT NULL
       );
     `);
 
-    // Get current version
-    const versionResult = await db.getFirstAsync<{ version: number }>('SELECT version FROM db_version');
-    const currentVersion = versionResult?.version || 0;
+    // Read current version or default to 0
+    const versionResult = await db.getFirstAsync<{ version: number }>(
+      "SELECT version FROM db_version WHERE id = 1"
+    );
+    const currentVersion = versionResult?.version ?? 0;
 
-    // Run migrations based on version
+    // Run migrations for version 1
     if (currentVersion < 1) {
-      // Start transaction
-      await db.execAsync('BEGIN TRANSACTION;');
-      
+      console.log("Creating initial tables and migrating to version 1...");
+      await db.execAsync("BEGIN TRANSACTION;");
       try {
-        // Create tables
+        // Step 1: Create independent tables first
+        await db.execAsync(`
+          CREATE TABLE IF NOT EXISTS contacts (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            type TEXT NOT NULL CHECK(type IN ('veterinarian', 'groomer', 'sitter', 'trainer', 'other')),
+            phone TEXT,
+            email TEXT,
+            address TEXT,
+            notes TEXT
+          );
+        `);
+
         await db.execAsync(`
           CREATE TABLE IF NOT EXISTS pets (
             id TEXT PRIMARY KEY,
@@ -39,7 +53,58 @@ export const migrateDatabase = async (db: SQLite.SQLiteDatabase): Promise<void> 
             sterilized INTEGER NOT NULL DEFAULT 0,
             deceased INTEGER NOT NULL DEFAULT 0
           );
-      
+        `);
+
+        await db.execAsync(`
+          CREATE TABLE IF NOT EXISTS vet_visits (
+            id TEXT PRIMARY KEY,
+            petId TEXT NOT NULL,
+            date INTEGER NOT NULL,
+            reason TEXT NOT NULL,
+            notes TEXT,
+            weight REAL,
+            notificationIdentifier TEXT UNIQUE,
+            contactId TEXT,
+            FOREIGN KEY (petId) REFERENCES pets (id) ON DELETE CASCADE,
+            FOREIGN KEY (contactId) REFERENCES contacts (id) ON DELETE SET NULL
+          );
+        `);
+
+        await db.execAsync(`
+          CREATE TABLE IF NOT EXISTS vaccinations (
+            id TEXT PRIMARY KEY,
+            petId TEXT NOT NULL,
+            name TEXT NOT NULL,
+            startDate INTEGER NOT NULL,
+            endDate INTEGER,
+            lotNumber TEXT NOT NULL,
+            manufacturer TEXT NOT NULL,
+            vetVisitId TEXT,
+            FOREIGN KEY (petId) REFERENCES pets (id) ON DELETE CASCADE,
+            FOREIGN KEY (vetVisitId) REFERENCES vet_visits (id) ON DELETE SET NULL
+          );
+        `);
+
+        await db.execAsync(`
+          CREATE TABLE IF NOT EXISTS treatments (
+            id TEXT PRIMARY KEY,
+            petId TEXT NOT NULL,
+            name TEXT NOT NULL,
+            type TEXT NOT NULL,
+            startDate INTEGER NOT NULL,
+            endDate INTEGER,
+            frequency TEXT NOT NULL,
+            dosage TEXT NOT NULL,
+            status TEXT NOT NULL CHECK(status IN ('ongoing', 'scheduled', 'completed')),
+            notes TEXT,
+            vetVisitId TEXT,
+            FOREIGN KEY (petId) REFERENCES pets (id) ON DELETE CASCADE,
+            FOREIGN KEY (vetVisitId) REFERENCES vet_visits (id) ON DELETE SET NULL
+          );
+        `);
+
+        // Step 2: Create dependent tables
+        await db.execAsync(`
           CREATE TABLE IF NOT EXISTS tasks (
             id TEXT PRIMARY KEY,
             petId TEXT NOT NULL,
@@ -66,49 +131,9 @@ export const migrateDatabase = async (db: SQLite.SQLiteDatabase): Promise<void> 
             FOREIGN KEY (linkedVaccinationId) REFERENCES vaccinations (id) ON DELETE SET NULL,
             FOREIGN KEY (linkedVetVisitId) REFERENCES vet_visits (id) ON DELETE SET NULL
           );
-      
-          CREATE TABLE IF NOT EXISTS vet_visits (
-            id TEXT PRIMARY KEY,
-            petId TEXT NOT NULL,
-            date INTEGER NOT NULL,
-            reason TEXT NOT NULL,
-            notes TEXT,
-            weight REAL,
-            notificationIdentifier TEXT UNIQUE,
-            contactId TEXT,
-            FOREIGN KEY (petId) REFERENCES pets (id) ON DELETE CASCADE,
-            FOREIGN KEY (contactId) REFERENCES contacts (id) ON DELETE SET NULL
-          );
-      
-          CREATE TABLE IF NOT EXISTS treatments (
-            id TEXT PRIMARY KEY,
-            petId TEXT NOT NULL,
-            name TEXT NOT NULL,
-            type TEXT NOT NULL,
-            startDate INTEGER NOT NULL,
-            endDate INTEGER,
-            frequency TEXT NOT NULL,
-            dosage TEXT NOT NULL,
-            status TEXT NOT NULL CHECK(status IN ('ongoing', 'scheduled', 'completed')),
-            notes TEXT,
-            vetVisitId TEXT,
-            FOREIGN KEY (petId) REFERENCES pets (id) ON DELETE CASCADE,
-            FOREIGN KEY (vetVisitId) REFERENCES vet_visits (id) ON DELETE SET NULL
-          );
-      
-          CREATE TABLE IF NOT EXISTS vaccinations (
-            id TEXT PRIMARY KEY,
-            petId TEXT NOT NULL,
-            name TEXT NOT NULL,
-            startDate INTEGER NOT NULL,
-            endDate INTEGER,
-            lotNumber TEXT NOT NULL,
-            manufacturer TEXT NOT NULL,
-            vetVisitId TEXT,
-            FOREIGN KEY (petId) REFERENCES pets (id) ON DELETE CASCADE,
-            FOREIGN KEY (vetVisitId) REFERENCES vet_visits (id) ON DELETE SET NULL
-          );
-      
+        `);
+
+        await db.execAsync(`
           CREATE TABLE IF NOT EXISTS expenses (
             id TEXT PRIMARY KEY NOT NULL,
             petId TEXT NOT NULL,
@@ -124,36 +149,25 @@ export const migrateDatabase = async (db: SQLite.SQLiteDatabase): Promise<void> 
             FOREIGN KEY (linkedVetVisitId) REFERENCES vet_visits (id) ON DELETE SET NULL,
             FOREIGN KEY (linkedVaccinationId) REFERENCES vaccinations (id) ON DELETE SET NULL
           );
-      
-          CREATE TABLE IF NOT EXISTS contacts (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            type TEXT NOT NULL CHECK(type IN ('veterinarian', 'groomer', 'sitter', 'trainer', 'other')),
-            phone TEXT,
-            email TEXT,
-            address TEXT,
-            notes TEXT
-          );
         `);
 
-        // Update version
-        await db.execAsync('INSERT OR REPLACE INTO db_version (version) VALUES (1)');
-        
-        // Commit transaction
-        await db.execAsync('COMMIT;');
+        // Update schema version
+        await db.execAsync(`
+          INSERT OR REPLACE INTO db_version (id, version) VALUES (1, 1);
+        `);
+
+        await db.execAsync("COMMIT;");
       } catch (error) {
-        // Rollback transaction on error
-        await db.execAsync('ROLLBACK;');
+        await db.execAsync("ROLLBACK;");
         throw error;
       }
     }
 
-    // Add more version checks here for future migrations
-    // if (currentVersion < 2) {
-    //   // Version 2 migrations
-    // }
+    // Future migrations here...
+    // if (currentVersion < 2) { ... }
+
   } catch (error) {
-    console.error('Database migration failed:', error);
+    console.error("Database migration failed:", error);
     throw error;
   }
 };

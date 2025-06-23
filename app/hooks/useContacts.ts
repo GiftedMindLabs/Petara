@@ -4,6 +4,7 @@ import { ContactRepository } from "../database/repositories/contactRepository";
 import { Contact } from "../database/types";
 
 export function useContacts() {
+  console.log("useContacts hook initialized");
   const db = useSQLiteContext();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(true);

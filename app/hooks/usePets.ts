@@ -4,6 +4,7 @@ import { PetRepository } from "../database/repositories/petRepository";
 import { Pet } from "../database/types";
 
 export function usePets() {
+  console.log("usePets hook initialized");
   const db = useSQLiteContext();
   const [pets, setPets] = useState<Pet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -36,22 +37,6 @@ export function usePets() {
     } catch (err) {
       console.error("Error getting all pets:", err);
       throw err;
-    }
-  };
-
-  const refresh = async () => {
-    console.log("usePets refresh called");
-    try {
-      if (petRepository) {
-        const loadedPets = await petRepository.getAllPets();
-        console.log("usePets refresh loaded pets:", loadedPets?.length || 0);
-        setPets(loadedPets || []);
-        setError(null);
-        
-      }
-    } catch (err) {
-      console.error("usePets refresh error:", err);
-      setError(err instanceof Error ? err.message : 'Failed to refresh pets');
     }
   };
 
@@ -121,7 +106,6 @@ export function usePets() {
     pets,
     isLoading,
     error,
-    refresh,
     getPetById,
     addPet,
     updatePet,

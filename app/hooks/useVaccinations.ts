@@ -4,6 +4,7 @@ import { VaccinationRepository } from "../database/repositories/vaccinationRepos
 import { Vaccination } from "../database/types";
 
 export function useVaccinations() {
+  console.log("useVaccinations hook initialized");
   const db = useSQLiteContext();
   const [vaccinations, setVaccinations] = useState<Vaccination[]>([]);
   const [isLoading, setIsLoading] = useState(true);

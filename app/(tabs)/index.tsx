@@ -1,110 +1,11 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
-import TaskItem from '../components/TaskItem';
-import { Task, VetVisit } from '../database/types';
-import { useTasks } from '../hooks/useTasks';
-import { useVetVisits } from '../hooks/useVetVisits';
-import { useSelectedPet } from '../providers/SelectedPetProvider';
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
 const Home: React.FC = () => {
-  const { selectedPetId } = useSelectedPet();
-  const { tasks, isLoading: tasksLoading } = useTasks();
-  const { vetVisits, isLoading: visitsLoading } = useVetVisits();
-  const [todaysTasks, setTodaysTasks] = useState<Task[]>([]);
-  const [upcomingVisits, setUpcomingVisits] = useState<VetVisit[]>([]);
-
-  useEffect(() => {
-    // Filter today's tasks
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const filtered = tasks.filter(task => {
-      const taskDate = new Date(task.dueDate);
-      return taskDate >= today && taskDate < tomorrow;
-    });
-
-    setTodaysTasks(filtered);
-  }, [tasks]);
-
-  useEffect(() => {
-    // Filter upcoming vet visits (next 30 days)
-    const today = new Date();
-    const thirtyDaysFromNow = new Date(today);
-    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-
-    const filtered = vetVisits
-      .filter((visit: VetVisit) => {
-        const visitDate = new Date(visit.date);
-        return visitDate >= today && visitDate <= thirtyDaysFromNow;
-      })
-      .sort((a: VetVisit, b: VetVisit) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-    setUpcomingVisits(filtered);
-  }, [vetVisits]);
-
-  if (tasksLoading || visitsLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0D9488" />
-      </View>
-    );
-  }
-
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Today's Tasks</Text>
-          <MaterialIcons name="event" size={18} color="#0D9488" />
-        </View>
-        {todaysTasks.length > 0 ? (
-          <View style={styles.contentCard}>
-            {todaysTasks.map(task => (
-              <TaskItem 
-                key={task.id} 
-                task={task}
-                showPetInfo={selectedPetId === 'all'} 
-              />
-            ))}
-          </View>
-        ) : (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>No tasks today! Time to play 🐶</Text>
-          </View>
-        )}
-      </View>
-
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Upcoming Vet Visits</Text>
-          <MaterialIcons name="local-hospital" size={18} color="#0D9488" />
-        </View>
-        {upcomingVisits.length > 0 ? (
-          <View style={styles.contentCard}>
-            {upcomingVisits.map(visit => (
-              <View key={visit.id} style={styles.visitItem}>
-                <View>
-                  <Text style={styles.visitReason}>{visit.reason}</Text>
-                  <View style={styles.visitDetails}>
-                    <Text style={styles.detailText}>
-                      {new Date(visit.date).toLocaleDateString()}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            ))}
-          </View>
-        ) : (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>No upcoming vet visits</Text>
-          </View>
-        )}
-      </View>
-    </ScrollView>
-  );
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>Test Stack</Text>
+    </View>)
 };
 
 const styles = StyleSheet.create({
