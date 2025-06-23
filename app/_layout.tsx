@@ -39,7 +39,7 @@ function RootLayoutNav() {
           options={migrationComplete ? { enableChangeListener: true } : undefined}
         >
           <SelectedPetProvider>
-            <MainStack />
+            <TestStack />
           </SelectedPetProvider>
         </SQLiteProvider>
       </SafeAreaView>
@@ -50,15 +50,22 @@ function RootLayoutNav() {
 const TestStack = () => {
   return (
     <Stack>
-      <Stack.Screen name="(tabs)/index" options={{ headerShown: false }} />
+      <Stack.Screen name="test" options={{ headerShown: false }} />
     </Stack>
   );
 };
 
 const MainStack = () => {
   return (
-    <Stack>
-      <Stack.Screen name="test" options={{ headerShown: false }} />
+
+    <Stack
+      screenOptions={{
+        contentStyle: { backgroundColor: "#0D9488" },
+        headerStyle: { backgroundColor: "#0D9488" },
+        headerTintColor: "#0D9488",
+      }}
+    >
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="+not-found" />
       <Stack.Screen
         name="FormModal"
