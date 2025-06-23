@@ -1,9 +1,8 @@
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import { SQLiteProvider } from "expo-sqlite";
-import { StatusBar } from "expo-status-bar";
 import { Suspense, useState } from "react";
-import { ActivityIndicator, SafeAreaView, View } from "react-native";
+import { ActivityIndicator, SafeAreaView, Text, View } from "react-native";
 import "react-native-reanimated";
 import { migrateDatabase } from "./database/database";
 import { SelectedPetProvider } from "./providers/SelectedPetProvider";
@@ -40,24 +39,38 @@ function RootLayoutNav() {
           options={migrationComplete ? { enableChangeListener: true } : undefined}
         >
           <SelectedPetProvider>
-            <Stack 
-              screenOptions={{
-                contentStyle: { backgroundColor: "#0D9488" },
-                headerStyle: { backgroundColor: "#0D9488" },
-                headerTintColor: "#0D9488",
-              }}
-            >
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="+not-found" />
-              <Stack.Screen
-                name="FormModal"
-                options={{ headerShown: false, presentation: "modal" }}
-              />
-            </Stack>
-            <StatusBar style="light" />
+            <TestStack />
           </SelectedPetProvider>
       </SQLiteProvider>
       </SafeAreaView>
     </Suspense>
   );
 }
+
+const TestStack = () => {
+  return (
+    <View style={{ flex: 1, backgroundColor: "#0D9488" }}>
+      <Text>Test</Text>
+    </View>
+  );
+};
+
+const MainStack = () => {
+  return (
+    
+    <Stack 
+    screenOptions={{
+      contentStyle: { backgroundColor: "#0D9488" },
+      headerStyle: { backgroundColor: "#0D9488" },
+      headerTintColor: "#0D9488",
+    }}
+  >
+    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+    <Stack.Screen name="+not-found" />
+    <Stack.Screen
+      name="FormModal"
+      options={{ headerShown: false, presentation: "modal" }}
+    />
+  </Stack>
+  );
+};
