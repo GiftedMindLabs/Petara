@@ -27,7 +27,6 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-
   const [migrationComplete, setMigrationComplete] = useState(false);
   return (
     <Suspense fallback={<ActivityIndicator size="large" color="#0D9488" />}>
