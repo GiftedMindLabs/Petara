@@ -30,7 +30,7 @@ export default function RootLayout() {
       databaseName="petara.db"
       options={{ enableChangeListener: true }}
     >
-      <TestStack />
+      <MainStack />
     </SQLiteProvider>
   );
 }
