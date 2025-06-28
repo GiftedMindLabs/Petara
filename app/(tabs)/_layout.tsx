@@ -2,6 +2,7 @@ import { IconSymbol } from "@/app/components/ui/IconSymbol";
 import { Tabs } from "expo-router";
 import React from "react";
 import { View } from "react-native";
+import CustomHeader from "../components/CustomHeader";
 
 export default function TabLayout() {
   
@@ -10,7 +11,7 @@ export default function TabLayout() {
       <Tabs
         initialRouteName="index"
         screenOptions={{
-          //header: () => <CustomHeader />,
+          header: () => <CustomHeader />,
         }}
       >
         <Tabs.Screen
