@@ -1,5 +1,5 @@
-import { useSQLiteContext } from "expo-sqlite";
-import { useState } from "react";
+import { addDatabaseChangeListener, useSQLiteContext } from "expo-sqlite";
+import { useEffect, useState } from "react";
 import { VetVisitRepository } from "../database/repositories/vetVisitRepository";
 import { VetVisit } from "../database/types";
 
@@ -27,6 +27,19 @@ export function useVetVisits() {
       setIsLoading(false);
     }
   };
+
+    useEffect(() => {
+      // Initial fetch of the data
+      loadVetVisits();
+  
+      //Local listener
+      const listener = addDatabaseChangeListener((event) => {
+        if (event.tableName === "vet_visits") {
+          loadVetVisits();
+        }
+      });
+      return () => listener.remove();
+    }, []);
 
   const getAllVetVisits = async () => { 
     try {

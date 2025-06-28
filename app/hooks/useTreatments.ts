@@ -1,5 +1,5 @@
-import { useSQLiteContext } from "expo-sqlite";
-import { useState } from "react";
+import { addDatabaseChangeListener, useSQLiteContext } from "expo-sqlite";
+import { useEffect, useState } from "react";
 import { TreatmentRepository } from "../database/repositories/treatmentRepository";
 import { Treatment } from "../database/types";
 
@@ -26,6 +26,19 @@ export function useTreatments() {
       setIsLoading(false);
     }
   };
+
+    useEffect(() => {
+      // Initial fetch of the data
+      loadTreatments();
+  
+      //Local listener
+      const listener = addDatabaseChangeListener((event) => {
+        if (event.tableName === "treatments") {
+          loadTreatments();
+        }
+      });
+      return () => listener.remove();
+    }, []);
 
   const getAllTreatments = async () => {
     console.log("useTreatments refresh called");

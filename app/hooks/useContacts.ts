@@ -1,5 +1,5 @@
-import { useSQLiteContext } from "expo-sqlite";
-import { useState } from "react";
+import { addDatabaseChangeListener, useSQLiteContext } from "expo-sqlite";
+import { useEffect, useState } from "react";
 import { ContactRepository } from "../database/repositories/contactRepository";
 import { Contact } from "../database/types";
 
@@ -27,6 +27,20 @@ export function useContacts() {
       setIsLoading(false);
     }
   };
+
+
+    useEffect(() => {
+      // Initial fetch of the data
+      loadContacts();
+  
+      //Local listener
+      const listener = addDatabaseChangeListener((event) => {
+        if (event.tableName === "tasks") {
+          loadContacts();
+        }
+      });
+      return () => listener.remove();
+    }, []);
 
   const getAllContacts = async () => {
     try {

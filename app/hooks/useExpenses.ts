@@ -1,5 +1,5 @@
-import { useSQLiteContext } from "expo-sqlite";
-import { useState } from "react";
+import { addDatabaseChangeListener, useSQLiteContext } from "expo-sqlite";
+import { useEffect, useState } from "react";
 import { ExpenseRepository } from "../database/repositories/expenseRepository";
 import { Expense } from "../database/types";
 
@@ -26,6 +26,19 @@ export function useExpenses() {
       setIsLoading(false);
     }
   };
+
+    useEffect(() => {
+      // Initial fetch of the data
+      loadExpenses();
+  
+      //Local listener
+      const listener = addDatabaseChangeListener((event) => {
+        if (event.tableName === "expenses") {
+          loadExpenses();
+        }
+      });
+      return () => listener.remove();
+    }, []);
 
   const getAllExpenses = async () => {
 

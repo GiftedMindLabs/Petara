@@ -1,5 +1,5 @@
-import { useSQLiteContext } from "expo-sqlite";
-import { useState } from "react";
+import { addDatabaseChangeListener, useSQLiteContext } from "expo-sqlite";
+import { useEffect, useState } from "react";
 import { VaccinationRepository } from "../database/repositories/vaccinationRepository";
 import { Vaccination } from "../database/types";
 
@@ -26,6 +26,19 @@ export function useVaccinations() {
       setIsLoading(false);
     }
   };
+
+    useEffect(() => {
+      // Initial fetch of the data
+      loadVaccinations();
+  
+      //Local listener
+      const listener = addDatabaseChangeListener((event) => {
+        if (event.tableName === "vaccinations") {
+          loadVaccinations();
+        }
+      });
+      return () => listener.remove();
+    }, []);
 
   const getAllVaccinations = async () => {
     console.log("useVaccinations getAllVaccinations called");

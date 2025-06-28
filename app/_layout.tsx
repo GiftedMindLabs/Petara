@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, SafeAreaView } from "react-native";
 import "react-native-reanimated";
 import { migrateDatabase } from "./database/database";
+import { SelectedPetProvider } from "./providers/SelectedPetProvider";
 
 
 export default function RootLayout() {
@@ -28,9 +29,14 @@ export default function RootLayout() {
   return (
     <SQLiteProvider
       databaseName="petara.db"
+      onInit={migrateDatabase}
       options={{ enableChangeListener: true }}
     >
-      <MainStack />
+      <SelectedPetProvider>
+        <SafeAreaView style={{ flex: 1}}>
+         <MainStack />
+        </SafeAreaView>
+      </SelectedPetProvider>
     </SQLiteProvider>
   );
 }

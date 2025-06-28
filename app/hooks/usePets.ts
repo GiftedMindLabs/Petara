@@ -1,5 +1,5 @@
-import { useSQLiteContext } from "expo-sqlite";
-import { useState } from "react";
+import { addDatabaseChangeListener, useSQLiteContext } from "expo-sqlite";
+import { useEffect, useState } from "react";
 import { PetRepository } from "../database/repositories/petRepository";
 import { Pet } from "../database/types";
 
@@ -27,6 +27,19 @@ export function usePets() {
       setIsLoading(false);
     }
   };
+
+    useEffect(() => {
+      // Initial fetch of the data
+      loadPets();
+  
+      //Local listener
+      const listener = addDatabaseChangeListener((event) => {
+        if (event.tableName === "pets") {
+          loadPets();
+        }
+      });
+      return () => listener.remove();
+    }, []);
 
   const getAllPets = async () => {
     try {

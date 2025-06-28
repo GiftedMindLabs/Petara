@@ -1,5 +1,5 @@
-import { useSQLiteContext } from "expo-sqlite";
-import { useState } from "react";
+import { addDatabaseChangeListener, useSQLiteContext } from "expo-sqlite";
+import { useEffect, useState } from "react";
 import { TaskRepository } from "../database/repositories/taskRepository";
 import { Task } from "../database/types";
 
@@ -26,7 +26,7 @@ export function useTasks() {
       setIsLoading(false);
     }
   };
-/*
+
   useEffect(() => {
     // Initial fetch of the data
     loadTasks();
@@ -39,7 +39,7 @@ export function useTasks() {
     });
     return () => listener.remove();
   }, []);
-*/
+
 
   const getAllTasks = async () => {
     try {
