@@ -32,7 +32,6 @@ const PetForm: React.FC<PetFormProps> = ({
   const [errors, setErrors] = useState<FormErrors>({});
   const { selectedPetId } = useSelectedPet()
   const [formData, setFormData] = useState<{
-
     id: string,
     name: string,
     species: PetSpecies,
