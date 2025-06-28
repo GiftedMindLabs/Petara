@@ -9,19 +9,13 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.giftedmindlabs.Petara",
-      "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false,
-        "UIBackgroundModes": ["remote-notification"],
-        "NSUserNotificationAlertUsageDescription": "Allow notifications to stay updated about your pet's needs."
-      }
+      "bundleIdentifier": "com.giftedmindlabs.Petara"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/foreground.png",
         "backgroundColor": "#18968A"
       },
-      "edgeToEdgeEnabled": true,
       "package": "com.giftedmindlabs.Petara"
     },
     "plugins": [
@@ -35,8 +29,7 @@
           "backgroundColor": "#18968A"
         }
       ],
-      "expo-sqlite",
-      "expo-web-browser"
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true
