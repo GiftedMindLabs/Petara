@@ -25,9 +25,13 @@ const Expenses: React.FC = () => {
     return filteredExpenses.reduce((acc, expense) => acc + expense.amount, 0);
   }, [filteredExpenses]);
 
+  const totalReimbursed = useMemo(() => {
+    return filteredExpenses.reduce((acc, expense) => acc + expense.reimbursed, 0);
+  }, [filteredExpenses]);
+
   const netExpenses = useMemo(() => {
-    return totalExpenses - totalExpenses;
-  }, [totalExpenses]);
+    return totalExpenses - totalReimbursed;
+  }, [totalExpenses, totalReimbursed]);
 
   if (isLoading) {
     return (
