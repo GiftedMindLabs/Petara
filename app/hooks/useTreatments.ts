@@ -1,15 +1,14 @@
-import { addDatabaseChangeListener, useSQLiteContext } from "expo-sqlite";
+import { addDatabaseChangeListener } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { TreatmentRepository } from "../database/repositories/treatmentRepository";
 import { Treatment } from "../database/types";
+import { useRepositories } from "./useRepositories";
 
 export function useTreatments() {
   console.log("useTreatments hook initialized");
-  const db = useSQLiteContext();
+  const { treatmentRepository } = useRepositories();
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const treatmentRepository = new TreatmentRepository(db);
 
   const loadTreatments = async () => {
     console.log("useTreatments loadTreatments called");

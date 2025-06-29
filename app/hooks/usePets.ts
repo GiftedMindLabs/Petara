@@ -1,15 +1,14 @@
-import { addDatabaseChangeListener, useSQLiteContext } from "expo-sqlite";
+import { addDatabaseChangeListener } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { PetRepository } from "../database/repositories/petRepository";
 import { Pet } from "../database/types";
+import { useRepositories } from "./useRepositories";
 
 export function usePets() {
   console.log("usePets hook initialized");
-  const db = useSQLiteContext();
   const [pets, setPets] = useState<Pet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const petRepository = new PetRepository(db);
+  const { petRepository } = useRepositories();
   
   const loadPets = async () => {
     console.log("usePets loadPets called");

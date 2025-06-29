@@ -1,15 +1,14 @@
-import { addDatabaseChangeListener, useSQLiteContext } from "expo-sqlite";
+import { addDatabaseChangeListener } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { ExpenseRepository } from "../database/repositories/expenseRepository";
 import { Expense } from "../database/types";
+import { useRepositories } from "./useRepositories";
 
 export function useExpenses() {
-  const db = useSQLiteContext();
+  const { expenseRepository } = useRepositories();
   console.log("useExpenses hook initialized");
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const expenseRepository = new ExpenseRepository(db);
 
   const loadExpenses = async () => {
     console.log("useExpenses loadExpenses called");

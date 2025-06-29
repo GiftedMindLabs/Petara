@@ -1,15 +1,14 @@
-import { addDatabaseChangeListener, useSQLiteContext } from "expo-sqlite";
+import { addDatabaseChangeListener } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { VetVisitRepository } from "../database/repositories/vetVisitRepository";
 import { VetVisit } from "../database/types";
+import { useRepositories } from "./useRepositories";
 
 export function useVetVisits() {
   console.log("useVetVisits hook initialized");
-  const db = useSQLiteContext();
+  const { vetVisitRepository } = useRepositories();
   const [vetVisits, setVetVisits] = useState<VetVisit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const vetVisitRepository = new VetVisitRepository(db);
   
   const loadVetVisits = async () => {
     console.log("useVetVisits loadVetVisits called");

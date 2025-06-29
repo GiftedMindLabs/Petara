@@ -1,15 +1,14 @@
-import { addDatabaseChangeListener, useSQLiteContext } from "expo-sqlite";
+import { addDatabaseChangeListener } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { VaccinationRepository } from "../database/repositories/vaccinationRepository";
 import { Vaccination } from "../database/types";
+import { useRepositories } from "./useRepositories";
 
 export function useVaccinations() {
   console.log("useVaccinations hook initialized");
-  const db = useSQLiteContext();
+  const { vaccinationRepository } = useRepositories();
   const [vaccinations, setVaccinations] = useState<Vaccination[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const vaccinationRepository = new VaccinationRepository(db);
 
   const loadVaccinations = async () => {
     console.log("useVaccinations loadVaccinations called");

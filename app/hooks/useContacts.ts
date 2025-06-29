@@ -1,15 +1,14 @@
-import { addDatabaseChangeListener, useSQLiteContext } from "expo-sqlite";
+import { addDatabaseChangeListener } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { ContactRepository } from "../database/repositories/contactRepository";
 import { Contact } from "../database/types";
+import { useRepositories } from "./useRepositories";
 
 export function useContacts() {
   console.log("useContacts hook initialized");
-  const db = useSQLiteContext();
+  const { contactRepository } = useRepositories();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const contactRepository = new ContactRepository(db);
 
   const loadContacts = async () => {
     console.log("useContacts loadContacts called");

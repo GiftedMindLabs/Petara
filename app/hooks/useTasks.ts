@@ -1,15 +1,14 @@
-import { addDatabaseChangeListener, useSQLiteContext } from "expo-sqlite";
+import { addDatabaseChangeListener } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { TaskRepository } from "../database/repositories/taskRepository";
 import { Task } from "../database/types";
+import { useRepositories } from "./useRepositories";
 
 export function useTasks() {
   console.log("useTasks hook initialized");
-  const db = useSQLiteContext();
+  const { taskRepository } = useRepositories();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const taskRepository = new TaskRepository(db);
 
   const loadTasks = async () => {
     console.log("useTasks loadTasks called");
