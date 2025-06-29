@@ -1,15 +1,15 @@
 import { IconSymbol } from "@/app/components/ui/IconSymbol";
 import UndoDialog from "@/app/components/ui/UndoDialog";
 import { router } from "expo-router";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import TaskItem from "../components/TaskItem";
 import AddButton from "../components/ui/AddButton";
@@ -19,7 +19,6 @@ import { useSelectedPet } from "../providers/SelectedPetProvider";
 
 const TaskManager: React.FC = () => {
   const { selectedPetId } = useSelectedPet();
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [todaysTasks, setTodaysTasks] = useState<Task[]>([]);
   const [upcomingTasks, setUpcomingTasks] = useState<Task[]>([]);
   const [overdueTasks, setOverdueTasks] = useState<Task[]>([]);
@@ -35,7 +34,7 @@ const TaskManager: React.FC = () => {
     clearAllTasks
   } = useTasks();
 
-  const filterAndSortTasks = useCallback(() => {
+  const filterAndSortTasks =() => {
     if (!tasks.length) {
       setTodaysTasks([]);
       setUpcomingTasks([]);
@@ -63,6 +62,10 @@ const TaskManager: React.FC = () => {
     setOverdueTasks(overdue.sort((a, b) => a.dueDate - b.dueDate));
     setTodaysTasks(todayList.sort((a, b) => a.dueDate - b.dueDate));
     setUpcomingTasks(upcoming.sort((a, b) => a.dueDate - b.dueDate));
+  };
+
+  useEffect(() => {
+    filterAndSortTasks();
   }, [tasks, selectedPetId]);
 
   const handleTaskComplete = async (taskId: string) => {
