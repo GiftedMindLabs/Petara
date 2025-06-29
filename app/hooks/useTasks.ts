@@ -67,20 +67,6 @@ export function useTasks() {
       }
   };
 
-  const scheduleTaskNotification = async (task: Task) => {
-      try {
-        if (!taskRepository) {
-          throw new Error("Task repository not available");
-        }
-        console.log("Scheduling task notification:", task.title);
-        const success = await taskRepository.scheduleTaskNotification(task);
-        return success;
-      } catch (err) {
-        console.error("Error scheduling task notification:", err);
-        throw err;
-      }
-  };
-
   const getTaskById = async (id: string) => {
       try {
         if (!taskRepository) {
@@ -114,9 +100,6 @@ export function useTasks() {
         }
         const success = await taskRepository.deleteTask(taskId);
         const task = await taskRepository.getTaskById(taskId);
-        if (task?.notificationIdentifier) {
-          await taskRepository.cancelTaskNotification(task.notificationIdentifier);
-        }
         console.log("Task deleted successfully");
         return success;
       } catch (err) {

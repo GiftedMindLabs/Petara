@@ -52,24 +52,6 @@ export function useVetVisits() {
     }
   };
 
-  const addVetVisit = async (vetVisit: Omit<VetVisit, 'id'>): Promise<VetVisit> => {
-    try {
-      if (!vetVisitRepository) {
-        throw new Error("Vet visit repository not available");
-      }
-      const newVetVisit = await vetVisitRepository.createVetVisit(vetVisit);
-
-      // Schedule notification for the new visit
-      const notificationId = await vetVisitRepository.scheduleVetVisitNotification(newVetVisit);
-      await vetVisitRepository.storeVetVisitNotificationIdentifier(newVetVisit.id, notificationId);
-      
-      return newVetVisit;
-    } catch (err) {
-      console.error('Error adding vet visit:', err);
-      throw err;
-    }
-  };
-
   const getVetVisitById = async (id: string): Promise<VetVisit | null> => {
     try {
       if (!vetVisitRepository) {
@@ -92,22 +74,10 @@ export function useVetVisits() {
         throw new Error('Vet visit not found');
       }
 
-      // Cancel existing notification if it exists
-      /*if (currentVisit.notificationIdentifier) {
-        await vetVisitRepository.cancelVetVisitNotification(currentVisit.notificationIdentifier);
-      }*/
-
       const success = await vetVisitRepository.updateVetVisit(id, updates);
       if (!success) {
         throw new Error('Failed to update vet visit');
       }
-
-      // Schedule new notification if date is updated or it's a future visit
-      /*onst updatedVisit = await vetVisitRepository.getVetVisitById(id);
-      if (updatedVisit && (updates.date || updatedVisit.date > Date.now())) {
-        const notificationId = await vetVisitRepository.scheduleVetVisitNotification(updatedVisit);
-        await vetVisitRepository.storeVetVisitNotificationIdentifier(id, notificationId);
-      }*/
       
       return success;
     } catch (err) {
@@ -124,11 +94,6 @@ export function useVetVisits() {
       const visit = await vetVisitRepository.getVetVisitById(vetVisitId);
       if (!visit) {
         throw new Error('Vet visit not found');
-      }
-
-      // Cancel notification if it exists
-      if (visit.notificationIdentifier) {
-        await vetVisitRepository.cancelVetVisitNotification(visit.notificationIdentifier);
       }
 
       const success = await vetVisitRepository.deleteVetVisit(vetVisitId);
@@ -159,7 +124,6 @@ export function useVetVisits() {
     vetVisits,
     isLoading,
     error,
-    addVetVisit,
     getVetVisitById,
     updateVetVisit,
     deleteVetVisit,

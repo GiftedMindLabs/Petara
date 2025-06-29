@@ -1,6 +1,5 @@
-import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Button, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import TaskItem from "../components/TaskItem";
 import { Task } from "../database/types";
 import { useTasks } from "../hooks/useTasks";
@@ -38,19 +37,6 @@ export default function Home() {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Today's Tasks</Text>
         </View>
-        <Button
-          title="Add Task"
-          onPress={() =>
-            router.push({
-              pathname: "/FormModal",
-              params: {
-                title: "Add",
-                action: "create",
-                form: "task",
-              },
-            })
-          }
-        />
         {todaysTasks.length > 0 ? (
           <View style={styles.contentCard}>
             {todaysTasks.map((task) => (
