@@ -1,7 +1,7 @@
 import ExpenseCard from '@/app/components/ExpenseCard';
 import { IconSymbol } from '@/app/components/ui/IconSymbol';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import AddButton from '../components/ui/AddButton';
 import { useExpenses } from '../hooks/useExpenses';
@@ -13,6 +13,21 @@ const Expenses: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const { expenses, isLoading} = useExpenses();
   const { pets } = usePets();
+
+  const filteredExpenses = useMemo(() => {
+    return expenses.filter(expense => {
+      if (selectedCategory === 'All Categories') return true;
+      return expense.category === selectedCategory;
+    });
+  }, [expenses, selectedCategory]);
+
+  const totalExpenses = useMemo(() => {
+    return filteredExpenses.reduce((acc, expense) => acc + expense.amount, 0);
+  }, [filteredExpenses]);
+
+  const netExpenses = useMemo(() => {
+    return totalExpenses - totalExpenses;
+  }, [totalExpenses]);
 
   if (isLoading) {
     return (
@@ -47,13 +62,13 @@ const Expenses: React.FC = () => {
         <View style={styles.summaryCard}>
           <Text style={styles.summaryLabel}>Total Expenses</Text>
           <Text style={styles.summaryValue}>
-            Expenses
+            {totalExpenses}
           </Text>
         </View>
         <View style={styles.summaryCard}>
           <Text style={styles.summaryLabel}>Net Cost</Text>
           <Text style={styles.summaryValue}>
-            Net Expenses
+            {netExpenses}
           </Text>
         </View>
       </View>
@@ -89,8 +104,8 @@ const Expenses: React.FC = () => {
       </ScrollView>
 
       <View style={styles.expensesList}>
-        {expenses.length > 0 ? (
-          expenses.map(expense => {
+          {filteredExpenses.length > 0 ? (
+          filteredExpenses.map(expense => {
             const pet = pets.find(p => p.id === expense.petId);
             return (
               <ExpenseCard

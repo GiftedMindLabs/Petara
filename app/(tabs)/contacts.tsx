@@ -2,7 +2,7 @@ import { IconSymbol } from '@/app/components/ui/IconSymbol';
 import { useContacts } from '@/app/hooks/useContacts';
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import AddButton from '../components/ui/AddButton';
 
@@ -10,7 +10,7 @@ type ContactType = 'veterinarian' | 'groomer' | 'sitter' | 'trainer' | 'other';
 
 const Contacts: React.FC = () => {
   const { contacts, isLoading, error } = useContacts();
-  const [selectedType] = useState<ContactType | null>(null);
+  const [selectedType, setSelectedType] = useState<ContactType | null>(null);
 
   const handleCall = (phone: string) => {
     Linking.openURL(`tel:${phone}`);
@@ -21,9 +21,15 @@ const Contacts: React.FC = () => {
   };
 
   const handleTypeFilter = (filter: string | null) => {
-    console.log("handle type")
+    setSelectedType(filter as ContactType | null);
   }
 
+  const filteredContacts = useMemo(() => {
+    return contacts.filter(contact => {
+      if (selectedType === null) return true;
+      return contact.type === selectedType;
+    });
+  }, [contacts, selectedType]);
 
   const handleEditContact = (id: string) => {
     router.push({
@@ -108,7 +114,7 @@ const Contacts: React.FC = () => {
         </View>
       ) : (
         <View style={styles.contactsList}>
-          {contacts.map(contact => (
+          {filteredContacts.map(contact => (
             <View key={contact.id} style={styles.contactCard}>
               <View style={styles.cardHeader}>
                 <View>
