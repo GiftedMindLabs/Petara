@@ -17,11 +17,11 @@ const ExpenseCard: React.FC<ExpenseCardProps> = ({
   pet,
   showPetInfo = false,
 }) => {
-  const { visits } = useVetVisits();
+  const { vetVisits } = useVetVisits();
   const { vaccinations } = useVaccinations();
 
   const linkedVetVisit = expense.linkedVetVisitId 
-    ? visits.find(v => v.id === expense.linkedVetVisitId)
+    ? vetVisits.find(v => v.id === expense.linkedVetVisitId)
     : undefined;
 
   const linkedVaccination = expense.linkedVaccinationId
