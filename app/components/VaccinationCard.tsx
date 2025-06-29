@@ -16,7 +16,7 @@ const VaccinationCard: React.FC<VaccinationCardProps> = ({
   pet,
   showPetInfo = false,
 }) => {
-  const { visits: vetVisits } = useVetVisits();
+  const { vetVisits } = useVetVisits();
   const vetVisit = vaccination.vetVisitId ? vetVisits.find(v => v.id === vaccination.vetVisitId) : null;
 
   const handlePress = () => {
